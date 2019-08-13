@@ -1,0 +1,141 @@
+html, body {
+  height: 100%;
+  color:white;
+}
+body {
+  background-color: #000000;
+  margin: 0;
+  font-family: Helvetica,sans-serif;
+  overflow: hidden;
+}
+.title {
+  padding:10px;
+}
+.dateSpan {
+  background-color: #666666; 
+  border-radius: 5px;
+  margin-left: 50px;
+  height: 20px;
+  padding:5px;
+  position: absolute;
+  z-index: 5;
+}
+.dateSpan input {
+  vertical-align: middle;
+  margin: 5px;
+}
+.dateSpan span {
+  margin: 5px;
+}
+.dateSpan ul {
+  list-style-type: none;
+}
+
+h1,h2{
+  font-size: 1em;
+  font-weight: normal;
+  padding-left: 20px;
+}
+.starDiv {
+  text-align: center;
+  height:50px;
+  z-index: 100;
+}
+.starText {
+  position:relative;
+  text-shadow: 1px 1px 0 black;
+  top:-50px; 
+  font-size: 24px;
+  -webkit-transition: all 0.1s ease-out; 
+       -moz-transition: all 0.1s ease-out; 
+         -o-transition: all 0.1s ease-out; 
+            transition: all 0.1s ease-out;
+}
+.planetText {
+  position: relative;
+  font-size: 18px;
+  font-weight: bold;
+  font-style: italic;
+  text-shadow: 1px 1px 0 black;
+  margin-top: -150px;
+  -webkit-transition: all 0.1s ease-out; 
+       -moz-transition: all 0.1s ease-out; 
+         -o-transition: all 0.1s ease-out; 
+            transition: all 0.1s ease-out;
+}
+.starDiv img {
+  position: relative;
+  height: 100px;
+  top:-25px;
+}
+.jumpLink {
+  width: 5px;
+  height: 10px;
+  display: block;
+}
+.alpha {
+  background: blue;
+  width: 5px;
+  height: 10px;
+  display: block;
+  -webkit-transition: all 1s ease-out; 
+     -moz-transition: all 1s ease-out; 
+       -o-transition: all 1s ease-out; 
+          transition: all 1s ease-out; 
+}
+.beta {
+  background: purple;
+  width: 5px;
+  height: 10px;
+  display: block;
+  -webkit-transition: all 1s ease-out; 
+     -moz-transition: all 1s ease-out; 
+       -o-transition: all 1s ease-out; 
+          transition: all 1s ease-out; 
+}
+.delta {
+  background: #FAE75E;
+  width: 5px;
+  height: 10px;
+  display: block;
+  -webkit-transition: all 1s ease-out; 
+     -moz-transition: all 1s ease-out; 
+       -o-transition: all 1s ease-out; 
+          transition: all 1s ease-out; 
+}
+.epsilon {
+  background: #65B657;
+  width: 5px;
+  height: 10px;
+  display: block;
+  -webkit-transition: all 1s ease-out; 
+     -moz-transition: all 1s ease-out; 
+       -o-transition: all 1s ease-out; 
+          transition: all 1s ease-out; 
+}
+.gamma {
+  background: #E68949;
+  width: 5px;
+  height: 10px;
+  display: block;
+  -webkit-transition: all 1s ease-out; 
+     -moz-transition: all 1s ease-out; 
+       -o-transition: all 1s ease-out; 
+          transition: all 1s ease-out; 
+}
+.undiscovered, .hidden {
+  opacity: 0; 
+  -webkit-transition: all 1s ease-out; 
+     -moz-transition: all 1s ease-out; 
+       -o-transition: all 1s ease-out; 
+          transition: all 1s ease-out; 
+
+}
+
+.invis{
+  opacity: 0;
+    -webkit-transition: all 0.1s ease-out; 
+       -moz-transition: all 0.1s ease-out; 
+         -o-transition: all 0.1s ease-out; 
+            transition: all 0.1s ease-out; 
+}
