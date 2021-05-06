@@ -120,13 +120,13 @@ var systemsArr=[
 {id:145, x: -2.32, y:  6.41, z: -0.38, sysName:"HR 8832",         type: ["K3 V"], absMag: [], mass: []},
 {id:146, x:  3.74, y:  0.22, z:  1.64, sysName:"BD-12°4523",      type: ["M"], absMag: [], mass: []},
 
-// Extra stars not commented out by Jon but by Gary
-// {id: 58, x:  0.49, y:  0.46, z:  8.32, sysName:"Beta Comae Berenices", type: ["G0V"], absMag: [4.451709668], mass: [1.15]},
-// {id: 60, x:  2.78, y:  0.26, z:  9.13, sysName:"Eta Boötis",      type: ["G0IV"], absMag: [2.406604204], mass: [1.71]},
-// {id:147, x:  4.28, y: -4.77, z:  6.21, sysName:"61 Virginis",     type: ["G5V"], absMag: [5.07], mass: [0.95]},
-// {id:148, x:  2.22, y: -1.20, z: -7.38, sysName:"Luyten 362-081",  type: ["D"], absMag: [], mass: []},
-// {id:149, x:  3.31, y:  3.64, z: -0.77, sysName:"Altair",          type: ["A7 V"], absMag: [2.21], mass: [1.79]},
-// {id:150, x:  2.26, y: -0.93, z:  8.59, sysName:"70 Virginis",     type: ["G2.5Va"], absMag: [3.70], mass: [1.12]},
-// {id:151, x:  2.96, y:  1.26, z:  5.89, sysName:"Xi Boötis",       type: ["G8 Ve"], absMag: [5.54], mass: [0.90]},
-// {id:152, x:  1.76, y:  2.25, z:  8.21, sysName:"Luyten 1484-43",  type: ["M"], absMag: [], mass: []},
+// Not on TWSB Map
+{id: 58, x:  0.49, y:  0.46, z:  8.32, sysName:"Beta Comae Berenices", type: ["G0V"], absMag: [4.451709668], mass: [1.15]},
+{id: 60, x:  2.78, y:  0.26, z:  9.13, sysName:"Eta Boötis",      type: ["G0IV"], absMag: [2.406604204], mass: [1.71]},
+{id:147, x:  4.28, y: -4.77, z:  6.21, sysName:"61 Virginis",     type: ["G5V"], absMag: [5.07], mass: [0.95]},
+{id:148, x:  2.22, y: -1.20, z: -7.38, sysName:"Luyten 362-081",  type: ["D"], absMag: [], mass: []},
+{id:149, x:  3.31, y:  3.64, z: -0.77, sysName:"Altair",          type: ["A7 V"], absMag: [2.21], mass: [1.79]},
+{id:150, x:  2.26, y: -0.93, z:  8.59, sysName:"70 Virginis",     type: ["G2.5Va"], absMag: [3.70], mass: [1.12]},
+{id:151, x:  2.96, y:  1.26, z:  5.89, sysName:"Xi Boötis",       type: ["G8 Ve"], absMag: [5.54], mass: [0.90]},
+{id:152, x:  1.76, y:  2.25, z:  8.21, sysName:"Luyten 1484-43",  type: ["M"], absMag: [], mass: []},
 ];

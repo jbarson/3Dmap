@@ -195,5 +195,19 @@ var jumpList = [
 {bridge: [141, 142], type: "E", year: 2186},
 {bridge: [142, 143], type: "D", year: 2185},
 {bridge: [143, 144], type: "G", year: 2184},
-{bridge: [144, 145], type: "E", year: 2183}
+{bridge: [144, 145], type: "E", year: 2183},
+// Not on TWSB Map
+{bridge: [90, 148], type: "D", year: 2158},
+{bridge: [53, 58], type: "D", year: 2163},
+{bridge: [57, 58], type: "D", year: 2165},
+{bridge: [58, 59], type: "D", year: 2167},
+{bridge: [58, 113], type: "D", year: 2173},
+{bridge: [113, 151], type: "D", year: 2173},
+{bridge: [58, 60], type: "D", year: 2174},
+{bridge: [59, 60], type: "D", year: 2174},
+{bridge: [61, 152], type: "D", year: 2175},
+{bridge: [58, 152], type: "G", year: 2175},
+{bridge: [58, 150], type: "D", year: 2180},
+{bridge: [119, 149], type: "E", year: 2194},
+{bridge: [62, 147], type: "E", year: 2196},
 ];
