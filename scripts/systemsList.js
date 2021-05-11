@@ -15,7 +15,7 @@ var systemsArr=[
 {id: 14, gl:150, x: -6.38, y: -2.09, z: -6.95, sysName:"Delta Eridani", type: ["K0IV"], absMag: [3.748382928], mass: []},
 {id: 15, gl:166, x: -3.56, y: -1.35, z: -2.97, sysName:"40(O2) Eridani", planetName:"Nexus Station", type: ["K1V"], absMag: [5.915956445], mass: []},
 {id: 16, gl:2034, x: -1.43, y: -5.62, z: -5.70, sysName:"GJ 2034", type: ["D"], absMag: [14.80952556], mass: []},
-{id: 17, gl:178, x: -6.78, y: -1.37, z: -2.94, sysName:"1 Pi(3)Orionis", planetName:"Nexus Station", type: ["F6V"], absMag: [3.667590212], mass: []},
+{id: 17, gl:178, x: -6.78, y: -1.37, z: -2.94, sysName:"1 Pi(3) Orionis", planetName:"Nexus Station", type: ["F6V"], absMag: [3.667590212], mass: []},
 {id: 18, gl:183, x: -7.28, y: -3.41, z: -4.13, sysName:"BD-05°1123", type: ["K3V"], absMag: [6.494213896], mass: []},
 {id: 19, gl:216, x: -5.00, y: -5.32, z: -3.29, sysName:"Gamma Leporis", planetName: "Concord", type: ["F7V"], absMag: [3.816179577], mass: [1.23]},
 {id: 20, gl:3379, x: -4.80, y: -2.20, z: -0.95, sysName:"NN 3379", type: ["M4"], absMag: [12.68106427], mass: []},
