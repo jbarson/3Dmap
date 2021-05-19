@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    font-family: sans-serif;
+}
+
+.title {
+    position: fixed;
+    top: 5px;
+    left: 10px;
+    color: white;
+    background-color: black;
+    padding: 10px;
+}
+
+.dateSpan {
+    background-color: #666666;
+    border-radius: 5px;
+    padding: 8px 8px 5px 5px;
+}
