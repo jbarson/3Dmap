@@ -77,16 +77,22 @@ map.init = function() {
     systemDiv.className = "starDiv";
     var starPic = document.createElement('img');
     if (starType==="A"){
+      starPic.className = "a_star";
       starPic.src = 'img/A-star.png';
     }else if (starType==="F"){
+      starPic.className = "f_star";
       starPic.src = 'img/F-star.png';
     }else if (starType==="G"){
+      starPic.className = "g_star";
       starPic.src = 'img/G-star.png';
     }else if (starType==="K"){
+      starPic.className = "k_star";
       starPic.src = 'img/K-star.png';
     }else if (starType==="M"){
+      starPic.className = "m_star";
       starPic.src = 'img/M-star.png';
     }else if (starType==="D"){
+      starPic.className = "m_star";
       starPic.src = 'img/D-star.png';
     }else{
       starPic.src = 'img/spark1.png';

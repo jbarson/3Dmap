@@ -65,9 +65,31 @@ h1,h2{
 }
 .starDiv img {
   position: relative;
-  height: 100px;
-  top:-25px;
+  /*height: 100px;*/
+  /*top:-25px;*/
 }
+
+.a_star {
+  height: 225px;
+  top: -90px;
+}
+.f_star {
+  height: 180px;
+  top: -65px;
+}
+.g_star {
+  height: 100px;
+  top: -25px;
+}
+.k_star {
+  height: 80px;
+  top: -15px;
+}
+.m_star {
+  height: 40px;
+  top: 5px;
+}
+
 .jumpLink {
   width: 5px;
   height: 10px;
