@@ -252,7 +252,7 @@ var systemsArr=[
     {id:1087, x:-7.32, y:-2.92, z:-1.34, type:["D"], sysName:"GJ 1087"},
     {id:273, x:-3.14, y:-1.99, z:0.68, type:["M V"], sysName:"Luyten's Star"},
     {id:694, x:2.99, y:7.97, z:4.93, type:["M V"], sysName:"BD+43°2796"},
-    {id:638, x:4.24, y:6.12, z:6.21, type:["M V"], sysName:"BD+33°2777"},
+    {id:638, x:4.24, y:6.12, z:6.21, type:["K V"], sysName:"BD+33°2777"},
     {id:721, x:2.79, y:6.73, z:2.54, type:["A V"], sysName:"Vega"},
     {id:661, x:1.62, y:4.81, z:3.68, type:["M V"], sysName:"Kuiper 79"},
     {id:687, x:-0.6, y:3.94, z:2.49, type:["M V"], sysName:"BD+68°946"},
