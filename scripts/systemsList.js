@@ -263,7 +263,7 @@ var systemsArr=[
     {id:713, x:-1.55, y:6.47, z:3.55, type:["F V"], sysName:"Chi Draconis"},
     {id:892, x:-2.32, y:6.41, z:-0.38, type:["K V"], sysName:"HR 8832"},
     {id:628, x:3.74, y:0.22, z:1.64, type:["M V"], sysName:"BD-12°4523"},
-    {id:502, x:0.49, y:0.46, z:8.32, type:["G V"], sysName:"Beta Comae Berenices *", planetName:"Randus"},
+    {id:502, x:0.49, y:0.46, z:8.32, type:["G V"], sysName:"Beta Comae Berenices *", planetName:"Galt's World"},
     {id:534, x:2.78, y:0.26, z:9.13, type:["G IV"], sysName:"Eta Boötis *"},
     {id:506, x:4.28, y:-4.77, z:6.21, type:["G V"], sysName:"61 Virginis *"},
     {id:915, x:2.22, y:-1.2, z:-7.38, type:["D"], sysName:"Luyten 362-081 *"},
