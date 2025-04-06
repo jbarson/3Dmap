@@ -34,7 +34,7 @@
 
   // THREE.js vectors initialization
   ['tmpVec1', 'tmpVec2', 'tmpVec3', 'tmpVec4'].forEach(vec => {
-    map[vec] = new THREE.Vector3()
+    map[vec] = new window.THREE.Vector3()
   })
 
   // DOM element references
@@ -84,139 +84,139 @@
           starPic.src = 'img/F-star.png'
           break
         case 'G':
-          starPic.className = 'g_star';
-          starPic.src = 'img/G-star.png';
-          break;
+          starPic.className = 'g_star'
+          starPic.src = 'img/G-star.png'
+          break
         case 'K':
-          starPic.className = 'k_star';
-          starPic.src = 'img/K-star.png';
-          break;
+          starPic.className = 'k_star'
+          starPic.src = 'img/K-star.png'
+          break
         case 'M':
-          starPic.className = 'm_star';
-          starPic.src = 'img/M-star.png';
-          break;
+          starPic.className = 'm_star'
+          starPic.src = 'img/M-star.png'
+          break
         case 'D':
-          starPic.className = 'm_star';
-          starPic.src = 'img/D-star.png';
-          break;
+          starPic.className = 'm_star'
+          starPic.src = 'img/D-star.png'
+          break
         default:
-          starPic.src = 'img/spark1.png';
-          break;
+          starPic.src = 'img/spark1.png'
+          break
       }
-      systemDiv.appendChild(starPic);
-      const name = document.createElement('div');
-      name.className = starText;
-      name.textContent = system.sysName;
-      systemDiv.appendChild(name);
+      systemDiv.appendChild(starPic)
+      const name = document.createElement('div')
+      name.className = starText
+      name.textContent = system.sysName
+      systemDiv.appendChild(name)
       if (system.planetName) {
-        const planet = document.createElement('div');
-        planet.className = starText;
-        planet.textContent = system.planetName;
-        systemDiv.appendChild(planet);
+        const planet = document.createElement('div')
+        planet.className = starText
+        planet.textContent = system.planetName
+        systemDiv.appendChild(planet)
       }
-      const star = new THREE.CSS3DObject(systemDiv);
-      star.position.x = system.x * map.Scale;
-      star.position.y = system.y * map.Scale;
-      star.position.z = system.z * map.Scale;
-      map.scene.add(star);
-      map.systems.push(star);
-    });
-    const systemIndex = _.pluck(systemsArr, 'id');
+      const star = new THREE.CSS3DObject(systemDiv)
+      star.position.x = system.x * map.Scale
+      star.position.y = system.y * map.Scale
+      star.position.z = system.z * map.Scale
+      map.scene.add(star)
+      map.systems.push(star)
+    })
+    const systemIndex = _.pluck(systemsArr, 'id')
     jumpList.forEach(jump => {
-      // const startSys = systemsArr[_.indexOf(systemIndex, jump.bridge[0])];
-      // const endSys = systemsArr[_.indexOf(systemIndex, jump.bridge[1])];
-      const startPos = map.systems[_.indexOf(systemIndex, jump.bridge[0])].position;
-      const endPos = map.systems[_.indexOf(systemIndex, jump.bridge[1])].position;
-      map.tmpVec1.subVectors(endPos, startPos);
-      const linkLength = map.tmpVec1.length() - 25;
-      const hyperLink = document.createElement('div');
-      hyperLink.className = 'jumpLink';
+      // const startSys = systemsArr[_.indexOf(systemIndex, jump.bridge[0])]
+      // const endSys = systemsArr[_.indexOf(systemIndex, jump.bridge[1])]
+      const startPos = map.systems[_.indexOf(systemIndex, jump.bridge[0])].position
+      const endPos = map.systems[_.indexOf(systemIndex, jump.bridge[1])].position
+      map.tmpVec1.subVectors(endPos, startPos)
+      const linkLength = map.tmpVec1.length() - 25
+      const hyperLink = document.createElement('div')
+      hyperLink.className = 'jumpLink'
       if (jump.type === 'A') {
-        hyperLink.className = 'alpha';
+        hyperLink.className = 'alpha'
       }
       if (jump.type === 'B') {
-        hyperLink.className = 'beta';
+        hyperLink.className = 'beta'
       }
       if (jump.type === 'G') {
-        hyperLink.className = 'gamma';
+        hyperLink.className = 'gamma'
       }
       if (jump.type === 'D') {
-        hyperLink.className = 'delta';
+        hyperLink.className = 'delta'
       }
       if (jump.type === 'E') {
-        hyperLink.className = 'epsilon';
+        hyperLink.className = 'epsilon'
       }
-      hyperLink.style.height = `${linkLength}px`;
-      const object = new THREE.CSS3DObject(hyperLink);
-      object.position.copy(startPos);
-      object.position.lerp(endPos, 0.5);
-      const axis = map.tmpVec2.set(0, 1, 0).cross(map.tmpVec1);
-      const radians = Math.acos(map.tmpVec3.set(0, 1, 0).dot(map.tmpVec4.copy(map.tmpVec1).normalize()));
-      const objMatrix = new THREE.Matrix4().makeRotationAxis(axis.normalize(), radians);
-      object.matrix = objMatrix;
-      object.rotation.setEulerFromRotationMatrix(object.matrix, object.eulerOrder);
-      object.matrixAutoUpdate = false;
-      object.updateMatrix();
+      hyperLink.style.height = `${linkLength}px`
+      const object = new THREE.CSS3DObject(hyperLink)
+      object.position.copy(startPos)
+      object.position.lerp(endPos, 0.5)
+      const axis = map.tmpVec2.set(0, 1, 0).cross(map.tmpVec1)
+      const radians = Math.acos(map.tmpVec3.set(0, 1, 0).dot(map.tmpVec4.copy(map.tmpVec1).normalize()))
+      const objMatrix = new THREE.Matrix4().makeRotationAxis(axis.normalize(), radians)
+      object.matrix = objMatrix
+      object.rotation.setEulerFromRotationMatrix(object.matrix, object.eulerOrder)
+      object.matrixAutoUpdate = false
+      object.updateMatrix()
       if (object.element.className === 'alpha') {
-        map.alphaLinks.push(object);
+        map.alphaLinks.push(object)
       }
       if (object.element.className === 'beta') {
-        map.betaLinks.push(object);
+        map.betaLinks.push(object)
       }
       if (object.element.className === 'delta') {
-        map.deltaLinks.push(object);
+        map.deltaLinks.push(object)
       }
       if (object.element.className === 'gamma') {
-        map.gammaLinks.push(object);
+        map.gammaLinks.push(object)
       }
       if (object.element.className === 'epsilon') {
-        map.epsiLinks.push(object);
+        map.epsiLinks.push(object)
       }
-      map.scene.add(object);
-      map.links.push(object);
-    });
-    map.renderer = new THREE.CSS3DRenderer();
-    map.renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('container').appendChild(map.renderer.domElement);
-    map.controls = new THREE.TrackballControls(map.camera, map.renderer.domElement);
-    map.controls.rotateSpeed = 0.05;
-    map.controls.dynamicDampingFactor = 0.3;
-    map.controls.maxDistance = 7500;
-    map.controls.addEventListener('change', map.render);
-    window.addEventListener('resize', map.onWindowResize, false);
-  };
+      map.scene.add(object)
+      map.links.push(object)
+    })
+    map.renderer = new THREE.CSS3DRenderer()
+    map.renderer.setSize(window.innerWidth, window.innerHeight)
+    document.getElementById('container').appendChild(map.renderer.domElement)
+    map.controls = new THREE.TrackballControls(map.camera, map.renderer.domElement)
+    map.controls.rotateSpeed = 0.05
+    map.controls.dynamicDampingFactor = 0.3
+    map.controls.maxDistance = 7500
+    map.controls.addEventListener('change', map.render)
+    window.addEventListener('resize', map.onWindowResize, false)
+  }
 
   map.onWindowResize = function () {
-    map.camera.aspect = window.innerWidth / window.innerHeight;
-    map.camera.updateProjectionMatrix();
-    map.renderer.setSize(window.innerWidth, window.innerHeight);
-    map.render();
-  };
+    map.camera.aspect = window.innerWidth / window.innerHeight
+    map.camera.updateProjectionMatrix()
+    map.renderer.setSize(window.innerWidth, window.innerHeight)
+    map.render()
+  }
 
   map.animate = function () {
-    requestAnimationFrame(map.animate);
-    map.controls.update();
-    map.render();
-  };
+    requestAnimationFrame(map.animate)
+    map.controls.update()
+    map.render()
+  }
 
   map.render = function () {
     map.systems.forEach(system => {
-      system.lookAt(map.camera.position.clone());
-      system.up = map.camera.up.clone();
+      system.lookAt(map.camera.position.clone())
+      system.up = map.camera.up.clone()
       if (system.position.distanceTo(map.camera.position) < 500) {
-        system.element.children[1].className = 'invis';
+        system.element.children[1].className = 'invis'
         if (system.element.children[2]) {
-          system.element.children[2].className = 'invis';
+          system.element.children[2].className = 'invis'
         }
       } else {
-        system.element.children[1].className = 'starText';
+        system.element.children[1].className = 'starText'
         if (system.element.children[2]) {
-          system.element.children[2].className = 'planetText';
+          system.element.children[2].className = 'planetText'
         }
       }
-    });
-    map.renderer.render(map.scene, map.camera);
-  };
+    })
+    map.renderer.render(map.scene, map.camera)
+  }
 
   /**
    * Toggles visibility for a given type of links
@@ -224,17 +224,17 @@
    */
   const toggleLinks = (type) => {
     map[`${type}Links`].forEach(link => {
-      link.element.classList.toggle('hidden');
-    });
-  };
+      link.element.classList.toggle('hidden')
+    })
+  }
 
   // Map toggle handlers to link types
-  map.toggleAlpha = () => toggleLinks('alpha');
-  map.toggleBeta = () => toggleLinks('beta');
-  map.toggleGamma = () => toggleLinks('gamma');
-  map.toggleDelta = () => toggleLinks('delta');
-  map.toggleEpsi = () => toggleLinks('epsi');
+  map.toggleAlpha = () => toggleLinks('alpha')
+  map.toggleBeta = () => toggleLinks('beta')
+  map.toggleGamma = () => toggleLinks('gamma')
+  map.toggleDelta = () => toggleLinks('delta')
+  map.toggleEpsi = () => toggleLinks('epsi')
 
-  map.init();
-  map.animate();
-}());
+  map.init()
+  map.animate()
+}())
