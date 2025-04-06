@@ -1,11 +1,11 @@
 {
   "name": "3dmap",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "3D Star Map for Attack Vector",
+  "main": "scripts/app.js",
   "scripts": {
     "test": "jest",
-    "lint": "eslint .",
+    "lint": "eslint scripts/app.js",
     "lint:fix": "eslint . --fix"
   },
   "repository": {
@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/jbarson/3Dmap#readme",
   "devDependencies": {
-    "eslint": "^8.57.1"
+    "eslint": "^8.56.0"
   }
 }

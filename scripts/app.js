@@ -1,29 +1,21 @@
 (function () {
-  'use strict';
+  'use strict'
 
-  const map = window.map || {};
-  let dateVal;
+  const map = window.map || {}
+  let dateVal
 
   document.querySelector('#dateSlider').addEventListener('input', (e) => {
-    dateVal = e.target.value;
-    document.querySelector('#dateBox').textContent = dateVal;
+    dateVal = e.target.value
+    document.querySelector('#dateBox').textContent = dateVal
     jumpList.forEach((jump, index) => {
       if (jump.year >= dateVal) {
-        map.links[index].element.classList.add('undiscovered');
+        map.links[index].element.classList.add('undiscovered')
       }
       if (jump.year <= dateVal) {
-        map.links[index].element.classList.remove('undiscovered');
+        map.links[index].element.classList.remove('undiscovered')
       }
-    });
-  });
-
-  // const LINK_TYPES = {
-  //   A: 'alpha',
-  //   B: 'beta',
-  //   G: 'gamma',
-  //   D: 'delta',
-  //   E: 'epsilon'
-  // };
+    })
+  })
 
   // Initialize map properties
   const mapProperties = {
@@ -36,14 +28,14 @@
     epsiLinks: [],
     linkTypes: [],
     Scale: 200
-  };
+  }
 
-  Object.assign(map, mapProperties);
+  Object.assign(map, mapProperties)
 
   // THREE.js vectors initialization
   ['tmpVec1', 'tmpVec2', 'tmpVec3', 'tmpVec4'].forEach(vec => {
-    map[vec] = new THREE.Vector3();
-  });
+    map[vec] = new THREE.Vector3()
+  })
 
   // DOM element references
   const elements = {
@@ -52,45 +44,45 @@
     gamma: document.querySelector('#gammaLink'),
     delta: document.querySelector('#deltaLink'),
     epsi: document.querySelector('#epsiLink')
-  };
+  }
 
-  Object.assign(map, elements);
-  map.linkTypes = Object.values(elements);
+  Object.assign(map, elements)
+  map.linkTypes = Object.values(elements)
 
   document.querySelector('#allLinks').addEventListener('change', (e) => {
-    const checked = e.target.checked;
+    const checked = e.target.checked
     map.linkTypes.forEach(element => {
       if (element.checked !== checked) {
-        element.checked = checked;
-        element.dispatchEvent(new Event('change'));
+        element.checked = checked
+        element.dispatchEvent(new Event('change'))
       }
-    });
-  });
+    })
+  })
 
   // Event handlers
   Object.entries(elements).forEach(([type, el]) => {
-    el.addEventListener('change', () => map[`toggle${type.charAt(0).toUpperCase() + type.slice(1)}`]());
-  });
+    el.addEventListener('change', () => map[`toggle${type.charAt(0).toUpperCase() + type.slice(1)}`]())
+  })
 
   map.init = function () {
-    map.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 75000);
-    map.camera.position.z = 5000;
-    map.scene = new THREE.Scene();
+    map.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 75000)
+    map.camera.position.z = 5000
+    map.scene = new THREE.Scene()
     systemsArr.forEach(system => {
-      const starText = 'starText';
-      const starType = system.type[0][0].toUpperCase();
-      const systemDiv = document.createElement('div');
-      systemDiv.className = 'starDiv';
-      const starPic = document.createElement('img');
+      const starText = 'starText'
+      const starType = system.type[0][0].toUpperCase()
+      const systemDiv = document.createElement('div')
+      systemDiv.className = 'starDiv'
+      const starPic = document.createElement('img')
       switch (starType) {
         case 'A':
-          starPic.className = 'a_star';
-          starPic.src = 'img/A-star.png';
-          break;
+          starPic.className = 'a_star'
+          starPic.src = 'img/A-star.png'
+          break
         case 'F':
-          starPic.className = 'f_star';
-          starPic.src = 'img/F-star.png';
-          break;
+          starPic.className = 'f_star'
+          starPic.src = 'img/F-star.png'
+          break
         case 'G':
           starPic.className = 'g_star';
           starPic.src = 'img/G-star.png';
