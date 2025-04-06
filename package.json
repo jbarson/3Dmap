@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -15,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/jbarson/3Dmap/issues"
   },
-  "homepage": "https://github.com/jbarson/3Dmap#readme"
+  "homepage": "https://github.com/jbarson/3Dmap#readme",
+  "devDependencies": {
+    "eslint": "^8.57.1"
+  }
 }
