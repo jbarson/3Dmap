@@ -33,7 +33,8 @@
   Object.assign(map, mapProperties)
 
   // THREE.js vectors initialization
-  ['tmpVec1', 'tmpVec2', 'tmpVec3', 'tmpVec4'].forEach(vec => {
+  const vectors = ['tmpVec1', 'tmpVec2', 'tmpVec3', 'tmpVec4']
+  vectors.forEach(vec => {
     map[vec] = new window.THREE.Vector3()
   })
 
