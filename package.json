@@ -5,6 +5,9 @@
   "main": "scripts/app.js",
   "scripts": {
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
     "lint": "eslint scripts/app.js",
     "lint:fix": "eslint . --fix"
   },
@@ -19,6 +22,8 @@
   },
   "homepage": "https://github.com/jbarson/3Dmap#readme",
   "devDependencies": {
-    "eslint": "^8.56.0"
+    "eslint": "^8.56.0",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4"
   }
 }
