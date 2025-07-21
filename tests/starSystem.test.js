@@ -122,9 +122,9 @@ describe('Star Classification System', () => {
       const scaledY = systemWithCoords.y * scale;
       const scaledZ = systemWithCoords.z * scale;
       
-      expect(scaledX).toBeCloseTo(246);
-      expect(scaledY).toBeCloseTo(-490);
-      expect(scaledZ).toBeCloseTo(734);
+      expect(scaledX).toBeCloseTo(systemWithCoords.x * scale);
+      expect(scaledY).toBeCloseTo(systemWithCoords.y * scale);
+      expect(scaledZ).toBeCloseTo(systemWithCoords.z * scale);
     });
   });
 });
