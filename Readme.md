@@ -10,8 +10,8 @@ The 3D Star Map application is an interactive tool that allows users to explore 
 
 ```bash
 # Clone the repository
-git clone https://github.com/username/project.git
+git clone https://github.com/username/3D-Star-Map.git
 
 # Navigate to the directory
-cd project
+cd 3D-Star-Map
 ```
