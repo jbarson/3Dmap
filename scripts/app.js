@@ -44,7 +44,7 @@
    */
   function handleDateSliderChange (e) {
     try {
-      dateVal = e.target.value;
+      dateVal = e.target.value
       const dateBox = document.querySelector('#dateBox');
       if (dateBox) {
         dateBox.textContent = dateVal;
