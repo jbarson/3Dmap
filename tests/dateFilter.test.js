@@ -83,9 +83,9 @@ describe('Date Filtering System', () => {
 
   describe('Link Type Classification', () => {
     test('should categorize all jump types correctly', () => {
-      const typeDistribution = mockJumpData.reduce((acc, jump) => {
-        acc[jump.type] = (acc[jump.type] || 0) + 1;
-        return acc;
+      const typeDistribution = mockJumpData.reduce((typeDistribution, jump) => {
+        typeDistribution[jump.type] = (typeDistribution[jump.type] || 0) + 1;
+        return typeDistribution;
       }, {});
 
       expect(Object.keys(typeDistribution)).toEqual(expect.arrayContaining(['A', 'B', 'G', 'D', 'E']));
