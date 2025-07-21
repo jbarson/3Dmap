@@ -1,18 +1,31 @@
 {
   "name": "3dmap",
   "version": "1.0.0",
-  "description": "3D Star Map for Attack Vector",
+  "description": "Interactive 3D Star Map for the Ten Worlds Universe by Attack Vector",
   "main": "scripts/app.js",
   "scripts": {
     "test": "jest",
     "lint": "eslint scripts/app.js",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint scripts/app.js --fix",
+    "lint:all": "eslint scripts/*.js",
+    "start": "npx http-server -p 8000",
+    "dev": "npx http-server -p 8000 -o"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jbarson/3Dmap.git"
   },
-  "author": "",
+  "keywords": [
+    "3d",
+    "visualization",
+    "threejs",
+    "space",
+    "astronomy",
+    "interactive",
+    "attack-vector",
+    "star-map"
+  ],
+  "author": "jbarson",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/jbarson/3Dmap/issues"
@@ -20,5 +33,8 @@
   "homepage": "https://github.com/jbarson/3Dmap#readme",
   "devDependencies": {
     "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

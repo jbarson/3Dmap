@@ -1,163 +1,182 @@
+:root {
+  /* Color variables */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-dark-gray: #666666;
+  --color-blue: blue;
+  --color-purple: purple;
+  --color-yellow: #FAE75E;
+  --color-green: #65B657;
+  --color-orange: #E68949;
+
+  /* Size variables */
+  --border-radius: 5px;
+  --padding-small: 5px;
+  --padding-medium: 10px;
+  --padding-large: 20px;
+  --margin-small: 5px;
+  --margin-large: 50px;
+
+  /* Font variables */
+  --font-family: Helvetica, sans-serif;
+  --font-size-normal: 1em;
+  --font-size-large: 24px;
+  --font-size-medium: 18px;
+
+  /* Animation variables */
+  --transition-fast: all 0.1s ease-out;
+  --transition-slow: all 1s ease-out;
+
+  /* Link dimensions */
+  --link-width: 5px;
+  --link-height: 10px;
+}
+
 html, body {
   height: 100%;
-  color:white;
+  color: var(--color-white);
 }
+
 body {
-  background-color: #000000;
+  background-color: var(--color-black);
   margin: 0;
-  font-family: Helvetica,sans-serif;
+  font-family: var(--font-family);
   overflow: hidden;
 }
+
 .title {
-  padding:10px;
+  padding: var(--padding-medium);
 }
+
 .dateSpan {
-  background-color: #666666; 
-  border-radius: 5px;
-  margin-left: 50px;
+  background-color: var(--color-dark-gray);
+  border-radius: var(--border-radius);
+  margin-left: var(--margin-large);
   height: 20px;
-  padding:5px;
+  padding: var(--padding-small);
   position: absolute;
   z-index: 5;
 }
+
 .dateSpan input {
   vertical-align: middle;
-  margin: 5px;
+  margin: var(--margin-small);
 }
+
 .dateSpan span {
-  margin: 5px;
+  margin: var(--margin-small);
 }
+
 .dateSpan ul {
   list-style-type: none;
 }
 
-h1,h2{
-  font-size: 1em;
+h1, h2 {
+  font-size: var(--font-size-normal);
   font-weight: normal;
-  padding-left: 20px;
-}
-.starDiv {
-  text-align: center;
-  height:50px;
-  z-index: 100;
-}
-.starText {
-  position:relative;
-  text-shadow: 1px 1px 0 black;
-  top:-50px; 
-  font-size: 24px;
-  -webkit-transition: all 0.1s ease-out; 
-       -moz-transition: all 0.1s ease-out; 
-         -o-transition: all 0.1s ease-out; 
-            transition: all 0.1s ease-out;
-}
-.planetText {
-  position: relative;
-  font-size: 18px;
-  font-weight: bold;
-  font-style: italic;
-  text-shadow: 1px 1px 0 black;
-  margin-top: -150px;
-  -webkit-transition: all 0.1s ease-out; 
-       -moz-transition: all 0.1s ease-out; 
-         -o-transition: all 0.1s ease-out; 
-            transition: all 0.1s ease-out;
-}
-.starDiv img {
-  position: relative;
-  /*height: 100px;*/
-  /*top:-25px;*/
+  padding-left: var(--padding-large);
 }
 
+.starDiv {
+  text-align: center;
+  height: 50px;
+  z-index: 100;
+}
+
+.starText {
+  position: relative;
+  text-shadow: 1px 1px 0 var(--color-black);
+  top: -50px;
+  font-size: var(--font-size-large);
+  transition: var(--transition-fast);
+}
+
+.planetText {
+  position: relative;
+  font-size: var(--font-size-medium);
+  font-weight: bold;
+  font-style: italic;
+  text-shadow: 1px 1px 0 var(--color-black);
+  margin-top: -150px;
+  transition: var(--transition-fast);
+}
+
+.starDiv img {
+  position: relative;
+}
+
+/* Star size classes */
 .a_star {
   height: 225px;
   top: -90px;
 }
+
 .f_star {
   height: 180px;
   top: -65px;
 }
+
 .g_star {
   height: 100px;
   top: -25px;
 }
+
 .k_star {
   height: 80px;
   top: -15px;
 }
+
 .m_star {
   height: 40px;
   top: 5px;
 }
 
+/* Jump link base styles */
 .jumpLink {
-  width: 5px;
-  height: 10px;
+  width: var(--link-width);
+  height: var(--link-height);
   display: block;
 }
-.alpha {
-  background: blue;
-  width: 5px;
-  height: 10px;
-  display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
-}
-.beta {
-  background: purple;
-  width: 5px;
-  height: 10px;
-  display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
-}
-.delta {
-  background: #FAE75E;
-  width: 5px;
-  height: 10px;
-  display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
-}
-.epsilon {
-  background: #65B657;
-  width: 5px;
-  height: 10px;
-  display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
-}
+
+/* Jump link type styles - using a shared base class pattern */
+.alpha,
+.beta,
+.delta,
+.epsilon,
 .gamma {
-  background: #E68949;
-  width: 5px;
-  height: 10px;
+  width: var(--link-width);
+  height: var(--link-height);
   display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
-}
-.undiscovered, .hidden {
-  opacity: 0; 
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
-
+  transition: var(--transition-slow);
 }
 
-.invis{
+.alpha {
+  background: var(--color-blue);
+}
+
+.beta {
+  background: var(--color-purple);
+}
+
+.delta {
+  background: var(--color-yellow);
+}
+
+.epsilon {
+  background: var(--color-green);
+}
+
+.gamma {
+  background: var(--color-orange);
+}
+
+.undiscovered,
+.hidden {
   opacity: 0;
-    -webkit-transition: all 0.1s ease-out; 
-       -moz-transition: all 0.1s ease-out; 
-         -o-transition: all 0.1s ease-out; 
-            transition: all 0.1s ease-out; 
+  transition: var(--transition-slow);
+}
+
+.invis {
+  opacity: 0;
+  transition: var(--transition-fast);
 }
