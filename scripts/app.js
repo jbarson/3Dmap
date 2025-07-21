@@ -284,9 +284,10 @@
     
     // Add to appropriate link type array
     const linkTypeProp = `${linkType}Links`
-    if (map[linkTypeProp]) {
-      map[linkTypeProp].push(object)
+    if (!map[linkTypeProp]) {
+      map[linkTypeProp] = [] // Initialize the property if it doesn't exist
     }
+    map[linkTypeProp].push(object)
     
     map.scene.add(object)
     map.links.push(object)
