@@ -65,6 +65,7 @@ export type MapState = {
   toggleDelta: () => void;
   toggleEpsi: () => void;
   init: () => void;
+  cleanup: () => void;
 };
 
 // Build a Set of valid system IDs for quick membership checks

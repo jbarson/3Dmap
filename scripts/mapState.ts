@@ -3,6 +3,15 @@ import { TrackballControls } from "three/examples/jsm/controls/TrackballControls
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import type { Jump, MapState, System } from "./types";
 
+// Utility function to debounce resize events
+function debounce<T extends (...args: unknown[]) => void>(func: T, delay: number): T {
+  let timeoutId: number | undefined;
+  return ((...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  }) as T;
+}
+
 export class MapStateImpl implements MapState {
   systems: CSS3DObject[] = [];
   links: CSS3DObject[] = [];
@@ -29,15 +38,34 @@ export class MapStateImpl implements MapState {
 
   private systemsData: System[];
   private jumpData: Jump[];
+  private debouncedResize: () => void;
+  private eventListeners: Array<{ element: EventTarget; event: string; handler: EventListener }> =
+    [];
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
     this.jumpData = jumpList;
+    // Create debounced resize handler with 100ms delay
+    this.debouncedResize = debounce(this.onWindowResize, 100);
   }
 
   private toggleLinksVisibility(list: CSS3DObject[]) {
     for (const obj of list) obj.element.classList.toggle("hidden");
   }
+
+  // Event listener management for organized cleanup
+  private addEventListener(element: EventTarget, event: string, handler: EventListener) {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
+  }
+
+  // Method to clean up all registered event listeners
+  cleanup = () => {
+    for (const { element, event, handler } of this.eventListeners) {
+      element.removeEventListener(event, handler);
+    }
+    this.eventListeners = [];
+  };
 
   toggleAlpha = () => this.toggleLinksVisibility(this.alphaLinks);
   toggleBeta = () => this.toggleLinksVisibility(this.betaLinks);
@@ -161,7 +189,8 @@ export class MapStateImpl implements MapState {
     this.controls.dynamicDampingFactor = 0.3;
     this.controls.maxDistance = 7500;
     this.controls.addEventListener("change", this.render);
-    window.addEventListener("resize", this.onWindowResize, false);
+    // Use debounced resize handler instead of direct onWindowResize
+    this.addEventListener(window, "resize", this.debouncedResize);
   };
 
   onWindowResize = () => {
