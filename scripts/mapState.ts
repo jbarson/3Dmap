@@ -2,6 +2,18 @@ import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import type { Jump, MapState, System } from "./types";
+import {
+  CAMERA_FAR,
+  CAMERA_FOV,
+  CAMERA_NEAR,
+  CAMERA_START_Z,
+  CONTROLS_DAMPING,
+  CONTROLS_MAX_DISTANCE,
+  CONTROLS_ROTATE_SPEED,
+  LINK_SHRINK,
+  STAR_SCALE,
+  VISIBILITY_DISTANCE,
+} from "./config";
 
 export class MapStateImpl implements MapState {
   systems: CSS3DObject[] = [];
@@ -21,7 +33,7 @@ export class MapStateImpl implements MapState {
   tmpVec2 = new THREE.Vector3();
   tmpVec3 = new THREE.Vector3();
   tmpVec4 = new THREE.Vector3();
-  Scale = 200;
+  Scale = STAR_SCALE;
   camera!: THREE.PerspectiveCamera;
   scene!: THREE.Scene;
   renderer!: CSS3DRenderer;
@@ -46,8 +58,13 @@ export class MapStateImpl implements MapState {
   toggleEpsi = () => this.toggleLinksVisibility(this.epsiLinks);
 
   init = () => {
-    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 75000);
-    this.camera.position.z = 5000;
+    this.camera = new THREE.PerspectiveCamera(
+      CAMERA_FOV,
+      window.innerWidth / window.innerHeight,
+      CAMERA_NEAR,
+      CAMERA_FAR,
+    );
+    this.camera.position.z = CAMERA_START_Z;
     this.scene = new THREE.Scene();
 
     for (const system of this.systemsData) {
@@ -108,7 +125,7 @@ export class MapStateImpl implements MapState {
       const startPos = this.systems[fromIdx].position;
       const endPos = this.systems[toIdx].position;
       this.tmpVec1.subVectors(endPos, startPos);
-      const linkLength = this.tmpVec1.length() - 25;
+      const linkLength = this.tmpVec1.length() - LINK_SHRINK;
       const hyperLink = document.createElement("div");
       // classify by jump type
       switch (this.jumpData[j].type) {
@@ -157,9 +174,9 @@ export class MapStateImpl implements MapState {
     const container = document.getElementById("container");
     if (container) container.appendChild(this.renderer.domElement);
     this.controls = new TrackballControls(this.camera, this.renderer.domElement);
-    this.controls.rotateSpeed = 1.0;
-    this.controls.dynamicDampingFactor = 0.3;
-    this.controls.maxDistance = 7500;
+    this.controls.rotateSpeed = CONTROLS_ROTATE_SPEED;
+    this.controls.dynamicDampingFactor = CONTROLS_DAMPING;
+    this.controls.maxDistance = CONTROLS_MAX_DISTANCE;
     this.controls.addEventListener("change", this.render);
     window.addEventListener("resize", this.onWindowResize, false);
   };
@@ -181,7 +198,7 @@ export class MapStateImpl implements MapState {
     for (const sys of this.systems) {
       sys.lookAt(this.camera.position.clone());
       sys.up = this.camera.up.clone();
-      if (sys.position.distanceTo(this.camera.position) < 500) {
+      if (sys.position.distanceTo(this.camera.position) < VISIBILITY_DISTANCE) {
         sys.element.children[1].className = "invis";
         if (sys.element.children[2]) sys.element.children[2].className = "invis";
       } else {
