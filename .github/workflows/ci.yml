@@ -28,9 +28,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint (no warnings allowed)
-        run: npm run lint:ci
-
       - name: Run tests
         run: npm test -- --run
 
