@@ -40,7 +40,9 @@ export default [
   {
     files: [
       "**/*.config.{js,cjs,mjs,ts}",
-      "**/*.config.*",
+  "**/*.config.json",
+  "**/*.config.yaml",
+  "**/*.config.yml",
       "vite.config.js",
       "eslint.config.mjs",
     ],
