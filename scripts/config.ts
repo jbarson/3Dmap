@@ -16,4 +16,4 @@ export const CONTROLS_ROTATE_SPEED = 1.0;
 export const CONTROLS_DAMPING = 0.3;
 export const CONTROLS_MAX_DISTANCE = 7500;
 
-// (Intentionally no grouped export to avoid duplicating patterns)
+// Individual exports are used to allow selective imports and avoid unnecessary coupling between configuration parameters.
