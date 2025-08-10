@@ -172,21 +172,32 @@ export class MapStateImpl implements MapState {
   };
 
   render = () => {
+    // Cache camera state once per frame to avoid repeated property access and allocations
+    const cam = this.camera;
+    const camPos = cam.position; // safe to reuse directly
+    const camUp = cam.up; // copy into sys.up below to avoid reassigning vector instances
+    const visDistSq = VISIBILITY_DISTANCE * VISIBILITY_DISTANCE;
+
     for (const sys of this.systems) {
-      sys.lookAt(this.camera.position.clone());
-      sys.up = this.camera.up.clone();
+      // Face each system toward the camera without cloning per iteration
+      sys.lookAt(camPos);
+      // Avoid allocating a new Vector3; copy values into existing up vector
+      sys.up.copy(camUp);
+
       const labels = this.labelRefs.get(sys);
-      const nearCamera = sys.position.distanceTo(this.camera.position) < VISIBILITY_DISTANCE;
       if (labels) {
+        const nearCamera = sys.position.distanceToSquared(camPos) < visDistSq;
+        const nameEl = labels.nameEl;
+        const planetEl = labels.planetEl;
         if (nearCamera) {
-          labels.nameEl.className = "invis";
-          if (labels.planetEl) labels.planetEl.className = "invis";
+          if (nameEl.className !== "invis") nameEl.className = "invis";
+          if (planetEl && planetEl.className !== "invis") planetEl.className = "invis";
         } else {
-          labels.nameEl.className = "starText";
-          if (labels.planetEl) labels.planetEl.className = "planetText";
+          if (nameEl.className !== "starText") nameEl.className = "starText";
+          if (planetEl && planetEl.className !== "planetText") planetEl.className = "planetText";
         }
       }
     }
-    this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.scene, cam);
   };
 }
