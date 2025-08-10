@@ -95,6 +95,7 @@ export class MapStateImpl implements MapState {
     for (const system of this.systemsData) {
       const starText = "starText";
       const starType = system.type[0][0].toUpperCase();
+      const planetText = "planetText";
       const systemDiv = document.createElement("div");
       systemDiv.className = "starDiv";
       const starPic = document.createElement("img");
@@ -128,7 +129,7 @@ export class MapStateImpl implements MapState {
       if (system.planetName) {
         planet = document.createElement("div");
         // Use explicit planet label class
-        planet.className = "planetText";
+        planet.className = planetText;
         planet.textContent = system.planetName;
         systemDiv.appendChild(planet);
       }
