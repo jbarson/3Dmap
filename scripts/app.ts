@@ -3,7 +3,6 @@ import { TrackballControls } from "three/examples/jsm/controls/TrackballControls
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import { systemsArr } from "./systemsList";
 import { jumpList } from "./jumpLinks";
-// underscore removed – using native array methods instead
 
 document.addEventListener("DOMContentLoaded", () => {
   ("use strict");
@@ -48,50 +47,50 @@ document.addEventListener("DOMContentLoaded", () => {
       const dateValStr = dateSlider.value;
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
-      for (var n in jumpList) {
+      for (const n in jumpList) {
         if (jumpList[n].year >= dateVal) {
-          map.links[n].element.classList.add("undiscovered");
+          mapState.links[n].element.classList.add("undiscovered");
         }
         if (jumpList[n].year <= dateVal) {
-          map.links[n].element.classList.remove("undiscovered");
+          mapState.links[n].element.classList.remove("undiscovered");
         }
       }
     });
   }
-  const map = {} as unknown as MapState;
-  map.systems = [];
-  map.links = [];
-  map.alphaLinks = [];
-  map.betaLinks = [];
-  map.gammaLinks = [];
-  map.deltaLinks = [];
-  map.epsiLinks = [];
-  map.linkTypes = [];
-  map.alphaCheckbox = document.getElementById('alphaLink') as HTMLInputElement | null;
-  map.betaCheckbox = document.getElementById('betaLink') as HTMLInputElement | null;
-  map.gammaCheckbox = document.getElementById('gammaLink') as HTMLInputElement | null;
-  map.deltaCheckbox = document.getElementById('deltaLink') as HTMLInputElement | null;
-  map.epsiCheckbox = document.getElementById('epsiLink') as HTMLInputElement | null;
-  map.linkTypes = ([map.alphaCheckbox, map.betaCheckbox, map.gammaCheckbox, map.deltaCheckbox, map.epsiCheckbox].filter(Boolean) as HTMLInputElement[]);
-  map.tmpVec1 = new THREE.Vector3();
-  map.tmpVec2 = new THREE.Vector3();
-  map.tmpVec3 = new THREE.Vector3();
-  map.tmpVec4 = new THREE.Vector3();
-  map.Scale = 200;
+  const mapState = {} as unknown as MapState;
+  mapState.systems = [];
+  mapState.links = [];
+  mapState.alphaLinks = [];
+  mapState.betaLinks = [];
+  mapState.gammaLinks = [];
+  mapState.deltaLinks = [];
+  mapState.epsiLinks = [];
+  mapState.linkTypes = [];
+  mapState.alphaCheckbox = document.getElementById('alphaLink') as HTMLInputElement | null;
+  mapState.betaCheckbox = document.getElementById('betaLink') as HTMLInputElement | null;
+  mapState.gammaCheckbox = document.getElementById('gammaLink') as HTMLInputElement | null;
+  mapState.deltaCheckbox = document.getElementById('deltaLink') as HTMLInputElement | null;
+  mapState.epsiCheckbox = document.getElementById('epsiLink') as HTMLInputElement | null;
+  mapState.linkTypes = ([mapState.alphaCheckbox, mapState.betaCheckbox, mapState.gammaCheckbox, mapState.deltaCheckbox, mapState.epsiCheckbox].filter(Boolean) as HTMLInputElement[]);
+  mapState.tmpVec1 = new THREE.Vector3();
+  mapState.tmpVec2 = new THREE.Vector3();
+  mapState.tmpVec3 = new THREE.Vector3();
+  mapState.tmpVec4 = new THREE.Vector3();
+  mapState.Scale = 200;
   const allLinks = document.getElementById('allLinks') as HTMLInputElement | null;
   if (allLinks) {
     allLinks.addEventListener('change', function (this: HTMLInputElement) {
       if (this.checked) {
-        for (var i in map.linkTypes) {
-          const el = map.linkTypes[i] as HTMLInputElement;
+        for (const i in mapState.linkTypes) {
+          const el = mapState.linkTypes[i] as HTMLInputElement;
           if (el && el.checked === false) {
             el.checked = true;
             el.dispatchEvent(new Event('change'));
           }
         }
       } else {
-        for (var j in map.linkTypes) {
-          const el = map.linkTypes[j] as HTMLInputElement;
+        for (const j in mapState.linkTypes) {
+          const el = mapState.linkTypes[j] as HTMLInputElement;
           if (el && el.checked === true) {
             el.checked = false;
             el.dispatchEvent(new Event('change'));
@@ -100,22 +99,22 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-  if (map.alphaCheckbox) map.alphaCheckbox.addEventListener('change', function () { map.toggleAlpha(); });
-  if (map.betaCheckbox) map.betaCheckbox.addEventListener('change', function () { map.toggleBeta(); });
-  if (map.gammaCheckbox) map.gammaCheckbox.addEventListener('change', function () { map.toggleGamma(); });
-  if (map.deltaCheckbox) map.deltaCheckbox.addEventListener('change', function () { map.toggleDelta(); });
-  if (map.epsiCheckbox) map.epsiCheckbox.addEventListener('change', function () { map.toggleEpsi(); });
-  map.init = function () {
-    map.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 75000);
-    map.camera.position.z = 5000;
-    map.scene = new THREE.Scene();
-    for (var i in systemsArr) {
-      var starText = "starText";
-      var system = systemsArr[i];
-      var starType = system.type[0][0].toUpperCase();
-      var systemDiv = document.createElement('div');
+  if (mapState.alphaCheckbox) mapState.alphaCheckbox.addEventListener('change', function () { mapState.toggleAlpha(); });
+  if (mapState.betaCheckbox) mapState.betaCheckbox.addEventListener('change', function () { mapState.toggleBeta(); });
+  if (mapState.gammaCheckbox) mapState.gammaCheckbox.addEventListener('change', function () { mapState.toggleGamma(); });
+  if (mapState.deltaCheckbox) mapState.deltaCheckbox.addEventListener('change', function () { mapState.toggleDelta(); });
+  if (mapState.epsiCheckbox) mapState.epsiCheckbox.addEventListener('change', function () { mapState.toggleEpsi(); });
+  mapState.init = function () {
+    mapState.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 75000);
+    mapState.camera.position.z = 5000;
+    mapState.scene = new THREE.Scene();
+    for (const i in systemsArr) {
+      const starText = "starText";
+      const system = systemsArr[i];
+      const starType = system.type[0][0].toUpperCase();
+      const systemDiv = document.createElement('div');
       systemDiv.className = "starDiv";
-      var starPic = document.createElement('img');
+      const starPic = document.createElement('img');
       if (starType === "A") {
         starPic.className = "a_star";
         starPic.src = 'img/A-star.png';
@@ -138,30 +137,30 @@ document.addEventListener("DOMContentLoaded", () => {
         starPic.src = 'img/spark1.png';
       }
       systemDiv.appendChild(starPic);
-      var name = document.createElement('div');
+      const name = document.createElement('div');
       name.className = starText;
       name.textContent = system.sysName;
       systemDiv.appendChild(name);
       if (system.planetName) {
-        var planet = document.createElement('div');
+        const planet = document.createElement('div');
         planet.className = starText;
         planet.textContent = system.planetName;
         systemDiv.appendChild(planet);
       }
-      var star = new CSS3DObject(systemDiv);
-      star.position.x = system.x * map.Scale;
-      star.position.y = system.y * map.Scale;
-      star.position.z = system.z * map.Scale;
-      map.scene.add(star);
-      map.systems.push(star);
+      const star = new CSS3DObject(systemDiv);
+      star.position.x = system.x * mapState.Scale;
+      star.position.y = system.y * mapState.Scale;
+      star.position.z = system.z * mapState.Scale;
+      mapState.scene.add(star);
+      mapState.systems.push(star);
     }
-    var systemIndex = systemsArr.map(s => s.id);
-    for (var j in jumpList) {
-      var startPos = map.systems[systemIndex.indexOf(jumpList[j].bridge[0])].position;
-      var endPos = map.systems[systemIndex.indexOf(jumpList[j].bridge[1])].position;
-      map.tmpVec1.subVectors(endPos, startPos);
-      var linkLength = map.tmpVec1.length() - 25;
-      var hyperLink = document.createElement('div');
+    const systemIndex = systemsArr.map(s => s.id);
+    for (const j in jumpList) {
+      const startPos = mapState.systems[systemIndex.indexOf(jumpList[j].bridge[0])].position;
+      const endPos = mapState.systems[systemIndex.indexOf(jumpList[j].bridge[1])].position;
+      mapState.tmpVec1.subVectors(endPos, startPos);
+      const linkLength = mapState.tmpVec1.length() - 25;
+      const hyperLink = document.createElement('div');
       hyperLink.className = "jumpLink";
       if (jumpList[j].type === "A") { hyperLink.className = "alpha"; }
       if (jumpList[j].type === "B") { hyperLink.className = "beta"; }
@@ -169,111 +168,77 @@ document.addEventListener("DOMContentLoaded", () => {
       if (jumpList[j].type === "D") { hyperLink.className = "delta"; }
       if (jumpList[j].type === "E") { hyperLink.className = "epsilon"; }
       hyperLink.style.height = linkLength + "px";
-      var object = new CSS3DObject(hyperLink);
+      const object = new CSS3DObject(hyperLink);
       object.position.copy(startPos).lerp(endPos, 0.5);
-      var axis = map.tmpVec2.set(0, 1, 0).cross(map.tmpVec1);
-      var radians = Math.acos(map.tmpVec3.set(0, 1, 0).dot(map.tmpVec4.copy(map.tmpVec1).normalize()));
-      var objMatrix = new THREE.Matrix4().makeRotationAxis(axis.normalize(), radians);
+      const axis = mapState.tmpVec2.set(0, 1, 0).cross(mapState.tmpVec1);
+      const radians = Math.acos(mapState.tmpVec3.set(0, 1, 0).dot(mapState.tmpVec4.copy(mapState.tmpVec1).normalize()));
+      const objMatrix = new THREE.Matrix4().makeRotationAxis(axis.normalize(), radians);
       object.matrix = objMatrix;
       object.rotation.setFromRotationMatrix(object.matrix);
       object.matrixAutoUpdate = false;
       object.updateMatrix();
-      if (object.element.className === "alpha") { map.alphaLinks.push(object); }
-      if (object.element.className === "beta") { map.betaLinks.push(object); }
-      if (object.element.className === "delta") { map.deltaLinks.push(object); }
-      if (object.element.className === "gamma") { map.gammaLinks.push(object); }
-      if (object.element.className === "epsilon") { map.epsiLinks.push(object); }
-      map.scene.add(object);
-      map.links.push(object);
+      if (object.element.className === "alpha") { mapState.alphaLinks.push(object); }
+      if (object.element.className === "beta") { mapState.betaLinks.push(object); }
+      if (object.element.className === "delta") { mapState.deltaLinks.push(object); }
+      if (object.element.className === "gamma") { mapState.gammaLinks.push(object); }
+      if (object.element.className === "epsilon") { mapState.epsiLinks.push(object); }
+      mapState.scene.add(object);
+      mapState.links.push(object);
     }
-    map.renderer = new CSS3DRenderer();
-    map.renderer.setSize(window.innerWidth, window.innerHeight);
+    mapState.renderer = new CSS3DRenderer();
+    mapState.renderer.setSize(window.innerWidth, window.innerHeight);
     const container = document.getElementById('container');
     if (container) {
-      container.appendChild(map.renderer.domElement);
+      container.appendChild(mapState.renderer.domElement);
     }
-    map.controls = new TrackballControls(map.camera, map.renderer.domElement);
-    map.controls.rotateSpeed = 1.0;
-    map.controls.dynamicDampingFactor = 0.3;
-    map.controls.maxDistance = 7500;
-    map.controls.addEventListener('change', map.render);
-    window.addEventListener('resize', map.onWindowResize, false);
+    mapState.controls = new TrackballControls(mapState.camera, mapState.renderer.domElement);
+    mapState.controls.rotateSpeed = 1.0;
+    mapState.controls.dynamicDampingFactor = 0.3;
+    mapState.controls.maxDistance = 7500;
+    mapState.controls.addEventListener('change', mapState.render);
+    window.addEventListener('resize', mapState.onWindowResize, false);
   };
-  map.onWindowResize = function () {
-    map.camera.aspect = window.innerWidth / window.innerHeight;
-    map.camera.updateProjectionMatrix();
-    map.renderer.setSize(window.innerWidth, window.innerHeight);
-    map.render();
+  mapState.onWindowResize = function () {
+    mapState.camera.aspect = window.innerWidth / window.innerHeight;
+    mapState.camera.updateProjectionMatrix();
+    mapState.renderer.setSize(window.innerWidth, window.innerHeight);
+    mapState.render();
   };
-  map.animate = function () {
-    requestAnimationFrame(map.animate);
-    map.controls.update();
-    map.render();
+  mapState.animate = function () {
+    requestAnimationFrame(mapState.animate);
+    mapState.controls.update();
+    mapState.render();
   };
-  map.render = function () {
-    for (var i in map.systems) {
-      map.systems[i].lookAt(map.camera.position.clone());
-      map.systems[i].up = map.camera.up.clone();
-      if (map.systems[i].position.distanceTo(map.camera.position) < 500) {
-        map.systems[i].element.children[1].className = "invis";
-        if (map.systems[i].element.children[2]) {
-          map.systems[i].element.children[2].className = "invis";
+  mapState.render = function () {
+    for (const i in mapState.systems) {
+      mapState.systems[i].lookAt(mapState.camera.position.clone());
+      mapState.systems[i].up = mapState.camera.up.clone();
+      if (mapState.systems[i].position.distanceTo(mapState.camera.position) < 500) {
+        mapState.systems[i].element.children[1].className = "invis";
+        if (mapState.systems[i].element.children[2]) {
+          mapState.systems[i].element.children[2].className = "invis";
         }
       } else {
-        map.systems[i].element.children[1].className = "starText";
-        if (map.systems[i].element.children[2]) {
-          map.systems[i].element.children[2].className = "planetText";
+        mapState.systems[i].element.children[1].className = "starText";
+        if (mapState.systems[i].element.children[2]) {
+          mapState.systems[i].element.children[2].className = "planetText";
         }
       }
     }
-    map.renderer.render(map.scene, map.camera);
+    mapState.renderer.render(mapState.scene, mapState.camera);
   };
-  map.toggleAlpha = function () {
-    for (var m in map.alphaLinks) {
-      if (map.alphaLinks[m].element.classList.contains("hidden")) {
-        map.alphaLinks[m].element.classList.remove("hidden");
-      } else {
-        map.alphaLinks[m].element.classList.add("hidden");
-      }
+  // unified toggle helper for link visibility
+  const toggleLinksVisibility = (list: CSS3DObject[]) => {
+    for (const obj of list) {
+      obj.element.classList.toggle("hidden");
     }
   };
-  map.toggleBeta = function () {
-    for (var m in map.betaLinks) {
-      if (map.betaLinks[m].element.classList.contains("hidden")) {
-        map.betaLinks[m].element.classList.remove("hidden");
-      } else {
-        map.betaLinks[m].element.classList.add("hidden");
-      }
-    }
-  };
-  map.toggleGamma = function () {
-    for (var m in map.gammaLinks) {
-      if (map.gammaLinks[m].element.classList.contains("hidden")) {
-        map.gammaLinks[m].element.classList.remove("hidden");
-      } else {
-        map.gammaLinks[m].element.classList.add("hidden");
-      }
-    }
-  };
-  map.toggleDelta = function () {
-    for (var m in map.deltaLinks) {
-      if (map.deltaLinks[m].element.classList.contains("hidden")) {
-        map.deltaLinks[m].element.classList.remove("hidden");
-      } else {
-        map.deltaLinks[m].element.classList.add("hidden");
-      }
-    }
-  };
-  map.toggleEpsi = function () {
-    for (var m in map.epsiLinks) {
-      if (map.epsiLinks[m].element.classList.contains("hidden")) {
-        map.epsiLinks[m].element.classList.remove("hidden");
-      } else {
-        map.epsiLinks[m].element.classList.add("hidden");
-      }
-    }
-  };
+  mapState.toggleAlpha = function () { toggleLinksVisibility(mapState.alphaLinks); };
+  mapState.toggleBeta = function () { toggleLinksVisibility(mapState.betaLinks); };
+  mapState.toggleGamma = function () { toggleLinksVisibility(mapState.gammaLinks); };
+  mapState.toggleDelta = function () { toggleLinksVisibility(mapState.deltaLinks); };
+  mapState.toggleEpsi = function () { toggleLinksVisibility(mapState.epsiLinks); };
 
-  map.init();
-  map.animate();
+  mapState.init();
+  mapState.animate();
 });
