@@ -1,4 +1,6 @@
-export const jumpList = [
+import type { Jump } from "./types";
+
+export const jumpList: Jump[] = [
   { bridge: [0, 244], type: "D", year: 2111 },
   { bridge: [0, 65], type: "D", year: 2118 },
   { bridge: [0, 411], type: "D", year: 2122 },

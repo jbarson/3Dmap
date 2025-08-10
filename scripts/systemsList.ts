@@ -1,4 +1,6 @@
-export const systemsArr = [
+import type { System } from "./types";
+
+export const systemsArr: System[] = [
   { id: 0, x: 0.0, y: 0.0, z: 0.0, type: ["G V"], sysName: "Sol", planetName: "Earth" },
   { id: 1005, x: 0.13, y: 1.26, z: -5.15, type: ["M V"], sysName: "Luyten 722-22" },
   {

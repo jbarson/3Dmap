@@ -3,8 +3,11 @@ import { TrackballControls } from "three/examples/jsm/controls/TrackballControls
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import { systemsArr } from "./systemsList";
 import { jumpList } from "./jumpLinks";
+import { validateData } from "./types";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // One-time data validation for developer visibility in console
+  validateData(systemsArr, jumpList);
   type MapState = {
     systems: CSS3DObject[];
     links: CSS3DObject[];
