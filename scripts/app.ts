@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const dateValStr = dateSlider.value;
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
-      for (const n in jumpList) {
+      for (let n = 0; n < jumpList.length; n++) {
         if (jumpList[n].year >= dateVal) {
           mapState.links[n].element.classList.add("undiscovered");
         }
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (allLinks) {
     allLinks.addEventListener("change", function (this: HTMLInputElement) {
       if (this.checked) {
-        for (const i in mapState.linkTypes) {
+        for (let i = 0; i < mapState.linkTypes.length; i++) {
           const el = mapState.linkTypes[i] as HTMLInputElement;
           if (el && el.checked === false) {
             el.checked = true;
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
-        for (const j in mapState.linkTypes) {
+        for (let j = 0; j < mapState.linkTypes.length; j++) {
           const el = mapState.linkTypes[j] as HTMLInputElement;
           if (el && el.checked === true) {
             el.checked = false;
@@ -136,9 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     mapState.camera.position.z = 5000;
     mapState.scene = new THREE.Scene();
-    for (const i in systemsArr) {
+    for (const system of systemsArr) {
       const starText = "starText";
-      const system = systemsArr[i];
       const starType = system.type[0][0].toUpperCase();
       const systemDiv = document.createElement("div");
       systemDiv.className = "starDiv";
@@ -183,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
       mapState.systems.push(star);
     }
     const systemIndex = systemsArr.map((s) => s.id);
-    for (const j in jumpList) {
+    for (let j = 0; j < jumpList.length; j++) {
       const startPos = mapState.systems[systemIndex.indexOf(jumpList[j].bridge[0])].position;
       const endPos = mapState.systems[systemIndex.indexOf(jumpList[j].bridge[1])].position;
       mapState.tmpVec1.subVectors(endPos, startPos);
@@ -260,18 +259,18 @@ document.addEventListener("DOMContentLoaded", () => {
     mapState.render();
   };
   mapState.render = function () {
-    for (const i in mapState.systems) {
-      mapState.systems[i].lookAt(mapState.camera.position.clone());
-      mapState.systems[i].up = mapState.camera.up.clone();
-      if (mapState.systems[i].position.distanceTo(mapState.camera.position) < 500) {
-        mapState.systems[i].element.children[1].className = "invis";
-        if (mapState.systems[i].element.children[2]) {
-          mapState.systems[i].element.children[2].className = "invis";
+    for (const sys of mapState.systems) {
+      sys.lookAt(mapState.camera.position.clone());
+      sys.up = mapState.camera.up.clone();
+      if (sys.position.distanceTo(mapState.camera.position) < 500) {
+        sys.element.children[1].className = "invis";
+        if (sys.element.children[2]) {
+          sys.element.children[2].className = "invis";
         }
       } else {
-        mapState.systems[i].element.children[1].className = "starText";
-        if (mapState.systems[i].element.children[2]) {
-          mapState.systems[i].element.children[2].className = "planetText";
+        sys.element.children[1].className = "starText";
+        if (sys.element.children[2]) {
+          sys.element.children[2].className = "planetText";
         }
       }
     }
