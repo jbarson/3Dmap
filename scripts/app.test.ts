@@ -1,19 +1,11 @@
 import { expect, test, vi } from "vitest";
+import { debounce } from "./utils/debounce";
 
 test("sanity check", () => {
   expect(true).toBe(true);
 });
 
 test("debounce function delays execution and only calls function once after multiple rapid calls", async () => {
-  // Extract the debounce function for testing (we'll test it in isolation)
-  function debounce<T extends (...args: unknown[]) => void>(func: T, delay: number): T {
-    let timeoutId: number | undefined;
-    return ((...args: Parameters<T>) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(this, args), delay);
-    }) as T;
-  }
-
   const mockFunction = vi.fn();
   const debouncedFunction = debounce(mockFunction, 100);
 
@@ -37,14 +29,6 @@ test("debounce function delays execution and only calls function once after mult
 });
 
 test("debounce function resets timer on subsequent calls", async () => {
-  function debounce<T extends (...args: unknown[]) => void>(func: T, delay: number): T {
-    let timeoutId: number | undefined;
-    return ((...args: Parameters<T>) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(this, args), delay);
-    }) as T;
-  }
-
   const mockFunction = vi.fn();
   const debouncedFunction = debounce(mockFunction, 100);
 
