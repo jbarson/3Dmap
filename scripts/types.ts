@@ -37,7 +37,7 @@ export function validateData(systems: System[], jumps: Jump[]): void {
     if (!aOK || !bOK) {
       invalidCount++;
       console.warn(
-        `Invalid jump reference: ${a} -> ${b} (exists: ${aOK ? "Y" : "N"} / ${bOK ? "Y" : "N"})`,
+        `Invalid jump reference: ${a} -> ${b} (from: ${aOK ? "found" : "missing"}, to: ${bOK ? "found" : "missing"})`,
       );
     }
   }
