@@ -1,5 +1,7 @@
 # 3Dmap — 3D Star Map
 
+Project name: 3Dmap
+
 Interactive 3D starmap built with Three.js, Vite, and TypeScript. Explore nearby systems, visualize jump links, and toggle link types.
 
 ## Prerequisites
