@@ -4,7 +4,7 @@ Short, imperative summary (e.g., chore: update Copilot guide and PR template)
 
 ## Linked Issue
 
-Fixed issue #<issue-number>
+Fixes issue #<issue-number>
 
 Note: GitHub auto-closes the linked issue on merge when using closing keywords like "Fixes #123" or "Fixed #123".
 
