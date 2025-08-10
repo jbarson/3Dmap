@@ -13,7 +13,7 @@ export function buildStarElement(system: System): {
   systemDiv.className = "starDiv";
 
   const starPic = document.createElement("img");
-  const starType = system.type[0][0]?.toUpperCase();
+  const starType = system.type[0]?.[0]?.toUpperCase();
   if (starType === "A") {
     starPic.className = "a_star";
     starPic.src = "img/A-star.png";
