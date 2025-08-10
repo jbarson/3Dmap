@@ -1,19 +1,21 @@
 import type { System, JumpType } from "../types";
 import { JUMP_TYPE_CLASS } from "../types";
 
+// Avoid magic strings for label classes
+const STAR_TEXT_CLASS = "starText";
+const PLANET_TEXT_CLASS = "planetText";
+
 export function buildStarElement(system: System): {
   element: HTMLDivElement;
   nameEl: HTMLDivElement;
   planetEl?: HTMLDivElement;
 } {
-  const starText = "starText";
-  const planetText = "planetText";
-
   const systemDiv = document.createElement("div") as HTMLDivElement;
   systemDiv.className = "starDiv";
 
   const starPic = document.createElement("img");
-  const starType = system.type[0][0]?.toUpperCase();
+  // Be defensive: dataset may have empty type arrays; fall back to spark image like original behavior
+  const starType = system.type?.[0]?.[0]?.toUpperCase();
   if (starType === "A") {
     starPic.className = "a_star";
     starPic.src = "img/A-star.png";
@@ -38,14 +40,14 @@ export function buildStarElement(system: System): {
   systemDiv.appendChild(starPic);
 
   const name = document.createElement("div") as HTMLDivElement;
-  name.className = starText;
+  name.className = STAR_TEXT_CLASS;
   name.textContent = system.sysName;
   systemDiv.appendChild(name);
 
   let planet: HTMLDivElement | undefined;
   if (system.planetName) {
     planet = document.createElement("div") as HTMLDivElement;
-    planet.className = planetText;
+    planet.className = PLANET_TEXT_CLASS;
     planet.textContent = system.planetName;
     systemDiv.appendChild(planet);
   }
