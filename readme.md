@@ -113,6 +113,6 @@ ISC. See `package.json`.
 [vitest]: https://vitest.dev/
 [jsdom]: https://github.com/jsdom/jsdom
 [eslint]: https://eslint.org/
-[\@eslint/js]: https://github.com/eslint/js
+[@eslint/js]: https://github.com/eslint/js
 [typescript-eslint]: https://typescript-eslint.io/
 [prettier]: https://prettier.io/
