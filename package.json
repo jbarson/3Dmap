@@ -8,7 +8,7 @@
     "build": "vite build",
     "test": "vitest",
     "lint": "eslint . --ext .ts,.tsx,.js,.cjs",
-    "lint:ci": "eslint . --ext .ts,.tsx,.js,.cjs",
+  "lint:ci": "eslint . --ext .ts,.tsx,.js,.cjs --max-warnings=0",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.cjs --fix",
     "format": "prettier --write ."
   },
@@ -25,9 +25,9 @@
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/three": "^0.179.0",
-    "eslint": "^9.33.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
+  "eslint": "^9.33.0",
+  "eslint-config-prettier": "^10.1.8",
+  "eslint-plugin-prettier": "^5.5.4",
     "jsdom": "^26.1.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",

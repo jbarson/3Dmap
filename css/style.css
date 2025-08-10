@@ -1,22 +1,23 @@
-html, body {
+html,
+body {
   height: 100%;
-  color:white;
+  color: white;
 }
 body {
   background-color: #000000;
   margin: 0;
-  font-family: Helvetica,sans-serif;
+  font-family: Helvetica, sans-serif;
   overflow: hidden;
 }
 .title {
-  padding:10px;
+  padding: 10px;
 }
 .dateSpan {
-  background-color: #666666; 
+  background-color: #666666;
   border-radius: 5px;
   margin-left: 50px;
   height: 20px;
-  padding:5px;
+  padding: 5px;
   position: absolute;
   z-index: 5;
 }
@@ -54,25 +55,26 @@ body {
   font-size: 0.9em;
 }
 
-h1,h2{
+h1,
+h2 {
   font-size: 1em;
   font-weight: normal;
   padding-left: 20px;
 }
 .starDiv {
   text-align: center;
-  height:50px;
+  height: 50px;
   z-index: 100;
 }
 .starText {
-  position:relative;
+  position: relative;
   text-shadow: 1px 1px 0 black;
-  top:-50px; 
+  top: -50px;
   font-size: 24px;
-  -webkit-transition: all 0.1s ease-out; 
-       -moz-transition: all 0.1s ease-out; 
-         -o-transition: all 0.1s ease-out; 
-            transition: all 0.1s ease-out;
+  -webkit-transition: all 0.1s ease-out;
+  -moz-transition: all 0.1s ease-out;
+  -o-transition: all 0.1s ease-out;
+  transition: all 0.1s ease-out;
 }
 .planetText {
   position: relative;
@@ -81,10 +83,10 @@ h1,h2{
   font-style: italic;
   text-shadow: 1px 1px 0 black;
   margin-top: -150px;
-  -webkit-transition: all 0.1s ease-out; 
-       -moz-transition: all 0.1s ease-out; 
-         -o-transition: all 0.1s ease-out; 
-            transition: all 0.1s ease-out;
+  -webkit-transition: all 0.1s ease-out;
+  -moz-transition: all 0.1s ease-out;
+  -o-transition: all 0.1s ease-out;
+  transition: all 0.1s ease-out;
 }
 .starDiv img {
   position: relative;
@@ -123,64 +125,64 @@ h1,h2{
   width: 5px;
   height: 10px;
   display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
+  -webkit-transition: all 1s ease-out;
+  -moz-transition: all 1s ease-out;
+  -o-transition: all 1s ease-out;
+  transition: all 1s ease-out;
 }
 .beta {
   background: purple;
   width: 5px;
   height: 10px;
   display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
+  -webkit-transition: all 1s ease-out;
+  -moz-transition: all 1s ease-out;
+  -o-transition: all 1s ease-out;
+  transition: all 1s ease-out;
 }
 .delta {
-  background: #FAE75E;
+  background: #fae75e;
   width: 5px;
   height: 10px;
   display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
+  -webkit-transition: all 1s ease-out;
+  -moz-transition: all 1s ease-out;
+  -o-transition: all 1s ease-out;
+  transition: all 1s ease-out;
 }
 .epsilon {
-  background: #65B657;
+  background: #65b657;
   width: 5px;
   height: 10px;
   display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
+  -webkit-transition: all 1s ease-out;
+  -moz-transition: all 1s ease-out;
+  -o-transition: all 1s ease-out;
+  transition: all 1s ease-out;
 }
 .gamma {
-  background: #E68949;
+  background: #e68949;
   width: 5px;
   height: 10px;
   display: block;
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
+  -webkit-transition: all 1s ease-out;
+  -moz-transition: all 1s ease-out;
+  -o-transition: all 1s ease-out;
+  transition: all 1s ease-out;
 }
-.undiscovered, .hidden {
-  opacity: 0; 
-  -webkit-transition: all 1s ease-out; 
-     -moz-transition: all 1s ease-out; 
-       -o-transition: all 1s ease-out; 
-          transition: all 1s ease-out; 
-
-}
-
-.invis{
+.undiscovered,
+.hidden {
   opacity: 0;
-    -webkit-transition: all 0.1s ease-out; 
-       -moz-transition: all 0.1s ease-out; 
-         -o-transition: all 0.1s ease-out; 
-            transition: all 0.1s ease-out; 
+  -webkit-transition: all 1s ease-out;
+  -moz-transition: all 1s ease-out;
+  -o-transition: all 1s ease-out;
+  transition: all 1s ease-out;
+}
+
+.invis {
+  opacity: 0;
+  -webkit-transition: all 0.1s ease-out;
+  -moz-transition: all 0.1s ease-out;
+  -o-transition: all 0.1s ease-out;
+  transition: all 0.1s ease-out;
 }
