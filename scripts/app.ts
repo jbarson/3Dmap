@@ -84,7 +84,4 @@ document.addEventListener("DOMContentLoaded", () => {
   // MapStateImpl encapsulates init/render/animate and link toggles
   mapState.init();
   mapState.animate();
-
-  mapState.init();
-  mapState.animate();
 });

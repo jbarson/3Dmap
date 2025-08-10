@@ -110,21 +110,25 @@ export class MapStateImpl implements MapState {
       this.tmpVec1.subVectors(endPos, startPos);
       const linkLength = this.tmpVec1.length() - 25;
       const hyperLink = document.createElement("div");
-      hyperLink.className = "jumpLink";
-      if (this.jumpData[j].type === "A") {
-        hyperLink.className = "alpha";
-      }
-      if (this.jumpData[j].type === "B") {
-        hyperLink.className = "beta";
-      }
-      if (this.jumpData[j].type === "G") {
-        hyperLink.className = "gamma";
-      }
-      if (this.jumpData[j].type === "D") {
-        hyperLink.className = "delta";
-      }
-      if (this.jumpData[j].type === "E") {
-        hyperLink.className = "epsilon";
+      // classify by jump type
+      switch (this.jumpData[j].type) {
+        case "A":
+          hyperLink.className = "alpha";
+          break;
+        case "B":
+          hyperLink.className = "beta";
+          break;
+        case "G":
+          hyperLink.className = "gamma";
+          break;
+        case "D":
+          hyperLink.className = "delta";
+          break;
+        case "E":
+          hyperLink.className = "epsilon";
+          break;
+        default:
+          hyperLink.className = "jumpLink";
       }
       hyperLink.style.height = linkLength + "px";
       const object = new CSS3DObject(hyperLink);
@@ -138,11 +142,12 @@ export class MapStateImpl implements MapState {
       object.rotation.setFromRotationMatrix(object.matrix);
       object.matrixAutoUpdate = false;
       object.updateMatrix();
-      if (object.element.className === "alpha") this.alphaLinks.push(object);
-      if (object.element.className === "beta") this.betaLinks.push(object);
-      if (object.element.className === "delta") this.deltaLinks.push(object);
-      if (object.element.className === "gamma") this.gammaLinks.push(object);
-      if (object.element.className === "epsilon") this.epsiLinks.push(object);
+      // categorize by source type directly
+      if (this.jumpData[j].type === "A") this.alphaLinks.push(object);
+      else if (this.jumpData[j].type === "B") this.betaLinks.push(object);
+      else if (this.jumpData[j].type === "D") this.deltaLinks.push(object);
+      else if (this.jumpData[j].type === "G") this.gammaLinks.push(object);
+      else if (this.jumpData[j].type === "E") this.epsiLinks.push(object);
       this.scene.add(object);
       this.links.push(object);
     }
