@@ -46,6 +46,10 @@ export class MapStateImpl implements MapState {
   private debouncedResize: () => void;
   private eventListeners: Array<{ element: EventTarget; event: string; handler: EventListener }> =
     [];
+  private labelRefs = new WeakMap<
+    CSS3DObject,
+    { nameEl: HTMLDivElement; planetEl?: HTMLDivElement }
+  >();
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
@@ -120,13 +124,17 @@ export class MapStateImpl implements MapState {
       name.className = starText;
       name.textContent = system.sysName;
       systemDiv.appendChild(name);
+      let planet: HTMLDivElement | undefined;
       if (system.planetName) {
-        const planet = document.createElement("div");
-        planet.className = starText;
+        planet = document.createElement("div");
+        // Use explicit planet label class
+        planet.className = "planetText";
         planet.textContent = system.planetName;
         systemDiv.appendChild(planet);
       }
       const star = new CSS3DObject(systemDiv);
+      // Store explicit references to labels to avoid brittle children indices (issue #17)
+      this.labelRefs.set(star, { nameEl: name, planetEl: planet });
       star.position.x = system.x * this.Scale;
       star.position.y = system.y * this.Scale;
       star.position.z = system.z * this.Scale;
@@ -220,12 +228,16 @@ export class MapStateImpl implements MapState {
     for (const sys of this.systems) {
       sys.lookAt(this.camera.position.clone());
       sys.up = this.camera.up.clone();
-      if (sys.position.distanceTo(this.camera.position) < VISIBILITY_DISTANCE) {
-        sys.element.children[1].className = "invis";
-        if (sys.element.children[2]) sys.element.children[2].className = "invis";
-      } else {
-        sys.element.children[1].className = "starText";
-        if (sys.element.children[2]) sys.element.children[2].className = "planetText";
+      const labels = this.labelRefs.get(sys);
+      const nearCamera = sys.position.distanceTo(this.camera.position) < VISIBILITY_DISTANCE;
+      if (labels) {
+        if (nearCamera) {
+          labels.nameEl.className = "invis";
+          if (labels.planetEl) labels.planetEl.className = "invis";
+        } else {
+          labels.nameEl.className = "starText";
+          if (labels.planetEl) labels.planetEl.className = "planetText";
+        }
       }
     }
     this.renderer.render(this.scene, this.camera);
