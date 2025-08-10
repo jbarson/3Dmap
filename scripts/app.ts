@@ -1,6 +1,18 @@
 import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
+import {
+  CAMERA_FAR,
+  CAMERA_FOV,
+  CAMERA_NEAR,
+  CAMERA_START_Z,
+  CONTROLS_DAMPING,
+  CONTROLS_MAX_DISTANCE,
+  CONTROLS_ROTATE_SPEED,
+  LINK_SHRINK,
+  STAR_SCALE,
+  VISIBILITY_DISTANCE,
+} from "./config";
 import { systemsArr } from "./systemsList";
 import { jumpList } from "./jumpLinks";
 import { validateData } from "./types";
@@ -53,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   mapState.tmpVec2 = new THREE.Vector3();
   mapState.tmpVec3 = new THREE.Vector3();
   mapState.tmpVec4 = new THREE.Vector3();
-  mapState.Scale = 200;
+  mapState.Scale = STAR_SCALE;
   const allLinks = document.getElementById("allLinks") as HTMLInputElement | null;
   if (allLinks) {
     allLinks.addEventListener("change", function (this: HTMLInputElement) {
@@ -98,12 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   mapState.init = function () {
     mapState.camera = new THREE.PerspectiveCamera(
-      60,
+      CAMERA_FOV,
       window.innerWidth / window.innerHeight,
-      1,
-      75000,
+      CAMERA_NEAR,
+      CAMERA_FAR,
     );
-    mapState.camera.position.z = 5000;
+    mapState.camera.position.z = CAMERA_START_Z;
     mapState.scene = new THREE.Scene();
     for (const system of systemsArr) {
       const starText = "starText";
@@ -160,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const startPos = mapState.systems[fromIdx].position;
       const endPos = mapState.systems[toIdx].position;
       mapState.tmpVec1.subVectors(endPos, startPos);
-      const linkLength = mapState.tmpVec1.length() - 25;
+      const linkLength = mapState.tmpVec1.length() - LINK_SHRINK;
       const hyperLink = document.createElement("div");
       hyperLink.className = "jumpLink";
       if (jumpList[j].type === "A") {
@@ -215,9 +227,9 @@ document.addEventListener("DOMContentLoaded", () => {
       container.appendChild(mapState.renderer.domElement);
     }
     mapState.controls = new TrackballControls(mapState.camera, mapState.renderer.domElement);
-    mapState.controls.rotateSpeed = 1.0;
-    mapState.controls.dynamicDampingFactor = 0.3;
-    mapState.controls.maxDistance = 7500;
+    mapState.controls.rotateSpeed = CONTROLS_ROTATE_SPEED;
+    mapState.controls.dynamicDampingFactor = CONTROLS_DAMPING;
+    mapState.controls.maxDistance = CONTROLS_MAX_DISTANCE;
     mapState.controls.addEventListener("change", mapState.render);
     window.addEventListener("resize", mapState.onWindowResize, false);
   };
@@ -236,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     for (const sys of mapState.systems) {
       sys.lookAt(mapState.camera.position.clone());
       sys.up = mapState.camera.up.clone();
-      if (sys.position.distanceTo(mapState.camera.position) < 500) {
+      if (sys.position.distanceTo(mapState.camera.position) < VISIBILITY_DISTANCE) {
         sys.element.children[1].className = "invis";
         if (sys.element.children[2]) {
           sys.element.children[2].className = "invis";
