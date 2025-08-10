@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let j = 0; j < jumpList.length; j++) {
       const fromIdx = idToIndex.get(jumpList[j].bridge[0]);
       const toIdx = idToIndex.get(jumpList[j].bridge[1]);
-      if (fromIdx == null || toIdx == null) continue; // invalid refs already warned by validateData
+      if (fromIdx === undefined || toIdx === undefined) continue; // invalid refs already warned by validateData
       const startPos = mapState.systems[fromIdx].position;
       const endPos = mapState.systems[toIdx].position;
       mapState.tmpVec1.subVectors(endPos, startPos);
