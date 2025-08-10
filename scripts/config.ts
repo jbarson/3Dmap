@@ -16,4 +16,5 @@ export const CONTROLS_ROTATE_SPEED = 1.0;
 export const CONTROLS_DAMPING = 0.3;
 export const CONTROLS_MAX_DISTANCE = 7500;
 
+export const RESIZE_DEBOUNCE_DELAY = 100; // ms delay for debounced window resize handling
 // Individual exports are used to allow selective imports and avoid unnecessary coupling between configuration parameters.

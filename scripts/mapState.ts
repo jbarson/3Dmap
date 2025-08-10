@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import type { Jump, MapState, System } from "./types";
+import { RESIZE_DEBOUNCE_DELAY } from "./config";
+import { debounce } from "./utils/debounce";
 import {
   CAMERA_FAR,
   CAMERA_FOV,
@@ -41,15 +43,34 @@ export class MapStateImpl implements MapState {
 
   private systemsData: System[];
   private jumpData: Jump[];
+  private debouncedResize: () => void;
+  private eventListeners: Array<{ element: EventTarget; event: string; handler: EventListener }> =
+    [];
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
     this.jumpData = jumpList;
+    // Create debounced resize handler with configured delay
+    this.debouncedResize = debounce(this.onWindowResize, RESIZE_DEBOUNCE_DELAY);
   }
 
   private toggleLinksVisibility(list: CSS3DObject[]) {
     for (const obj of list) obj.element.classList.toggle("hidden");
   }
+
+  // Event listener management for organized cleanup
+  private addEventListener(element: EventTarget, event: string, handler: EventListener) {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
+  }
+
+  // Method to clean up all registered event listeners
+  cleanup = () => {
+    for (const { element, event, handler } of this.eventListeners) {
+      element.removeEventListener(event, handler);
+    }
+    this.eventListeners = [];
+  };
 
   toggleAlpha = () => this.toggleLinksVisibility(this.alphaLinks);
   toggleBeta = () => this.toggleLinksVisibility(this.betaLinks);
@@ -178,7 +199,8 @@ export class MapStateImpl implements MapState {
     this.controls.dynamicDampingFactor = CONTROLS_DAMPING;
     this.controls.maxDistance = CONTROLS_MAX_DISTANCE;
     this.controls.addEventListener("change", this.render);
-    window.addEventListener("resize", this.onWindowResize, false);
+    // Use debounced resize handler instead of direct onWindowResize
+    this.addEventListener(window, "resize", this.debouncedResize);
   };
 
   onWindowResize = () => {
