@@ -16,16 +16,4 @@ export const CONTROLS_ROTATE_SPEED = 1.0;
 export const CONTROLS_DAMPING = 0.3;
 export const CONTROLS_MAX_DISTANCE = 7500;
 
-// Optional grouped export if consumers prefer a single object
-export const Config = {
-  STAR_SCALE,
-  CAMERA_FOV,
-  CAMERA_NEAR,
-  CAMERA_FAR,
-  CAMERA_START_Z,
-  LINK_SHRINK,
-  VISIBILITY_DISTANCE,
-  CONTROLS_ROTATE_SPEED,
-  CONTROLS_DAMPING,
-  CONTROLS_MAX_DISTANCE,
-} as const;
+// (Intentionally no grouped export to avoid duplicating patterns)
