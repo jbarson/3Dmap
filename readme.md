@@ -18,7 +18,7 @@ npm -v
 ## Quick start
 
 ```bash
-# Clone
+# Clone (repo name is 3Dmap)
 git clone https://github.com/jbarson/3Dmap.git
 cd 3Dmap
 
@@ -111,4 +111,6 @@ ISC. See `package.json`.
 [vitest]: https://vitest.dev/
 [jsdom]: https://github.com/jsdom/jsdom
 [eslint]: https://eslint.org/
+[\@eslint/js]: https://github.com/eslint/js
+[typescript-eslint]: https://typescript-eslint.io/
 [prettier]: https://prettier.io/
