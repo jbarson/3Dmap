@@ -181,10 +181,15 @@ document.addEventListener("DOMContentLoaded", () => {
       mapState.scene.add(star);
       mapState.systems.push(star);
     }
-    const systemIndex = systemsArr.map((s) => s.id);
+    // Precompute system id → index map for O(1) lookups (perf #14)
+    const idToIndex = new Map<number, number>();
+    for (let idx = 0; idx < systemsArr.length; idx++) idToIndex.set(systemsArr[idx].id, idx);
     for (let j = 0; j < jumpList.length; j++) {
-      const startPos = mapState.systems[systemIndex.indexOf(jumpList[j].bridge[0])].position;
-      const endPos = mapState.systems[systemIndex.indexOf(jumpList[j].bridge[1])].position;
+      const fromIdx = idToIndex.get(jumpList[j].bridge[0]);
+      const toIdx = idToIndex.get(jumpList[j].bridge[1]);
+      if (fromIdx === undefined || toIdx === undefined) continue; // invalid refs already warned by validateData
+      const startPos = mapState.systems[fromIdx].position;
+      const endPos = mapState.systems[toIdx].position;
       mapState.tmpVec1.subVectors(endPos, startPos);
       const linkLength = mapState.tmpVec1.length() - 25;
       const hyperLink = document.createElement("div");
