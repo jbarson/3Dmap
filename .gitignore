@@ -1,1 +1,49 @@
-node_modules
+### Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+### OS
+.DS_Store
+
+### Dependencies
+node_modules/
+
+### Build output
+dist/
+build/
+
+### Caches and temp
+.cache/
+.tmp/
+.eslintcache
+.vite/
+tmp/
+temp/
+
+### Testing
+coverage/
+.nyc_output/
+
+### TypeScript
+*.tsbuildinfo
+
+### Environment files
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+### Editors/IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+*.swp

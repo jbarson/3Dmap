@@ -29,6 +29,29 @@ body {
 }
 .dateSpan ul {
   list-style-type: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+/* Make labels match app text and align with checkboxes */
+.dateSpan li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+.dateSpan label {
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #fff;
+  cursor: pointer;
+}
+.dateSpan label em {
+  font-style: italic;
+  color: #ccc;
+  font-size: 0.9em;
 }
 
 h1,h2{

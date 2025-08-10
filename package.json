@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest"
   },
   "repository": {
     "type": "git",
@@ -15,5 +17,15 @@
   "bugs": {
     "url": "https://github.com/jbarson/3Dmap/issues"
   },
-  "homepage": "https://github.com/jbarson/3Dmap#readme"
+  "homepage": "https://github.com/jbarson/3Dmap#readme",
+  "devDependencies": {
+    "@types/three": "^0.179.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.1",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "three": "^0.179.1"
+  }
 }
