@@ -1,8 +1,8 @@
 {
   "name": "3dmap",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "3D Star Map for Attack Vector",
+  "main": "scripts/app.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
