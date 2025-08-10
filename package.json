@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "eslint . --ext .ts,.tsx,.js,.cjs",
+    "lint:ci": "eslint . --ext .ts,.tsx,.js,.cjs --max-warnings=0",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.cjs --fix",
+    "format": "prettier --write ."
   },
   "repository": {
     "type": "git",
@@ -20,6 +24,13 @@
   "homepage": "https://github.com/jbarson/3Dmap#readme",
   "devDependencies": {
     "@types/three": "^0.179.0",
+    "@typescript-eslint/eslint-plugin": "^8.4.0",
+    "@typescript-eslint/parser": "^8.4.0",
+    "typescript-eslint": "^8.4.0",
+    "eslint": "^9.9.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3",
     "jsdom": "^26.1.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.1",
