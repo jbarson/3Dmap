@@ -13,6 +13,15 @@ export interface System {
 
 export type JumpType = "A" | "B" | "G" | "D" | "E";
 
+// Mapping from jump type to CSS class name used when rendering links
+export const JUMP_TYPE_CLASS: Record<JumpType, string> = {
+  A: "alpha",
+  B: "beta",
+  G: "gamma",
+  D: "delta",
+  E: "epsilon",
+};
+
 export interface Jump {
   bridge: [number, number]; // [fromId, toId]
   type: JumpType;
