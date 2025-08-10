@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import type { Jump, MapState, System } from "./types";
+import { RESIZE_DEBOUNCE_DELAY } from "./config";
 import { debounce } from "./utils/debounce";
 
 export class MapStateImpl implements MapState {
@@ -37,8 +38,8 @@ export class MapStateImpl implements MapState {
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
     this.jumpData = jumpList;
-    // Create debounced resize handler with 100ms delay
-    this.debouncedResize = debounce(this.onWindowResize, 100);
+    // Create debounced resize handler with configured delay
+    this.debouncedResize = debounce(this.onWindowResize, RESIZE_DEBOUNCE_DELAY);
   }
 
   private toggleLinksVisibility(list: CSS3DObject[]) {
