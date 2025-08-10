@@ -19,6 +19,19 @@ export interface Jump {
   year: number;
 }
 
+// Result returned from validateData for programmatic handling
+export interface ValidationResult {
+  valid: boolean; // true when no invalid references were found
+  invalidCount: number;
+  invalidJumps: Array<{
+    bridge: [number, number];
+    fromFound: boolean;
+    toFound: boolean;
+    type: JumpType;
+    year: number;
+  }>;
+}
+
 // Build a Set of valid system IDs for quick membership checks
 export function buildSystemIdSet(systems: System[]): Set<number> {
   const ids = new Set<number>();
@@ -26,16 +39,24 @@ export function buildSystemIdSet(systems: System[]): Set<number> {
   return ids;
 }
 
-// Validate that all jump endpoints reference known system IDs. Logs a single warning per invalid pair.
-export function validateData(systems: System[], jumps: Jump[]): void {
+// Validate that all jump endpoints reference known system IDs. Logs warnings and returns a structured result.
+export function validateData(systems: System[], jumps: Jump[]): ValidationResult {
   const idSet = buildSystemIdSet(systems);
   let invalidCount = 0;
+  const invalidJumps: ValidationResult["invalidJumps"] = [];
   for (const j of jumps) {
     const [a, b] = j.bridge;
     const aOK = idSet.has(a);
     const bOK = idSet.has(b);
     if (!aOK || !bOK) {
       invalidCount++;
+      invalidJumps.push({
+        bridge: [a, b],
+        fromFound: aOK,
+        toFound: bOK,
+        type: j.type,
+        year: j.year,
+      });
       console.warn(
         `Invalid jump reference: ${a} -> ${b} (from: ${aOK ? "found" : "missing"}, to: ${bOK ? "found" : "missing"})`,
       );
@@ -44,4 +65,5 @@ export function validateData(systems: System[], jumps: Jump[]): void {
   if (invalidCount > 0) {
     console.warn(`Validation found ${invalidCount} invalid jump(s).`);
   }
+  return { valid: invalidCount === 0, invalidCount, invalidJumps };
 }
