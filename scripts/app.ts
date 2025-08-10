@@ -4,43 +4,12 @@ import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRe
 import { systemsArr } from "./systemsList";
 import { jumpList } from "./jumpLinks";
 import { validateData } from "./types";
+import type { MapState } from "./types";
 
 document.addEventListener("DOMContentLoaded", () => {
   // One-time data validation for developer visibility in console
   validateData(systemsArr, jumpList);
-  type MapState = {
-    systems: CSS3DObject[];
-    links: CSS3DObject[];
-    alphaLinks: CSS3DObject[];
-    betaLinks: CSS3DObject[];
-    gammaLinks: CSS3DObject[];
-    deltaLinks: CSS3DObject[];
-    epsiLinks: CSS3DObject[];
-    linkTypes: HTMLInputElement[];
-    alphaCheckbox: HTMLInputElement | null;
-    betaCheckbox: HTMLInputElement | null;
-    gammaCheckbox: HTMLInputElement | null;
-    deltaCheckbox: HTMLInputElement | null;
-    epsiCheckbox: HTMLInputElement | null;
-    tmpVec1: THREE.Vector3;
-    tmpVec2: THREE.Vector3;
-    tmpVec3: THREE.Vector3;
-    tmpVec4: THREE.Vector3;
-    Scale: number;
-    camera: THREE.PerspectiveCamera;
-    scene: THREE.Scene;
-    renderer: CSS3DRenderer;
-    controls: TrackballControls;
-    onWindowResize: () => void;
-    animate: () => void;
-    render: () => void;
-    toggleAlpha: () => void;
-    toggleBeta: () => void;
-    toggleGamma: () => void;
-    toggleDelta: () => void;
-    toggleEpsi: () => void;
-    init: () => void;
-  };
+  // MapState is now defined in scripts/types.ts
   //the following is to link the slider with the text box*/
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
