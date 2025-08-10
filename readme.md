@@ -48,13 +48,14 @@ Data sources:
 ## Scripts
 
 ```bash
-npm run dev       # start Vite dev server
-npm run build     # production build
-npm test          # run vitest (watch by default)
-npm run lint      # eslint (warnings allowed)
-npm run lint:ci   # eslint with max-warnings=0 (CI)
-npm run lint:fix  # fix autofixable issues
-npm run format    # prettier write
+npm run dev        # start Vite dev server
+npm run build      # production build
+npm test           # single test run (non-watch)
+npm run test:watch # vitest in watch mode (local dev)
+npm run lint       # eslint (warnings allowed)
+npm run lint:ci    # eslint with max-warnings=0 (CI)
+npm run lint:fix   # fix autofixable issues
+npm run format     # prettier write
 ```
 
 ## Dependencies
@@ -82,8 +83,8 @@ Key files:
 Vitest runs in a jsdom environment (see `vite.config.js`).
 
 ```bash
-npm test          # watch mode
-npm test -- --run # single run (CI-style)
+npm test           # single run
+npm run test:watch # watch mode
 ```
 
 ## Contributing

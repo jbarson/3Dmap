@@ -32,7 +32,7 @@ jobs:
         run: npm run lint:ci
 
       - name: Run tests
-        run: npm test -- --run
+        run: npm test
 
       - name: Build
         run: npm run build
