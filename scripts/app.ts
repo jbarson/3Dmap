@@ -1,14 +1,25 @@
-/*(function () {
-   "use strict";
-   //the following is to link the slider with the text box*/
+import * as THREE from "three";
+import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
+import {
+  CSS3DObject,
+  CSS3DRenderer,
+} from "three/examples/jsm/renderers/CSS3DRenderer.js";
+import { systemsArr } from "./systemsList";
+import { jumpList } from "./jumpLinks";
+import * as $ from "jquery";
+import * as _ from "underscore";
+
+document.addEventListener("DOMContentLoaded", () => {
+  ("use strict");
+  //the following is to link the slider with the text box*/
   $('#dateSlider').change(function(){
-    $dateVal = $('#dateSlider').val();
-    $('#dateBox').text($dateVal);
+    let dateVal = $('#dateSlider').val();
+    $('#dateBox').text(dateVal);
     for (var n in jumpList){
-      if(jumpList[n].year>= $dateVal){
+      if(jumpList[n].year>= dateVal){
         map.links[n].element.classList.add("undiscovered");
       }
-      if(jumpList[n].year<= $dateVal){
+      if(jumpList[n].year<= dateVal){
         map.links[n].element.classList.remove("undiscovered");
       }
     }
@@ -92,7 +103,7 @@ map.init = function() {
       starPic.className = "m_star";
       starPic.src = 'img/M-star.png';
     }else if (starType==="D"){
-      starPic.className = "m_star";
+      starPic.className = "d_star";
       starPic.src = 'img/D-star.png';
     }else{
       starPic.src = 'img/spark1.png';
@@ -107,7 +118,7 @@ map.init = function() {
       planet.textContent = system.planetName;
       systemDiv.appendChild(planet);
     }
-    var star = new THREE.CSS3DObject(systemDiv);
+    var star = new CSS3DObject(systemDiv);
     star.position.x = system.x*map.Scale;
     star.position.y = system.y*map.Scale;
     star.position.z = system.z*map.Scale;
@@ -130,14 +141,14 @@ map.init = function() {
     if (jumpList[j].type==="D"){hyperLink.className="delta";}
     if (jumpList[j].type==="E"){hyperLink.className="epsilon";}
     hyperLink.style.height=  linkLength + "px";
-    var object = new THREE.CSS3DObject( hyperLink );
+    var object = new CSS3DObject( hyperLink );
     object.position.copy( startPos );
-    object.position.lerp( endPos, 0.5 );
+.lerp( endPos, 0.5 );
     var axis = map.tmpVec2.set( 0, 1, 0 ).cross( map.tmpVec1 );
     var radians = Math.acos( map.tmpVec3.set( 0, 1, 0 ).dot( map.tmpVec4.copy( map.tmpVec1 ).normalize() ) );
     var objMatrix = new THREE.Matrix4().makeRotationAxis( axis.normalize(), radians );
     object.matrix = objMatrix;
-    object.rotation.setEulerFromRotationMatrix( object.matrix, object.eulerOrder );
+    object.rotation.setFromRotationMatrix( object.matrix );
     object.matrixAutoUpdate = false;
     object.updateMatrix();
     if (object.element.className ==="alpha"){map.alphaLinks.push(object);}
@@ -148,10 +159,10 @@ map.init = function() {
     map.scene.add( object );
     map.links.push( object );
   }
-  map.renderer = new THREE.CSS3DRenderer();
+  map.renderer = new CSS3DRenderer();
   map.renderer.setSize( window.innerWidth, window.innerHeight );
   document.getElementById( 'container' ).appendChild( map.renderer.domElement );
-  map.controls = new THREE.TrackballControls( map.camera, map.renderer.domElement );
+  map.controls = new TrackballControls( map.camera, map.renderer.domElement );
   map.controls.rotateSpeed = 0.05;
   map.controls.dynamicDampingFactor = 0.3;
   map.controls.maxDistance=7500;
@@ -231,4 +242,4 @@ map.toggleEpsi = function(){
 
 map.init();
 map.animate();
-/*}());*/
+});
