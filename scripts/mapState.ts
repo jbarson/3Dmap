@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import type { Jump, MapState, System, JumpType } from "./types";
-import { JUMP_TYPE_CLASS } from "./types";
+import { buildStarElement, buildLinkElement } from "./utils/dom";
 import { RESIZE_DEBOUNCE_DELAY } from "./config";
 import { debounce } from "./utils/debounce";
 import {
@@ -94,49 +94,10 @@ export class MapStateImpl implements MapState {
     this.scene = new THREE.Scene();
 
     for (const system of this.systemsData) {
-      const starText = "starText";
-      const starType = system.type[0][0].toUpperCase();
-      const planetText = "planetText";
-      const systemDiv = document.createElement("div");
-      systemDiv.className = "starDiv";
-      const starPic = document.createElement("img");
-      if (starType === "A") {
-        starPic.className = "a_star";
-        starPic.src = "img/A-star.png";
-      } else if (starType === "F") {
-        starPic.className = "f_star";
-        starPic.src = "img/F-star.png";
-      } else if (starType === "G") {
-        starPic.className = "g_star";
-        starPic.src = "img/G-star.png";
-      } else if (starType === "K") {
-        starPic.className = "k_star";
-        starPic.src = "img/K-star.png";
-      } else if (starType === "M") {
-        starPic.className = "m_star";
-        starPic.src = "img/M-star.png";
-      } else if (starType === "D") {
-        starPic.className = "d_star";
-        starPic.src = "img/D-star.png";
-      } else {
-        starPic.src = "img/spark1.png";
-      }
-      systemDiv.appendChild(starPic);
-      const name = document.createElement("div");
-      name.className = starText;
-      name.textContent = system.sysName;
-      systemDiv.appendChild(name);
-      let planet: HTMLDivElement | undefined;
-      if (system.planetName) {
-        planet = document.createElement("div");
-        // Use explicit planet label class
-        planet.className = planetText;
-        planet.textContent = system.planetName;
-        systemDiv.appendChild(planet);
-      }
-      const star = new CSS3DObject(systemDiv);
+      const built = buildStarElement(system);
+      const star = new CSS3DObject(built.element);
       // Store explicit references to labels to avoid brittle children indices (issue #17)
-      this.labelRefs.set(star, { nameEl: name, planetEl: planet });
+      this.labelRefs.set(star, { nameEl: built.nameEl, planetEl: built.planetEl });
       star.position.x = system.x * this.Scale;
       star.position.y = system.y * this.Scale;
       star.position.z = system.z * this.Scale;
@@ -166,9 +127,7 @@ export class MapStateImpl implements MapState {
       const endPos = this.systems[toIdx].position;
       this.tmpVec1.subVectors(endPos, startPos);
       const linkLength = this.tmpVec1.length() - LINK_SHRINK;
-      const hyperLink = document.createElement("div");
-      hyperLink.className = JUMP_TYPE_CLASS[this.jumpData[j].type] ?? "jumpLink";
-      hyperLink.style.height = linkLength + "px";
+      const hyperLink = buildLinkElement(this.jumpData[j].type, linkLength);
       const object = new CSS3DObject(hyperLink);
       object.position.copy(startPos).lerp(endPos, 0.5);
       const axis = this.tmpVec2.set(0, 1, 0).cross(this.tmpVec1);
