@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
-import type { Jump, MapState, System } from "./types";
+import type { Jump, MapState, System, JumpType } from "./types";
+import { JUMP_TYPE_CLASS } from "./types";
 import { RESIZE_DEBOUNCE_DELAY } from "./config";
 import { debounce } from "./utils/debounce";
 import {
@@ -148,6 +149,15 @@ export class MapStateImpl implements MapState {
     for (let idx = 0; idx < this.systemsData.length; idx++) {
       idToIndex.set(this.systemsData[idx].id, idx);
     }
+    // Build a map from JumpType to the target arrays to simplify categorization
+    const typeToList: Record<JumpType, CSS3DObject[]> = {
+      A: this.alphaLinks,
+      B: this.betaLinks,
+      G: this.gammaLinks,
+      D: this.deltaLinks,
+      E: this.epsiLinks,
+    };
+
     for (let j = 0; j < this.jumpData.length; j++) {
       const fromIdx = idToIndex.get(this.jumpData[j].bridge[0]);
       const toIdx = idToIndex.get(this.jumpData[j].bridge[1]);
@@ -157,26 +167,7 @@ export class MapStateImpl implements MapState {
       this.tmpVec1.subVectors(endPos, startPos);
       const linkLength = this.tmpVec1.length() - LINK_SHRINK;
       const hyperLink = document.createElement("div");
-      // classify by jump type
-      switch (this.jumpData[j].type) {
-        case "A":
-          hyperLink.className = "alpha";
-          break;
-        case "B":
-          hyperLink.className = "beta";
-          break;
-        case "G":
-          hyperLink.className = "gamma";
-          break;
-        case "D":
-          hyperLink.className = "delta";
-          break;
-        case "E":
-          hyperLink.className = "epsilon";
-          break;
-        default:
-          hyperLink.className = "jumpLink";
-      }
+      hyperLink.className = JUMP_TYPE_CLASS[this.jumpData[j].type] ?? "jumpLink";
       hyperLink.style.height = linkLength + "px";
       const object = new CSS3DObject(hyperLink);
       object.position.copy(startPos).lerp(endPos, 0.5);
@@ -189,12 +180,8 @@ export class MapStateImpl implements MapState {
       object.rotation.setFromRotationMatrix(object.matrix);
       object.matrixAutoUpdate = false;
       object.updateMatrix();
-      // categorize by source type directly
-      if (this.jumpData[j].type === "A") this.alphaLinks.push(object);
-      else if (this.jumpData[j].type === "B") this.betaLinks.push(object);
-      else if (this.jumpData[j].type === "D") this.deltaLinks.push(object);
-      else if (this.jumpData[j].type === "G") this.gammaLinks.push(object);
-      else if (this.jumpData[j].type === "E") this.epsiLinks.push(object);
+      // Categorize by type via the map
+      typeToList[this.jumpData[j].type].push(object);
       this.scene.add(object);
       this.links.push(object);
     }
