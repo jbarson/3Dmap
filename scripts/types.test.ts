@@ -25,12 +25,8 @@ describe("types utils", () => {
   });
 
   it("validateData reports invalid with structured detail and warns", () => {
-    const systems = [
-      { id: 1, x: 0, y: 0, z: 0, type: ["G"], sysName: "A" },
-    ];
-    const jumps = [
-      { bridge: [1, 3] as [number, number], type: "B" as JumpType, year: 1001 },
-    ];
+    const systems = [{ id: 1, x: 0, y: 0, z: 0, type: ["G"], sysName: "A" }];
+    const jumps = [{ bridge: [1, 3] as [number, number], type: "B" as JumpType, year: 1001 }];
     const spy = vi.spyOn(console, "warn").mockImplementation(() => { });
     const res = validateData(systems, jumps);
     expect(res.valid).toBe(false);
