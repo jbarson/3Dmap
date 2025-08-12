@@ -9,11 +9,11 @@ vi.mock("three/examples/jsm/controls/TrackballControls.js", () => {
     dynamicDampingFactor = 0;
     maxDistance = 0;
     private handlers = new Map<string, EventListener>();
-    constructor() { }
+    constructor() {}
     addEventListener(ev: string, handler: EventListener) {
       this.handlers.set(ev, handler);
     }
-    update() { }
+    update() {}
     trigger(ev: string) {
       const h = this.handlers.get(ev);
       if (h) h(new Event(ev));
