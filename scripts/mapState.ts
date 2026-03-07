@@ -53,6 +53,10 @@ export class MapStateImpl implements MapState {
     }
   >();
   private glowSprite: THREE.Sprite | null = null;
+
+  // Derived constants — computed once from config, reused every frame
+  private readonly tanHalfFov = Math.tan((CAMERA_FOV * Math.PI) / 360);
+  private readonly visDistSq = VISIBILITY_DISTANCE * VISIBILITY_DISTANCE;
   private bgPoints: THREE.Points | null = null;
   private typeMaterials = new Map<JumpType, THREE.LineBasicMaterial>();
 
@@ -234,9 +238,7 @@ export class MapStateImpl implements MapState {
   render = () => {
     const cam = this.camera;
     const camPos = cam.position;
-    const visDistSq = VISIBILITY_DISTANCE * VISIBILITY_DISTANCE;
-    // Precompute tan(FOV/2) to convert world-space sprite radius → screen pixels
-    const tanHalfFov = Math.tan((CAMERA_FOV * Math.PI) / 360);
+    const { visDistSq, tanHalfFov } = this;
     const viewH = window.innerHeight;
 
     for (const sprite of this.systems) {
