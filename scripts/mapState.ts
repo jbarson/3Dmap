@@ -1,9 +1,8 @@
 import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
-import { CSS3DObject, CSS3DRenderer } from "three/examples/jsm/renderers/CSS3DRenderer.js";
+import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { Jump, MapState, System, JumpType } from "./types";
-import { buildStarElement, buildLinkElement } from "./utils/dom";
-import { RESIZE_DEBOUNCE_DELAY } from "./config";
+import { buildStarSprite } from "./utils/scene";
 import { debounce } from "./utils/debounce";
 import {
   CAMERA_FAR,
@@ -13,69 +12,74 @@ import {
   CONTROLS_DAMPING,
   CONTROLS_MAX_DISTANCE,
   CONTROLS_ROTATE_SPEED,
-  LINK_SHRINK,
+  JUMP_TYPE_COLOR,
+  RESIZE_DEBOUNCE_DELAY,
   STAR_SCALE,
   VISIBILITY_DISTANCE,
 } from "./config";
 
 export class MapStateImpl implements MapState {
-  systems: CSS3DObject[] = [];
-  links: CSS3DObject[] = [];
-  alphaLinks: CSS3DObject[] = [];
-  betaLinks: CSS3DObject[] = [];
-  gammaLinks: CSS3DObject[] = [];
-  deltaLinks: CSS3DObject[] = [];
-  epsiLinks: CSS3DObject[] = [];
+  systems: THREE.Sprite[] = [];
+  links: THREE.Line[] = [];
+  alphaLinks: THREE.Line[] = [];
+  betaLinks: THREE.Line[] = [];
+  gammaLinks: THREE.Line[] = [];
+  deltaLinks: THREE.Line[] = [];
+  epsiLinks: THREE.Line[] = [];
   linkTypes: HTMLInputElement[] = [];
   alphaCheckbox: HTMLInputElement | null = null;
   betaCheckbox: HTMLInputElement | null = null;
   gammaCheckbox: HTMLInputElement | null = null;
   deltaCheckbox: HTMLInputElement | null = null;
   epsiCheckbox: HTMLInputElement | null = null;
-  tmpVec1 = new THREE.Vector3();
-  tmpVec2 = new THREE.Vector3();
-  tmpVec3 = new THREE.Vector3();
-  tmpVec4 = new THREE.Vector3();
   Scale = STAR_SCALE;
   camera!: THREE.PerspectiveCamera;
   scene!: THREE.Scene;
-  renderer!: CSS3DRenderer;
+  renderer!: THREE.WebGLRenderer;
   controls!: TrackballControls;
 
+  private labelRenderer!: CSS2DRenderer;
   private systemsData: System[];
   private jumpData: Jump[];
   private debouncedResize: () => void;
   private eventListeners: Array<{ element: EventTarget; event: string; handler: EventListener }> =
     [];
+  // Maps sprite → its CSS2DObject label elements for visibility toggling
   private labelRefs = new WeakMap<
-    CSS3DObject,
-    { nameEl: HTMLDivElement; planetEl?: HTMLDivElement }
+    THREE.Sprite,
+    { label: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject; planetLabel?: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject }
   >();
-  private highlightedStar: CSS3DObject | null = null;
+  private highlightedStar: THREE.Sprite | null = null;
+  private glowSprite: THREE.Sprite | null = null;
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
     this.jumpData = jumpList;
-    // Create debounced resize handler with configured delay
     this.debouncedResize = debounce(this.onWindowResize, RESIZE_DEBOUNCE_DELAY);
   }
 
-  private toggleLinksVisibility(list: CSS3DObject[]) {
-    for (const obj of list) obj.element.classList.toggle("hidden");
+  private toggleLinksVisibility(list: THREE.Line[]) {
+    for (const line of list) line.visible = !line.visible;
   }
 
-  // Event listener management for organized cleanup
   private addEventListener(element: EventTarget, event: string, handler: EventListener) {
     element.addEventListener(event, handler);
     this.eventListeners.push({ element, event, handler });
   }
 
-  // Method to clean up all registered event listeners
   cleanup = () => {
     for (const { element, event, handler } of this.eventListeners) {
       element.removeEventListener(event, handler);
     }
     this.eventListeners = [];
+    for (const sprite of this.systems) {
+      (sprite.material as THREE.SpriteMaterial).dispose();
+    }
+    for (const line of this.links) {
+      line.geometry.dispose();
+      (line.material as THREE.LineBasicMaterial).dispose();
+    }
+    this.renderer.dispose();
   };
 
   toggleAlpha = () => this.toggleLinksVisibility(this.alphaLinks);
@@ -94,25 +98,63 @@ export class MapStateImpl implements MapState {
     this.camera.position.z = CAMERA_START_Z;
     this.scene = new THREE.Scene();
 
+    // --- WebGL renderer ---
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.domElement.style.position = "absolute";
+    this.renderer.domElement.style.top = "0";
+    this.renderer.domElement.style.left = "0";
+    const container = document.getElementById("container");
+    if (container) container.appendChild(this.renderer.domElement);
+
+    // --- CSS2D label renderer ---
+    this.labelRenderer = new CSS2DRenderer();
+    this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    this.labelRenderer.domElement.style.position = "absolute";
+    this.labelRenderer.domElement.style.top = "0";
+    this.labelRenderer.domElement.style.left = "0";
+    this.labelRenderer.domElement.style.pointerEvents = "none";
+    const labelsContainer = document.getElementById("labels");
+    if (labelsContainer) labelsContainer.appendChild(this.labelRenderer.domElement);
+
+    // --- Background starfield ---
+    const starCount = 2000;
+    const positions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 60000;
+    }
+    const bgGeometry = new THREE.BufferGeometry();
+    bgGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const bgMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 10,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: 0.6,
+    });
+    this.scene.add(new THREE.Points(bgGeometry, bgMaterial));
+
+    // --- Star sprites ---
     for (const system of this.systemsData) {
-      const built = buildStarElement(system);
-      const star = new CSS3DObject(built.element);
-      // Store explicit references to labels to avoid brittle children indices (issue #17)
-      this.labelRefs.set(star, { nameEl: built.nameEl, planetEl: built.planetEl });
-      star.position.x = system.x * this.Scale;
-      star.position.y = system.y * this.Scale;
-      star.position.z = system.z * this.Scale;
-      this.scene.add(star);
-      this.systems.push(star);
+      const built = buildStarSprite(system);
+      built.sprite.position.set(
+        system.x * this.Scale,
+        system.y * this.Scale,
+        system.z * this.Scale,
+      );
+      this.scene.add(built.sprite);
+      this.systems.push(built.sprite);
+      this.labelRefs.set(built.sprite, { label: built.label, planetLabel: built.planetLabel });
     }
 
-    // Precompute system id → index map for O(1) lookups (perf #14)
+    // --- Jump links as Lines ---
     const idToIndex = new Map<number, number>();
     for (let idx = 0; idx < this.systemsData.length; idx++) {
       idToIndex.set(this.systemsData[idx].id, idx);
     }
-    // Build a map from JumpType to the target arrays to simplify categorization
-    const typeToList: Record<JumpType, CSS3DObject[]> = {
+
+    const typeToList: Record<JumpType, THREE.Line[]> = {
       A: this.alphaLinks,
       B: this.betaLinks,
       G: this.gammaLinks,
@@ -120,42 +162,32 @@ export class MapStateImpl implements MapState {
       E: this.epsiLinks,
     };
 
-    for (let j = 0; j < this.jumpData.length; j++) {
-      const fromIdx = idToIndex.get(this.jumpData[j].bridge[0]);
-      const toIdx = idToIndex.get(this.jumpData[j].bridge[1]);
-      if (fromIdx === undefined || toIdx === undefined) continue; // invalid refs already warned by validateData
+    for (const jump of this.jumpData) {
+      const fromIdx = idToIndex.get(jump.bridge[0]);
+      const toIdx = idToIndex.get(jump.bridge[1]);
+      if (fromIdx === undefined || toIdx === undefined) continue;
+
       const startPos = this.systems[fromIdx].position;
       const endPos = this.systems[toIdx].position;
-      this.tmpVec1.subVectors(endPos, startPos);
-      const linkLength = this.tmpVec1.length() - LINK_SHRINK;
-      const hyperLink = buildLinkElement(this.jumpData[j].type, linkLength);
-      const object = new CSS3DObject(hyperLink);
-      object.position.copy(startPos).lerp(endPos, 0.5);
-      const axis = this.tmpVec2.set(0, 1, 0).cross(this.tmpVec1);
-      const radians = Math.acos(
-        this.tmpVec3.set(0, 1, 0).dot(this.tmpVec4.copy(this.tmpVec1).normalize()),
-      );
-      const objMatrix = new THREE.Matrix4().makeRotationAxis(axis.normalize(), radians);
-      object.matrix = objMatrix;
-      object.rotation.setFromRotationMatrix(object.matrix);
-      object.matrixAutoUpdate = false;
-      object.updateMatrix();
-      // Categorize by type via the map
-      typeToList[this.jumpData[j].type].push(object);
-      this.scene.add(object);
-      this.links.push(object);
+      const points = [startPos.clone(), endPos.clone()];
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({
+        color: JUMP_TYPE_COLOR[jump.type],
+        transparent: true,
+        opacity: 1.0,
+      });
+      const line = new THREE.Line(geometry, material);
+      typeToList[jump.type].push(line);
+      this.scene.add(line);
+      this.links.push(line);
     }
 
-    this.renderer = new CSS3DRenderer();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    const container = document.getElementById("container");
-    if (container) container.appendChild(this.renderer.domElement);
+    // --- Controls ---
     this.controls = new TrackballControls(this.camera, this.renderer.domElement);
     this.controls.rotateSpeed = CONTROLS_ROTATE_SPEED;
     this.controls.dynamicDampingFactor = CONTROLS_DAMPING;
     this.controls.maxDistance = CONTROLS_MAX_DISTANCE;
     this.controls.addEventListener("change", this.render);
-    // Use debounced resize handler instead of direct onWindowResize
     this.addEventListener(window, "resize", this.debouncedResize);
   };
 
@@ -163,6 +195,7 @@ export class MapStateImpl implements MapState {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
     this.render();
   };
 
@@ -173,33 +206,23 @@ export class MapStateImpl implements MapState {
   };
 
   render = () => {
-    // Cache camera state once per frame to avoid repeated property access and allocations
     const cam = this.camera;
-    const camPos = cam.position; // safe to reuse directly
-    const camUp = cam.up; // copy into sys.up below to avoid reassigning vector instances
+    const camPos = cam.position;
     const visDistSq = VISIBILITY_DISTANCE * VISIBILITY_DISTANCE;
 
-    for (const sys of this.systems) {
-      // Face each system toward the camera without cloning per iteration
-      sys.lookAt(camPos);
-      // Avoid allocating a new Vector3; copy values into existing up vector
-      sys.up.copy(camUp);
-
-      const labels = this.labelRefs.get(sys);
-      if (labels) {
-        const nearCamera = sys.position.distanceToSquared(camPos) < visDistSq;
-        const nameEl = labels.nameEl;
-        const planetEl = labels.planetEl;
-        if (nearCamera) {
-          if (nameEl.className !== "invis") nameEl.className = "invis";
-          if (planetEl && planetEl.className !== "invis") planetEl.className = "invis";
-        } else {
-          if (nameEl.className !== "starText") nameEl.className = "starText";
-          if (planetEl && planetEl.className !== "planetText") planetEl.className = "planetText";
+    for (const sprite of this.systems) {
+      const refs = this.labelRefs.get(sprite);
+      if (refs) {
+        const nearCamera = sprite.position.distanceToSquared(camPos) < visDistSq;
+        refs.label.element.className = nearCamera ? "invis" : "starLabel";
+        if (refs.planetLabel) {
+          refs.planetLabel.element.className = nearCamera ? "invis" : "planetLabel";
         }
       }
     }
+
     this.renderer.render(this.scene, cam);
+    this.labelRenderer.render(this.scene, cam);
   };
 
   focusOnSystem = (name: string): boolean => {
@@ -208,16 +231,30 @@ export class MapStateImpl implements MapState {
     const idx = this.systemsData.findIndex((s) => s.sysName.toLowerCase().includes(query));
     if (idx === -1) return false;
 
-    // Un-highlight the previously focused star
-    if (this.highlightedStar) {
-      this.highlightedStar.element.classList.remove("highlighted");
+    // Remove previous glow
+    if (this.glowSprite) {
+      this.scene.remove(this.glowSprite);
+      (this.glowSprite.material as THREE.SpriteMaterial).dispose();
+      this.glowSprite = null;
     }
 
     const star = this.systems[idx];
-    star.element.classList.add("highlighted");
     this.highlightedStar = star;
 
-    // Move the controls target to the system and position the camera above it
+    // Add additive glow sprite
+    const glowMaterial = new THREE.SpriteMaterial({
+      map: (star.material as THREE.SpriteMaterial).map,
+      color: 0x88ccff,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.7,
+      depthWrite: false,
+    });
+    this.glowSprite = new THREE.Sprite(glowMaterial);
+    this.glowSprite.scale.setScalar(star.scale.x * 2.5);
+    this.glowSprite.position.copy(star.position);
+    this.scene.add(this.glowSprite);
+
     this.controls.target.copy(star.position);
     this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
     this.controls.update();

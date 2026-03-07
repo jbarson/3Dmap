@@ -16,12 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
       for (let n = 0; n < jumpList.length; n++) {
-        if (jumpList[n].year >= dateVal) {
-          mapState.links[n].element.classList.add("undiscovered");
-        }
-        if (jumpList[n].year <= dateVal) {
-          mapState.links[n].element.classList.remove("undiscovered");
-        }
+        const mat = mapState.links[n].material as import("three").LineBasicMaterial;
+        mat.opacity = jumpList[n].year >= dateVal ? 0 : 1;
+        mapState.links[n].visible = jumpList[n].year < dateVal;
       }
     });
   }

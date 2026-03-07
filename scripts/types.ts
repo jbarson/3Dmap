@@ -13,7 +13,7 @@ export interface System {
 
 export type JumpType = "A" | "B" | "G" | "D" | "E";
 
-// Mapping from jump type to CSS class name used when rendering links
+// JUMP_TYPE_CLASS kept for any legacy CSS references (unused in WebGL renderer)
 export const JUMP_TYPE_CLASS: Record<JumpType, string> = {
   A: "alpha",
   B: "beta",
@@ -43,27 +43,23 @@ export interface ValidationResult {
 
 // Shared app state type used in app.ts
 export type MapState = {
-  systems: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DObject[];
-  links: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DObject[];
-  alphaLinks: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DObject[];
-  betaLinks: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DObject[];
-  gammaLinks: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DObject[];
-  deltaLinks: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DObject[];
-  epsiLinks: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DObject[];
+  systems: import("three").Sprite[];
+  links: import("three").Line[];
+  alphaLinks: import("three").Line[];
+  betaLinks: import("three").Line[];
+  gammaLinks: import("three").Line[];
+  deltaLinks: import("three").Line[];
+  epsiLinks: import("three").Line[];
   linkTypes: HTMLInputElement[];
   alphaCheckbox: HTMLInputElement | null;
   betaCheckbox: HTMLInputElement | null;
   gammaCheckbox: HTMLInputElement | null;
   deltaCheckbox: HTMLInputElement | null;
   epsiCheckbox: HTMLInputElement | null;
-  tmpVec1: import("three").Vector3;
-  tmpVec2: import("three").Vector3;
-  tmpVec3: import("three").Vector3;
-  tmpVec4: import("three").Vector3;
   Scale: number;
   camera: import("three").PerspectiveCamera;
   scene: import("three").Scene;
-  renderer: import("three/examples/jsm/renderers/CSS3DRenderer.js").CSS3DRenderer;
+  renderer: import("three").WebGLRenderer;
   controls: import("three/examples/jsm/controls/TrackballControls.js").TrackballControls;
   onWindowResize: () => void;
   animate: () => void;
