@@ -3,7 +3,7 @@ import { TrackballControls } from "three/examples/jsm/controls/TrackballControls
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { Jump, MapState, System, JumpType } from "./types";
 import { buildStarSprite } from "./utils/scene";
-import { debounce } from "./utils/debounce";
+import { debounce, type DebouncedFn } from "./utils/debounce";
 import {
   CAMERA_FAR,
   CAMERA_FOV,
@@ -41,7 +41,7 @@ export class MapStateImpl implements MapState {
   private labelRenderer!: CSS2DRenderer;
   private systemsData: System[];
   private jumpData: Jump[];
-  private debouncedResize: () => void;
+  private debouncedResize: DebouncedFn<() => void>;
   private eventListeners: Array<{ element: EventTarget; event: string; handler: EventListener }> =
     [];
   // Maps sprite → its CSS2DObject label elements for visibility toggling
@@ -52,8 +52,9 @@ export class MapStateImpl implements MapState {
       planetLabel?: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject;
     }
   >();
-  private highlightedStar: THREE.Sprite | null = null;
   private glowSprite: THREE.Sprite | null = null;
+  private bgPoints: THREE.Points | null = null;
+  private typeMaterials = new Map<JumpType, THREE.LineBasicMaterial>();
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
@@ -71,17 +72,33 @@ export class MapStateImpl implements MapState {
   }
 
   cleanup = () => {
+    this.debouncedResize.cancel();
     for (const { element, event, handler } of this.eventListeners) {
       element.removeEventListener(event, handler);
     }
     this.eventListeners = [];
+    this.controls.dispose();
     for (const sprite of this.systems) {
       (sprite.material as THREE.SpriteMaterial).dispose();
     }
     for (const line of this.links) {
       line.geometry.dispose();
-      (line.material as THREE.LineBasicMaterial).dispose();
     }
+    // Dispose shared per-type materials
+    for (const mat of this.typeMaterials.values()) {
+      mat.dispose();
+    }
+    if (this.glowSprite) {
+      this.scene.remove(this.glowSprite);
+      (this.glowSprite.material as THREE.SpriteMaterial).dispose();
+      this.glowSprite = null;
+    }
+    if (this.bgPoints) {
+      this.bgPoints.geometry.dispose();
+      (this.bgPoints.material as THREE.PointsMaterial).dispose();
+    }
+    this.renderer.domElement.remove();
+    this.labelRenderer.domElement.remove();
     this.renderer.dispose();
   };
 
@@ -136,7 +153,8 @@ export class MapStateImpl implements MapState {
       transparent: true,
       opacity: 0.6,
     });
-    this.scene.add(new THREE.Points(bgGeometry, bgMaterial));
+    this.bgPoints = new THREE.Points(bgGeometry, bgMaterial);
+    this.scene.add(this.bgPoints);
 
     // --- Star sprites ---
     for (const system of this.systemsData) {
@@ -174,12 +192,17 @@ export class MapStateImpl implements MapState {
       const endPos = this.systems[toIdx].position;
       const points = [startPos.clone(), endPos.clone()];
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const material = new THREE.LineBasicMaterial({
-        color: JUMP_TYPE_COLOR[jump.type],
-        transparent: true,
-        opacity: 1.0,
-      });
-      const line = new THREE.Line(geometry, material);
+      if (!this.typeMaterials.has(jump.type)) {
+        this.typeMaterials.set(
+          jump.type,
+          new THREE.LineBasicMaterial({
+            color: JUMP_TYPE_COLOR[jump.type],
+            transparent: true,
+            opacity: 1.0,
+          }),
+        );
+      }
+      const line = new THREE.Line(geometry, this.typeMaterials.get(jump.type)!);
       typeToList[jump.type].push(line);
       this.scene.add(line);
       this.links.push(line);
@@ -217,9 +240,15 @@ export class MapStateImpl implements MapState {
       const refs = this.labelRefs.get(sprite);
       if (refs) {
         const nearCamera = sprite.position.distanceToSquared(camPos) < visDistSq;
-        refs.label.element.className = nearCamera ? "invis" : "starLabel";
+        const labelClass = nearCamera ? "invis" : "starLabel";
+        if (refs.label.element.className !== labelClass) {
+          refs.label.element.className = labelClass;
+        }
         if (refs.planetLabel) {
-          refs.planetLabel.element.className = nearCamera ? "invis" : "planetLabel";
+          const planetLabelClass = nearCamera ? "invis" : "planetLabel";
+          if (refs.planetLabel.element.className !== planetLabelClass) {
+            refs.planetLabel.element.className = planetLabelClass;
+          }
         }
       }
     }
@@ -242,7 +271,6 @@ export class MapStateImpl implements MapState {
     }
 
     const star = this.systems[idx];
-    this.highlightedStar = star;
 
     // Add additive glow sprite
     const glowMaterial = new THREE.SpriteMaterial({
