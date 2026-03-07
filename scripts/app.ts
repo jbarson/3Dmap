@@ -7,6 +7,9 @@ import { MapStateImpl } from "./mapState";
 document.addEventListener("DOMContentLoaded", () => {
   // One-time data validation for developer visibility in console
   validateData(systemsArr, jumpList);
+
+  const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
+
   //the following is to link the slider with the text box*/
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
@@ -16,16 +19,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
       for (let n = 0; n < jumpList.length; n++) {
-        if (jumpList[n].year >= dateVal) {
-          mapState.links[n].element.classList.add("undiscovered");
-        }
-        if (jumpList[n].year <= dateVal) {
-          mapState.links[n].element.classList.remove("undiscovered");
-        }
+        // Treat links from the selected year as discovered; hide only strictly later years
+        const mat = mapState.links[n].material as import("three").LineBasicMaterial;
+        mat.opacity = jumpList[n].year > dateVal ? 0 : 1;
       }
     });
   }
-  const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
   mapState.linkTypes = [];
   mapState.alphaCheckbox = document.getElementById("alphaLink") as HTMLInputElement | null;
   mapState.betaCheckbox = document.getElementById("betaLink") as HTMLInputElement | null;
@@ -81,6 +80,28 @@ document.addEventListener("DOMContentLoaded", () => {
     mapState.epsiCheckbox.addEventListener("change", function () {
       mapState.toggleEpsi();
     });
+  // Search box: focus camera on the named system
+  const systemSearch = document.getElementById("systemSearch") as HTMLInputElement | null;
+  const systemSearchBtn = document.getElementById("systemSearchBtn");
+  const searchStatus = document.getElementById("searchStatus");
+
+  function runSearch() {
+    if (!systemSearch) return;
+    const found = mapState.focusOnSystem(systemSearch.value);
+    if (searchStatus) {
+      searchStatus.textContent = found
+        ? `Focused on "${systemSearch.value}"`
+        : `System "${systemSearch.value}" not found`;
+    }
+  }
+
+  if (systemSearchBtn) systemSearchBtn.addEventListener("click", runSearch);
+  if (systemSearch) {
+    systemSearch.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter") runSearch();
+    });
+  }
+
   // MapStateImpl encapsulates init/render/animate and link toggles
   mapState.init();
   mapState.animate();

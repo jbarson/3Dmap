@@ -42,6 +42,7 @@ Then open http://localhost:5173 in your browser.
 - Date slider: scrub to mark future links as “undiscovered”
 
 Data sources:
+
 - Systems: `scripts/systemsList.ts`
 - Jumps: `scripts/jumpLinks.ts`
 
@@ -66,6 +67,7 @@ npm run format     # prettier write
 - Lint/Format: [eslint], [@eslint/js], [typescript-eslint], [prettier]
 
 Key files:
+
 - `vite.config.js` — Vite (and Vitest) config
 - `tsconfig.json` — TypeScript compiler options (includes `scripts/`)
 - `eslint.config.mjs` — Flat ESLint config (JS + TS + Prettier)
@@ -73,9 +75,9 @@ Key files:
 ## Configuration
 
 - Dev server: Vite defaults to port 5173. You can pass a port, e.g.:
-	```bash
-	npm run dev -- --port 5174
-	```
+  ```bash
+  npm run dev -- --port 5174
+  ```
 - No environment variables are required by default.
 
 ## Testing
@@ -93,11 +95,12 @@ npm run test:watch # watch mode
 - Commits: concise, imperative (e.g., `feat: add star label helper`)
 - Lint/format before pushing: `npm run lint && npm run format`
 - Pull Requests: use the template and include a closing keyword, e.g.:
-	- `Fixed issue #<number>` (auto-closes on merge)
+  - `Fixed issue #<number>` (auto-closes on merge)
 
 ## CI
 
 GitHub Actions workflow at `.github/workflows/ci.yml` runs on push/PR:
+
 - Install dependencies: `npm ci`
 - Lint: `npm run lint:ci`
 - Tests: `npm test -- --run`
@@ -108,6 +111,7 @@ GitHub Actions workflow at `.github/workflows/ci.yml` runs on push/PR:
 ISC. See `package.json`.
 
 <!-- references -->
+
 [three]: https://threejs.org/
 [vite]: https://vitejs.dev/
 [typescript]: https://www.typescriptlang.org/
