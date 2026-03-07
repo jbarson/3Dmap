@@ -11,13 +11,7 @@ import prettier from "eslint-plugin-prettier";
 export default [
   // Ignore build artifacts and generated types
   {
-    ignores: [
-      "dist/**",
-      "node_modules/**",
-      "coverage/**",
-      "**/*.d.ts",
-      ".eslintrc.cjs",
-    ],
+    ignores: ["dist/**", "node_modules/**", "coverage/**", "**/*.d.ts", ".eslintrc.cjs"],
   },
 
   // JavaScript rules
@@ -40,9 +34,9 @@ export default [
   {
     files: [
       "**/*.config.{js,cjs,mjs,ts}",
-  "**/*.config.json",
-  "**/*.config.yaml",
-  "**/*.config.yml",
+      "**/*.config.json",
+      "**/*.config.yaml",
+      "**/*.config.yml",
       "vite.config.js",
       "eslint.config.mjs",
     ],

@@ -11,16 +11,16 @@ GPU **Sprites**, links become **Lines**, and a procedural starfield background i
 
 ## Architecture Change Summary
 
-| Concern         | Before (CSS3D)                         | After (WebGL)                                    |
-|-----------------|----------------------------------------|--------------------------------------------------|
-| Renderer        | CSS3DRenderer                          | WebGLRenderer + CSS2DRenderer overlay            |
-| Stars           | `<div>` + `<img>` PNG via CSS3DObject  | THREE.Sprite with SpriteMaterial (PNG textures)  |
-| Links           | `<div>` sized/colored via CSS          | THREE.LineSegments (BufferGeometry)              |
-| Labels          | `<div>` children of the star div       | CSS2DObject (HTML div, projected by CSS2DRenderer) |
-| Visibility      | `classList.toggle('hidden')`           | `object.visible = false`                         |
-| Highlight       | CSS `drop-shadow` filter               | Additive glow sprite layered over the star       |
-| Background      | Black `body` background                | THREE.Points starfield (random positions)        |
-| Toggle undiscovered | `classList.add('undiscovered')`    | `material.opacity = 0` + transition via animate  |
+| Concern             | Before (CSS3D)                        | After (WebGL)                                      |
+| ------------------- | ------------------------------------- | -------------------------------------------------- |
+| Renderer            | CSS3DRenderer                         | WebGLRenderer + CSS2DRenderer overlay              |
+| Stars               | `<div>` + `<img>` PNG via CSS3DObject | THREE.Sprite with SpriteMaterial (PNG textures)    |
+| Links               | `<div>` sized/colored via CSS         | THREE.LineSegments (BufferGeometry)                |
+| Labels              | `<div>` children of the star div      | CSS2DObject (HTML div, projected by CSS2DRenderer) |
+| Visibility          | `classList.toggle('hidden')`          | `object.visible = false`                           |
+| Highlight           | CSS `drop-shadow` filter              | Additive glow sprite layered over the star         |
+| Background          | Black `body` background               | THREE.Points starfield (random positions)          |
+| Toggle undiscovered | `classList.add('undiscovered')`       | `material.opacity = 0` + transition via animate    |
 
 ---
 
@@ -49,6 +49,7 @@ Remove imports of `CSS3DObject` and `CSS3DRenderer`.
 Add imports of `CSS2DObject`, `CSS2DRenderer` from `three/examples/jsm/renderers/CSS2DRenderer.js`.
 
 Change class fields:
+
 - Remove `systems: CSS3DObject[]`, `links: CSS3DObject[]`, and per-type link arrays typed as
   `CSS3DObject[]`.
 - Add `systems: THREE.Sprite[]`, `links: THREE.Line[]`, and per-type arrays typed as
@@ -98,7 +99,7 @@ Replace `buildLinkElement` calls with direct `THREE.Line` construction:
 const points = [startPos.clone(), endPos.clone()];
 const geometry = new THREE.BufferGeometry().setFromPoints(points);
 const material = new THREE.LineBasicMaterial({
-  color: JUMP_TYPE_COLOR[jumpType],   // new color constant map
+  color: JUMP_TYPE_COLOR[jumpType], // new color constant map
   transparent: true,
   opacity: 1.0,
 });
@@ -109,11 +110,11 @@ Add `JUMP_TYPE_COLOR` constant map to `config.ts`:
 
 ```typescript
 export const JUMP_TYPE_COLOR: Record<JumpType, number> = {
-  A: 0x4444ff,   // blue
-  B: 0x9933cc,   // purple
-  G: 0xe68949,   // orange
-  D: 0xfae75e,   // yellow
-  E: 0x65b657,   // green
+  A: 0x4444ff, // blue
+  B: 0x9933cc, // purple
+  G: 0xe68949, // orange
+  D: 0xfae75e, // yellow
+  E: 0x65b657, // green
 };
 ```
 
@@ -285,16 +286,16 @@ Update `css/style.css`:
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `index.html` | Add `<div id="labels">` overlay |
-| `css/style.css` | Remove CSS3D rules; add label overlay and `.label`/`.planetLabel` styles |
-| `scripts/config.ts` | Add `JUMP_TYPE_COLOR` map; remove `LINK_SHRINK` |
-| `scripts/types.ts` | Update `MapState` type (Sprite/Line instead of CSS3DObject) |
-| `scripts/mapState.ts` | Replace CSS3DRenderer with WebGLRenderer + CSS2DRenderer; rewrite init/render/cleanup |
-| `scripts/utils/scene.ts` | New file: `buildStarSprite()` replacing `buildStarElement()` |
-| `scripts/utils/dom.ts` | Remove `buildStarElement` and `buildLinkElement`; delete if empty |
-| `scripts/app.ts` | Update date-slider handler to set `material.opacity` instead of classList |
+| File                     | Change                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `index.html`             | Add `<div id="labels">` overlay                                                       |
+| `css/style.css`          | Remove CSS3D rules; add label overlay and `.label`/`.planetLabel` styles              |
+| `scripts/config.ts`      | Add `JUMP_TYPE_COLOR` map; remove `LINK_SHRINK`                                       |
+| `scripts/types.ts`       | Update `MapState` type (Sprite/Line instead of CSS3DObject)                           |
+| `scripts/mapState.ts`    | Replace CSS3DRenderer with WebGLRenderer + CSS2DRenderer; rewrite init/render/cleanup |
+| `scripts/utils/scene.ts` | New file: `buildStarSprite()` replacing `buildStarElement()`                          |
+| `scripts/utils/dom.ts`   | Remove `buildStarElement` and `buildLinkElement`; delete if empty                     |
+| `scripts/app.ts`         | Update date-slider handler to set `material.opacity` instead of classList             |
 
 ---
 

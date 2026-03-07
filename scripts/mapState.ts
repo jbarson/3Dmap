@@ -47,7 +47,10 @@ export class MapStateImpl implements MapState {
   // Maps sprite → its CSS2DObject label elements for visibility toggling
   private labelRefs = new WeakMap<
     THREE.Sprite,
-    { label: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject; planetLabel?: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject }
+    {
+      label: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject;
+      planetLabel?: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject;
+    }
   >();
   private highlightedStar: THREE.Sprite | null = null;
   private glowSprite: THREE.Sprite | null = null;
