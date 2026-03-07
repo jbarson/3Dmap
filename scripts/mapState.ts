@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { Jump, MapState, System, JumpType } from "./types";
-import { buildStarSprite } from "./utils/scene";
+import { buildStarSprite, computeLabelMarginTop } from "./utils/scene";
 import { debounce, type DebouncedFn } from "./utils/debounce";
 import {
   CAMERA_FAR,
@@ -259,9 +259,7 @@ export class MapStateImpl implements MapState {
           const scale = Math.max(0.4, Math.min(2.5, CAMERA_START_Z / dist));
           const fontSize = Math.round(5 * scale);
           refs.label.element.style.fontSize = `${fontSize}px`;
-          // Push label below the sprite's visible edge (~25% of geometric sprite radius)
-          const screenRadius = (sprite.scale.x * viewH) / (8 * dist * tanHalfFov);
-          const marginTop = Math.round(screenRadius + 4);
+          const marginTop = computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov);
           refs.label.element.style.marginTop = `${marginTop}px`;
           if (refs.planetLabel) {
             refs.planetLabel.element.style.fontSize = `${Math.round(4 * scale)}px`;

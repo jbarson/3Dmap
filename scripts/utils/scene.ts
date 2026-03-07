@@ -81,3 +81,23 @@ export function buildStarSprite(system: System): {
 
   return { sprite, label, planetLabel };
 }
+
+/**
+ * Computes the CSS margin-top (px) to push a label just below the star's
+ * visible edge. Pure function so it can be unit-tested independently.
+ *
+ * @param spriteScaleX  sprite.scale.x (world-space sprite diameter)
+ * @param viewHeight    viewport height in pixels
+ * @param dist          distance from camera to sprite in world units
+ * @param tanHalfFov    Math.tan(cameraFovDegrees * Math.PI / 360)
+ * @param fontSize      current label font size in px (used to stack planet label)
+ */
+export function computeLabelMarginTop(
+  spriteScaleX: number,
+  viewHeight: number,
+  dist: number,
+  tanHalfFov: number,
+): number {
+  const screenRadius = (spriteScaleX * viewHeight) / (8 * dist * tanHalfFov);
+  return Math.round(screenRadius + 4);
+}
