@@ -1,8 +1,28 @@
-import { expect, test, vi } from "vitest";
+import { expect, test, describe, vi } from "vitest";
 import { debounce } from "./utils/debounce";
+import { MapStateImpl } from "./mapState";
+import { systemsArr } from "./systemsList";
+import { jumpList } from "./jumpLinks";
 
 test("sanity check", () => {
   expect(true).toBe(true);
+});
+
+describe("MapStateImpl construction order", () => {
+  test("links array is accessible immediately after construction, before init()", () => {
+    // Regression: mapState was previously declared after event listeners were
+    // registered, so the slider change handler could reference an uninitialised
+    // binding. mapState must be constructed first so .links is always reachable.
+    const instance = new MapStateImpl(systemsArr, jumpList);
+    expect(instance.links).toBeDefined();
+    expect(Array.isArray(instance.links)).toBe(true);
+  });
+
+  test("systems array is accessible immediately after construction", () => {
+    const instance = new MapStateImpl(systemsArr, jumpList);
+    expect(instance.systems).toBeDefined();
+    expect(Array.isArray(instance.systems)).toBe(true);
+  });
 });
 
 test("debounce function delays execution and only calls function once after multiple rapid calls", async () => {

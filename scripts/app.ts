@@ -7,6 +7,9 @@ import { MapStateImpl } from "./mapState";
 document.addEventListener("DOMContentLoaded", () => {
   // One-time data validation for developer visibility in console
   validateData(systemsArr, jumpList);
+
+  const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
+
   //the following is to link the slider with the text box*/
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
@@ -22,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-  const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
   mapState.linkTypes = [];
   mapState.alphaCheckbox = document.getElementById("alphaLink") as HTMLInputElement | null;
   mapState.betaCheckbox = document.getElementById("betaLink") as HTMLInputElement | null;
