@@ -271,11 +271,7 @@ export class MapStateImpl implements MapState {
           const planetMarginTop = `${computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov) + Math.round(5 * scale) + 2}px`;
 
           const cached = this.labelStyles.get(sprite);
-          if (
-            !cached ||
-            cached.fontSize !== fontSize ||
-            cached.marginTop !== marginTop
-          ) {
+          if (!cached || cached.fontSize !== fontSize || cached.marginTop !== marginTop) {
             refs.label.element.style.fontSize = fontSize;
             refs.label.element.style.marginTop = marginTop;
           }

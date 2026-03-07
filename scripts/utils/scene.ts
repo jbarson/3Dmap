@@ -86,10 +86,7 @@ export function buildStarSprite(system: System): {
  * Returns true when a label style string has changed from its cached value,
  * indicating a DOM write is needed. Pure function for testability.
  */
-export function labelStyleChanged(
-  cached: string | undefined,
-  next: string,
-): boolean {
+export function labelStyleChanged(cached: string | undefined, next: string): boolean {
   return cached !== next;
 }
 

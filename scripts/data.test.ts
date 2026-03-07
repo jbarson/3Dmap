@@ -8,7 +8,10 @@ describe("data integrity", () => {
     const result = validateData(systemsArr, jumpList);
     if (!result.valid) {
       const details = result.invalidJumps
-        .map((j) => `  [${j.bridge}] type=${j.type} year=${j.year} (from=${j.fromFound ? "ok" : "MISSING"}, to=${j.toFound ? "ok" : "MISSING"})`)
+        .map(
+          (j) =>
+            `  [${j.bridge}] type=${j.type} year=${j.year} (from=${j.fromFound ? "ok" : "MISSING"}, to=${j.toFound ? "ok" : "MISSING"})`,
+        )
         .join("\n");
       throw new Error(`${result.invalidCount} invalid jump(s):\n${details}`);
     }
