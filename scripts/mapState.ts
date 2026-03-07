@@ -235,11 +235,15 @@ export class MapStateImpl implements MapState {
     const cam = this.camera;
     const camPos = cam.position;
     const visDistSq = VISIBILITY_DISTANCE * VISIBILITY_DISTANCE;
+    // Precompute tan(FOV/2) to convert world-space sprite radius → screen pixels
+    const tanHalfFov = Math.tan((CAMERA_FOV * Math.PI) / 360);
+    const viewH = window.innerHeight;
 
     for (const sprite of this.systems) {
       const refs = this.labelRefs.get(sprite);
       if (refs) {
-        const nearCamera = sprite.position.distanceToSquared(camPos) < visDistSq;
+        const distSq = sprite.position.distanceToSquared(camPos);
+        const nearCamera = distSq < visDistSq;
         const labelClass = nearCamera ? "invis" : "starLabel";
         if (refs.label.element.className !== labelClass) {
           refs.label.element.className = labelClass;
@@ -248,6 +252,20 @@ export class MapStateImpl implements MapState {
           const planetLabelClass = nearCamera ? "invis" : "planetLabel";
           if (refs.planetLabel.element.className !== planetLabelClass) {
             refs.planetLabel.element.className = planetLabelClass;
+          }
+        }
+        if (!nearCamera) {
+          const dist = Math.sqrt(distSq);
+          const scale = Math.max(0.4, Math.min(2.5, CAMERA_START_Z / dist));
+          const fontSize = Math.round(5 * scale);
+          refs.label.element.style.fontSize = `${fontSize}px`;
+          // Push label below the sprite's visible edge (~25% of geometric sprite radius)
+          const screenRadius = (sprite.scale.x * viewH) / (8 * dist * tanHalfFov);
+          const marginTop = Math.round(screenRadius + 4);
+          refs.label.element.style.marginTop = `${marginTop}px`;
+          if (refs.planetLabel) {
+            refs.planetLabel.element.style.fontSize = `${Math.round(4 * scale)}px`;
+            refs.planetLabel.element.style.marginTop = `${marginTop + fontSize + 2}px`;
           }
         }
       }

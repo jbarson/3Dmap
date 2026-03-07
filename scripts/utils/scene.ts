@@ -61,7 +61,10 @@ export function buildStarSprite(system: System): {
   nameDiv.className = "starLabel";
   nameDiv.textContent = system.sysName;
   const label = new CSS2DObject(nameDiv);
-  label.position.set(0, -(size / 2 + 20), 0);
+  // Anchor at star center; center=(0.5,0) means top-edge of div is at the
+  // projected screen point, so the label always appears below the star.
+  label.position.set(0, 0, 0);
+  label.center.set(0.5, 0);
   sprite.add(label);
 
   // Optional planet label
@@ -71,7 +74,8 @@ export function buildStarSprite(system: System): {
     planetDiv.className = "planetLabel";
     planetDiv.textContent = system.planetName;
     planetLabel = new CSS2DObject(planetDiv);
-    planetLabel.position.set(0, -(size / 2 + 48), 0);
+    planetLabel.position.set(0, 0, 0);
+    planetLabel.center.set(0.5, 0);
     sprite.add(planetLabel);
   }
 
