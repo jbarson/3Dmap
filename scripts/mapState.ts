@@ -52,6 +52,12 @@ export class MapStateImpl implements MapState {
       planetLabel?: import("three/examples/jsm/renderers/CSS2DRenderer.js").CSS2DObject;
     }
   >();
+
+  // Cache of last-written label style values to avoid redundant DOM writes
+  private labelStyles = new WeakMap<
+    THREE.Sprite,
+    { fontSize: string; marginTop: string; planetFontSize: string; planetMarginTop: string }
+  >();
   private glowSprite: THREE.Sprite | null = null;
 
   // Derived constants — computed once from config, reused every frame
@@ -259,14 +265,31 @@ export class MapStateImpl implements MapState {
         if (!nearCamera) {
           const dist = Math.sqrt(distSq);
           const scale = Math.max(0.4, Math.min(2.5, CAMERA_START_Z / dist));
-          const fontSize = Math.round(5 * scale);
-          refs.label.element.style.fontSize = `${fontSize}px`;
-          const marginTop = computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov);
-          refs.label.element.style.marginTop = `${marginTop}px`;
-          if (refs.planetLabel) {
-            refs.planetLabel.element.style.fontSize = `${Math.round(4 * scale)}px`;
-            refs.planetLabel.element.style.marginTop = `${marginTop + fontSize + 2}px`;
+          const fontSize = `${Math.round(5 * scale)}px`;
+          const marginTop = `${computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov)}px`;
+          const planetFontSize = `${Math.round(4 * scale)}px`;
+          const planetMarginTop = `${computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov) + Math.round(5 * scale) + 2}px`;
+
+          const cached = this.labelStyles.get(sprite);
+          if (
+            !cached ||
+            cached.fontSize !== fontSize ||
+            cached.marginTop !== marginTop
+          ) {
+            refs.label.element.style.fontSize = fontSize;
+            refs.label.element.style.marginTop = marginTop;
           }
+          if (refs.planetLabel) {
+            if (
+              !cached ||
+              cached.planetFontSize !== planetFontSize ||
+              cached.planetMarginTop !== planetMarginTop
+            ) {
+              refs.planetLabel.element.style.fontSize = planetFontSize;
+              refs.planetLabel.element.style.marginTop = planetMarginTop;
+            }
+          }
+          this.labelStyles.set(sprite, { fontSize, marginTop, planetFontSize, planetMarginTop });
         }
       }
     }

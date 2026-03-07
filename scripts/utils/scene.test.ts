@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeLabelMarginTop } from "./scene";
+import { computeLabelMarginTop, labelStyleChanged } from "./scene";
 
 const tanHalfFov = Math.tan((60 * Math.PI) / 360); // tan(30°) ≈ 0.577
 
@@ -30,5 +30,23 @@ describe("computeLabelMarginTop", () => {
     const small = computeLabelMarginTop(200, 400, 3000, tanHalfFov);
     const large = computeLabelMarginTop(200, 800, 3000, tanHalfFov);
     expect(large).toBeGreaterThan(small);
+  });
+});
+
+describe("labelStyleChanged", () => {
+  it("returns true when there is no cached value", () => {
+    expect(labelStyleChanged(undefined, "12px")).toBe(true);
+  });
+
+  it("returns true when the value has changed", () => {
+    expect(labelStyleChanged("10px", "12px")).toBe(true);
+  });
+
+  it("returns false when the value is unchanged", () => {
+    expect(labelStyleChanged("12px", "12px")).toBe(false);
+  });
+
+  it("treats different numeric representations as changed", () => {
+    expect(labelStyleChanged("12.0px", "12px")).toBe(true);
   });
 });
