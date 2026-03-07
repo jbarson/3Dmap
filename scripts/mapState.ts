@@ -51,6 +51,7 @@ export class MapStateImpl implements MapState {
     CSS3DObject,
     { nameEl: HTMLDivElement; planetEl?: HTMLDivElement }
   >();
+  private highlightedStar: CSS3DObject | null = null;
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
@@ -199,5 +200,28 @@ export class MapStateImpl implements MapState {
       }
     }
     this.renderer.render(this.scene, cam);
+  };
+
+  focusOnSystem = (name: string): boolean => {
+    const query = name.toLowerCase().trim();
+    if (!query) return false;
+    const idx = this.systemsData.findIndex((s) => s.sysName.toLowerCase().includes(query));
+    if (idx === -1) return false;
+
+    // Un-highlight the previously focused star
+    if (this.highlightedStar) {
+      this.highlightedStar.element.classList.remove("highlighted");
+    }
+
+    const star = this.systems[idx];
+    star.element.classList.add("highlighted");
+    this.highlightedStar = star;
+
+    // Move the controls target to the system and position the camera above it
+    this.controls.target.copy(star.position);
+    this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
+    this.controls.update();
+    this.render();
+    return true;
   };
 }

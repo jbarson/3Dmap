@@ -81,6 +81,28 @@ document.addEventListener("DOMContentLoaded", () => {
     mapState.epsiCheckbox.addEventListener("change", function () {
       mapState.toggleEpsi();
     });
+  // Search box: focus camera on the named system
+  const systemSearch = document.getElementById("systemSearch") as HTMLInputElement | null;
+  const systemSearchBtn = document.getElementById("systemSearchBtn");
+  const searchStatus = document.getElementById("searchStatus");
+
+  function runSearch() {
+    if (!systemSearch) return;
+    const found = mapState.focusOnSystem(systemSearch.value);
+    if (searchStatus) {
+      searchStatus.textContent = found
+        ? `Focused on "${systemSearch.value}"`
+        : `System "${systemSearch.value}" not found`;
+    }
+  }
+
+  if (systemSearchBtn) systemSearchBtn.addEventListener("click", runSearch);
+  if (systemSearch) {
+    systemSearch.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter") runSearch();
+    });
+  }
+
   // MapStateImpl encapsulates init/render/animate and link toggles
   mapState.init();
   mapState.animate();

@@ -75,6 +75,7 @@ export type MapState = {
   toggleEpsi: () => void;
   init: () => void;
   cleanup: () => void;
+  focusOnSystem: (name: string) => boolean;
 };
 
 // Build a Set of valid system IDs for quick membership checks

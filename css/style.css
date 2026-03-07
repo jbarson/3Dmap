@@ -186,3 +186,48 @@ h2 {
   -o-transition: all 0.1s ease-out;
   transition: all 0.1s ease-out;
 }
+
+/* Search box */
+.searchDiv {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 2px;
+}
+#systemSearch {
+  background: #333;
+  border: 1px solid #888;
+  border-radius: 3px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9em;
+  padding: 3px 6px;
+  width: 130px;
+}
+#systemSearch::placeholder {
+  color: #aaa;
+}
+#systemSearchBtn {
+  background: #555;
+  border: 1px solid #888;
+  border-radius: 3px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9em;
+  padding: 3px 8px;
+}
+#systemSearchBtn:hover {
+  background: #777;
+}
+#searchStatus {
+  font-size: 0.8em;
+  color: #ccc;
+  margin-left: 4px;
+}
+
+/* Highlighted (searched) star */
+.starDiv.highlighted img {
+  filter: drop-shadow(0 0 10px #fff) drop-shadow(0 0 20px #7af);
+  transition: filter 0.3s ease-out;
+}
