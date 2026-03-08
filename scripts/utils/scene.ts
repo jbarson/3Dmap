@@ -14,28 +14,46 @@ const STAR_SIZE: Record<string, number> = {
 
 const DEFAULT_STAR_SIZE = 100;
 
-// One shared TextureLoader instance; cache textures so each PNG is loaded once
-const textureLoader = new THREE.TextureLoader();
-const textureCache = new Map<string, THREE.Texture>();
+// Spectral colours: [core rgba, mid rgba] — outer edge is always transparent
+const STAR_COLORS: Record<string, [string, string]> = {
+  A: ["rgba(220,230,255,1)", "rgba(100,140,255,0.6)"], // blue-white
+  F: ["rgba(255,255,230,1)", "rgba(255,240,140,0.6)"], // yellow-white
+  G: ["rgba(255,255,200,1)", "rgba(255,200,50,0.6)"],  // yellow  (Sun-like)
+  K: ["rgba(255,220,160,1)", "rgba(255,130,40,0.6)"],  // orange
+  M: ["rgba(255,180,160,1)", "rgba(220,60,30,0.6)"],   // red
+  D: ["rgba(210,220,255,1)", "rgba(120,140,200,0.6)"], // blue-grey dwarf
+};
+const DEFAULT_STAR_COLORS: [string, string] = ["rgba(255,255,255,1)", "rgba(180,180,180,0.6)"];
 
-function loadTexture(src: string): THREE.Texture {
-  let tex = textureCache.get(src);
-  if (!tex) {
-    tex = textureLoader.load(src);
-    textureCache.set(src, tex);
-  }
+// Cache canvas textures by spectral type key
+const canvasTextureCache = new Map<string, THREE.CanvasTexture>();
+
+function makeStarTexture(starType: string | undefined): THREE.CanvasTexture {
+  const key = starType ?? "";
+  let tex = canvasTextureCache.get(key);
+  if (tex) return tex;
+
+  const size = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const cx = size / 2;
+  const r = size / 2;
+
+  const [core, mid] = STAR_COLORS[key] ?? DEFAULT_STAR_COLORS;
+  const grad = ctx.createRadialGradient(cx, cx, 0, cx, cx, r);
+  grad.addColorStop(0, "rgba(255,255,255,1)"); // pure white hot centre
+  grad.addColorStop(0.15, core);
+  grad.addColorStop(0.45, mid);
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  tex = new THREE.CanvasTexture(canvas);
+  canvasTextureCache.set(key, tex);
   return tex;
-}
-
-function starTextureSrc(starType: string | undefined): string {
-  const t = starType?.toUpperCase();
-  if (t === "A") return "img/A-star.png";
-  if (t === "F") return "img/F-star.png";
-  if (t === "G") return "img/G-star.png";
-  if (t === "K") return "img/K-star.png";
-  if (t === "M") return "img/M-star.png";
-  if (t === "D") return "img/D-star.png";
-  return "img/spark1.png";
 }
 
 export function buildStarSprite(system: System): {
@@ -44,8 +62,7 @@ export function buildStarSprite(system: System): {
   planetLabel?: CSS2DObject;
 } {
   const starType = system.type?.[0]?.[0]?.toUpperCase();
-  const src = starTextureSrc(starType);
-  const texture = loadTexture(src);
+  const texture = makeStarTexture(starType);
   const material = new THREE.SpriteMaterial({
     map: texture,
     sizeAttenuation: true,
