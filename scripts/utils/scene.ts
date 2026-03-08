@@ -18,9 +18,9 @@ const DEFAULT_STAR_SIZE = 100;
 const STAR_COLORS: Record<string, [string, string]> = {
   A: ["rgba(220,230,255,1)", "rgba(100,140,255,0.6)"], // blue-white
   F: ["rgba(255,255,230,1)", "rgba(255,240,140,0.6)"], // yellow-white
-  G: ["rgba(255,255,200,1)", "rgba(255,200,50,0.6)"],  // yellow  (Sun-like)
-  K: ["rgba(255,220,160,1)", "rgba(255,130,40,0.6)"],  // orange
-  M: ["rgba(255,180,160,1)", "rgba(220,60,30,0.6)"],   // red
+  G: ["rgba(255,255,200,1)", "rgba(255,200,50,0.6)"], // yellow  (Sun-like)
+  K: ["rgba(255,220,160,1)", "rgba(255,130,40,0.6)"], // orange
+  M: ["rgba(255,180,160,1)", "rgba(220,60,30,0.6)"], // red
   D: ["rgba(210,220,255,1)", "rgba(120,140,200,0.6)"], // blue-grey dwarf
 };
 const DEFAULT_STAR_COLORS: [string, string] = ["rgba(255,255,255,1)", "rgba(180,180,180,0.6)"];
@@ -29,7 +29,7 @@ const DEFAULT_STAR_COLORS: [string, string] = ["rgba(255,255,255,1)", "rgba(180,
 const canvasTextureCache = new Map<string, THREE.CanvasTexture>();
 
 function makeStarTexture(starType: string | undefined): THREE.CanvasTexture {
-  const key = starType ?? "";
+  const key = (starType ?? "").trim().toUpperCase();
   let tex = canvasTextureCache.get(key);
   if (tex) return tex;
 
@@ -37,16 +37,25 @@ function makeStarTexture(starType: string | undefined): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error(
+      "makeStarTexture: Failed to obtain 2D rendering context. This environment may not support canvas.",
+    );
+  }
   const cx = size / 2;
   const r = size / 2;
 
   const [core, mid] = STAR_COLORS[key] ?? DEFAULT_STAR_COLORS;
+  const transparentMid = mid.replace(
+    /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,[^)]+\)/,
+    "rgba($1,$2,$3,0)",
+  );
   const grad = ctx.createRadialGradient(cx, cx, 0, cx, cx, r);
   grad.addColorStop(0, "rgba(255,255,255,1)"); // pure white hot centre
   grad.addColorStop(0.15, core);
   grad.addColorStop(0.45, mid);
-  grad.addColorStop(1, "rgba(0,0,0,0)");
+  grad.addColorStop(1, transparentMid);
 
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
