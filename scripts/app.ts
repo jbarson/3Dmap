@@ -3,6 +3,60 @@ import { jumpList } from "./jumpLinks";
 import { validateData } from "./types";
 import type { MapState } from "./types";
 import { MapStateImpl } from "./mapState";
+import { debounce } from "./utils/debounce";
+
+const DATE_DEFAULT = 2213;
+// Map checkbox element IDs to their link-type letters
+const LINK_CHECKBOX_IDS: { id: string; letter: string }[] = [
+  { id: "alphaLink", letter: "A" },
+  { id: "betaLink", letter: "B" },
+  { id: "gammaLink", letter: "G" },
+  { id: "deltaLink", letter: "D" },
+  { id: "epsiLink", letter: "E" },
+];
+
+// Build the hash string from current UI state (omit defaults)
+function buildHash(
+  dateSlider: HTMLInputElement | null,
+  linkCheckboxes: (HTMLInputElement | null)[],
+  focusedSystem: string,
+): string {
+  const params = new URLSearchParams();
+
+  // Comment 1: parse as integer and fall back to DATE_DEFAULT; also clamp to slider min/max
+  let dateVal = DATE_DEFAULT;
+  if (dateSlider) {
+    const parsed = Number.parseInt(dateSlider.value, 10);
+    dateVal = Number.isNaN(parsed) ? DATE_DEFAULT : parsed;
+    const sliderMin = dateSlider.min !== "" ? Number.parseInt(dateSlider.min, 10) : undefined;
+    const sliderMax = dateSlider.max !== "" ? Number.parseInt(dateSlider.max, 10) : undefined;
+    if (sliderMin !== undefined && Number.isFinite(sliderMin) && dateVal < sliderMin)
+      dateVal = sliderMin;
+    if (sliderMax !== undefined && Number.isFinite(sliderMax) && dateVal > sliderMax)
+      dateVal = sliderMax;
+  }
+  if (dateVal !== DATE_DEFAULT) {
+    params.set("date", String(dateVal));
+  }
+
+  if (focusedSystem) {
+    params.set("focus", focusedSystem);
+  }
+
+  // Comment 4: "Hide Hyper Links" checkboxes — checked = hidden.
+  // Default state is no boxes checked (all links visible).
+  // Encode links param only when some boxes are checked (some links hidden).
+  const checkedLetters = LINK_CHECKBOX_IDS.filter((_, i) => linkCheckboxes[i]?.checked).map(
+    (x) => x.letter,
+  );
+  // Only encode when non-default (some links hidden)
+  if (checkedLetters.length > 0) {
+    params.set("links", checkedLetters.join(","));
+  }
+
+  const str = params.toString();
+  return str ? str : "";
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   // One-time data validation for developer visibility in console
@@ -74,26 +128,51 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Comment 3: use .map() to preserve index alignment with LINK_CHECKBOX_IDS
+  const linkCheckboxes = LINK_CHECKBOX_IDS.map(
+    ({ id }) => document.getElementById(id) as HTMLInputElement | null,
+  );
+
+  // Track the currently focused system name for hash serialization
+  let currentFocus = "";
+
+  // Debounced hash writer
+  const updateHash = debounce(() => {
+    const hash = buildHash(dateSlider, linkCheckboxes, currentFocus);
+    history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
+  }, 500);
+
   if (mapState.alphaCheckbox)
     mapState.alphaCheckbox.addEventListener("change", function () {
       mapState.toggleAlpha();
+      updateHash();
     });
   if (mapState.betaCheckbox)
     mapState.betaCheckbox.addEventListener("change", function () {
       mapState.toggleBeta();
+      updateHash();
     });
   if (mapState.gammaCheckbox)
     mapState.gammaCheckbox.addEventListener("change", function () {
       mapState.toggleGamma();
+      updateHash();
     });
   if (mapState.deltaCheckbox)
     mapState.deltaCheckbox.addEventListener("change", function () {
       mapState.toggleDelta();
+      updateHash();
     });
   if (mapState.epsiCheckbox)
     mapState.epsiCheckbox.addEventListener("change", function () {
       mapState.toggleEpsi();
+      updateHash();
     });
+
+  if (dateSlider) {
+    dateSlider.addEventListener("input", updateHash);
+  }
+
   // Search box: focus camera on the named system
   const systemSearch = document.getElementById("systemSearch") as HTMLInputElement | null;
   const systemSearchBtn = document.getElementById("systemSearchBtn");
@@ -107,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `Focused on "${systemSearch.value}"`
         : `System "${systemSearch.value}" not found`;
     }
+    // currentFocus and updateHash are handled by the onZoom callback
   }
 
   if (systemSearchBtn) systemSearchBtn.addEventListener("click", runSearch);
@@ -118,6 +198,59 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // MapStateImpl encapsulates init/render/animate and link toggles
   mapState.init();
+
+  // Comment 5: wire onZoom so label/Named Worlds clicks also update currentFocus + hash
+  mapState.onZoom = (idx) => {
+    currentFocus = systemsArr[idx]?.sysName ?? "";
+    updateHash();
+  };
+
+  // --- Restore state from URL hash ---
+  const rawHash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
+  if (rawHash) {
+    const params = new URLSearchParams(rawHash);
+
+    // Comment 2: validate dateParam is finite and clamp to slider min/max before applying
+    const dateParam = params.get("date");
+    if (dateParam !== null && dateSlider) {
+      const parsedDate = Number(dateParam);
+      if (Number.isFinite(parsedDate)) {
+        const min = dateSlider.min !== "" ? Number(dateSlider.min) : undefined;
+        const max = dateSlider.max !== "" ? Number(dateSlider.max) : undefined;
+        let clamped = parsedDate;
+        if (min !== undefined && Number.isFinite(min) && clamped < min) clamped = min;
+        if (max !== undefined && Number.isFinite(max) && clamped > max) clamped = max;
+        dateSlider.value = String(clamped);
+        dateSlider.dispatchEvent(new Event("input"));
+      }
+    }
+
+    // Restore link checkbox states
+    const linksParam = params.get("links");
+    if (linksParam !== null) {
+      const hiddenLetters = new Set(linksParam ? linksParam.split(",") : []);
+      LINK_CHECKBOX_IDS.forEach(({ letter }, i) => {
+        const cb = linkCheckboxes[i];
+        if (!cb) return;
+        const shouldBeChecked = hiddenLetters.has(letter);
+        if (cb.checked !== shouldBeChecked) {
+          cb.checked = shouldBeChecked;
+          cb.dispatchEvent(new Event("change"));
+        }
+      });
+    }
+
+    // Restore focused system (after init so the scene is ready)
+    const focusParam = params.get("focus");
+    if (focusParam) {
+      const found = mapState.focusOnSystem(focusParam);
+      if (found) {
+        if (systemSearch) systemSearch.value = focusParam;
+        if (searchStatus) searchStatus.textContent = `Focused on "${focusParam}"`;
+        // currentFocus is set by the onZoom callback fired inside focusOnSystem
+      }
+    }
+  }
 
   // Build Named Worlds list from systems that have a planetName
   const planetList = document.getElementById("planetList");
