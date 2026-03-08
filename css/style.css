@@ -240,4 +240,14 @@ h2 {
 }
 #systemDetailContent li {
   margin: 2px 0;
+@media (max-width: 480px) {
+  #controlsPanel {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  #menuToggle {
+    top: 6px;
+    left: 6px;
+  }
 }

@@ -60,7 +60,7 @@ export type MapState = {
   camera: import("three").PerspectiveCamera;
   scene: import("three").Scene;
   renderer: import("three").WebGLRenderer;
-  controls: import("three/examples/jsm/controls/TrackballControls.js").TrackballControls;
+  controls: import("three/examples/jsm/controls/OrbitControls.js").OrbitControls;
   onWindowResize: () => void;
   animate: () => void;
   render: () => void;

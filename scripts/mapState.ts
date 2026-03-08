@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { Jump, MapState, System, JumpType } from "./types";
 import { buildStarSprite, computeLabelMarginTop } from "./utils/scene";
@@ -36,7 +36,7 @@ export class MapStateImpl implements MapState {
   camera!: THREE.PerspectiveCamera;
   scene!: THREE.Scene;
   renderer!: THREE.WebGLRenderer;
-  controls!: TrackballControls;
+  controls!: OrbitControls;
 
   private labelRenderer!: CSS2DRenderer;
   private systemsData: System[];
@@ -72,6 +72,11 @@ export class MapStateImpl implements MapState {
   // Derived constants — computed once from config, reused every frame
   private readonly tanHalfFov = Math.tan((CAMERA_FOV * Math.PI) / 360);
   private readonly visDistSq = VISIBILITY_DISTANCE * VISIBILITY_DISTANCE;
+
+  // Frustum culling — reused every frame to avoid GC pressure
+  private readonly frustum = new THREE.Frustum();
+  private readonly projScreenMatrix = new THREE.Matrix4();
+  onZoom: ((idx: number) => void) | null = null;
   private bgPoints: THREE.Points | null = null;
   private typeMaterials = new Map<JumpType, THREE.LineBasicMaterial>();
 
@@ -241,11 +246,11 @@ export class MapStateImpl implements MapState {
     }
 
     // --- Controls ---
-    this.controls = new TrackballControls(this.camera, this.renderer.domElement);
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.rotateSpeed = CONTROLS_ROTATE_SPEED;
-    this.controls.dynamicDampingFactor = CONTROLS_DAMPING;
+    this.controls.dampingFactor = CONTROLS_DAMPING;
+    this.controls.enableDamping = true;
     this.controls.maxDistance = CONTROLS_MAX_DISTANCE;
-    this.controls.addEventListener("change", this.render);
     this.addEventListener(window, "resize", this.debouncedResize);
   };
 
@@ -282,14 +287,29 @@ export class MapStateImpl implements MapState {
   render = () => {
     const cam = this.camera;
     const camPos = cam.position;
-    const { visDistSq, tanHalfFov } = this;
+    const { visDistSq, tanHalfFov, frustum, projScreenMatrix } = this;
     const viewH = window.innerHeight;
+
+    // Build frustum once per frame to cull off-screen labels
+    projScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
 
     for (const sprite of this.systems) {
       const refs = this.labelRefs.get(sprite);
       if (refs) {
         const distSq = sprite.position.distanceToSquared(camPos);
         const nearCamera = distSq < visDistSq;
+        const inFrustum = frustum.containsPoint(sprite.position);
+
+        // Hide labels entirely when off-screen so CSS2DRenderer skips DOM updates
+        if (!inFrustum) {
+          refs.label.visible = false;
+          if (refs.planetLabel) refs.planetLabel.visible = false;
+          continue;
+        }
+        refs.label.visible = true;
+        if (refs.planetLabel) refs.planetLabel.visible = true;
+
         const labelClass = nearCamera ? "invis" : "starLabel";
         if (refs.label.element.className !== labelClass) {
           refs.label.element.className = labelClass;
@@ -375,12 +395,12 @@ export class MapStateImpl implements MapState {
 
     const star = this.systems[idx];
     this.placeGlow(star);
-
     this.controls.target.copy(star.position);
     this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
     this.controls.update();
     this.render();
     this.onZoom?.(idx);
+    this.zoomToStar(idx);
     return true;
   };
 }
