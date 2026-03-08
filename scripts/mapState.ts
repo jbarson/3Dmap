@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { TrackballControls } from "three/examples/jsm/controls/TrackballControls.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { Jump, MapState, System, JumpType } from "./types";
 import { buildStarSprite, computeLabelMarginTop } from "./utils/scene";
@@ -36,7 +36,7 @@ export class MapStateImpl implements MapState {
   camera!: THREE.PerspectiveCamera;
   scene!: THREE.Scene;
   renderer!: THREE.WebGLRenderer;
-  controls!: TrackballControls;
+  controls!: OrbitControls;
 
   private labelRenderer!: CSS2DRenderer;
   private systemsData: System[];
@@ -240,11 +240,11 @@ export class MapStateImpl implements MapState {
     }
 
     // --- Controls ---
-    this.controls = new TrackballControls(this.camera, this.renderer.domElement);
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.rotateSpeed = CONTROLS_ROTATE_SPEED;
-    this.controls.dynamicDampingFactor = CONTROLS_DAMPING;
+    this.controls.dampingFactor = CONTROLS_DAMPING;
+    this.controls.enableDamping = true;
     this.controls.maxDistance = CONTROLS_MAX_DISTANCE;
-    this.controls.addEventListener("change", this.render);
     this.addEventListener(window, "resize", this.debouncedResize);
   };
 
