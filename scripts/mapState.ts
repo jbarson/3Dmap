@@ -371,13 +371,7 @@ export class MapStateImpl implements MapState {
     const idx = this.systemsData.findIndex((s) => s.sysName.toLowerCase().includes(query));
     if (idx === -1) return false;
 
-    const star = this.systems[idx];
-    this.placeGlow(star);
-
-    this.controls.target.copy(star.position);
-    this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
-    this.controls.update();
-    this.render();
+    this.zoomToStar(idx);
     return true;
   };
 }
