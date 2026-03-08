@@ -10,11 +10,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
 
+  const menuToggle = document.getElementById("menuToggle") as HTMLButtonElement | null;
+  const controlsPanel = document.getElementById("controlsPanel") as HTMLElement | null;
+  if (menuToggle && controlsPanel) {
+    menuToggle.setAttribute("aria-controls", "controlsPanel");
+    controlsPanel.hidden = true;
+    controlsPanel.setAttribute("aria-hidden", "true");
+    menuToggle.addEventListener("click", () => {
+      const isOpen = controlsPanel.classList.toggle("open");
+      menuToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      controlsPanel.hidden = !isOpen;
+      controlsPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    });
+  }
+
   //the following is to link the slider with the text box*/
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
   if (dateSlider) {
-    dateSlider.addEventListener("change", function () {
+    dateSlider.addEventListener("input", function () {
       const dateValStr = dateSlider.value;
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
