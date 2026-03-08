@@ -1,7 +1,7 @@
 import { systemsArr } from "./systemsList";
 import { jumpList } from "./jumpLinks";
 import { validateData } from "./types";
-import type { MapState } from "./types";
+import type { Jump, JumpType, MapState, System } from "./types";
 import { MapStateImpl } from "./mapState";
 import { debounce } from "./utils/debounce";
 
@@ -56,6 +56,48 @@ function buildHash(
 
   const str = params.toString();
   return str ? str : "";
+}
+
+const JUMP_TYPE_LABEL: Record<JumpType, string> = {
+  A: "Alpha",
+  B: "Beta",
+  G: "Gamma",
+  D: "Delta",
+  E: "Epsilon",
+};
+
+function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): void {
+  const panel = document.getElementById("systemDetail");
+  const content = document.getElementById("systemDetailContent");
+  if (!panel || !content) return;
+
+  const idToName = new Map<number, string>();
+  for (const s of allSystems) idToName.set(s.id, s.sysName);
+
+  const connected = jumps.filter((j) => j.bridge[0] === sys.id || j.bridge[1] === sys.id);
+  const connectedItems = connected
+    .map((j) => {
+      const otherId = j.bridge[0] === sys.id ? j.bridge[1] : j.bridge[0];
+      const otherName = idToName.get(otherId) ?? `#${otherId}`;
+      const typeLabel = JUMP_TYPE_LABEL[j.type] ?? j.type;
+      return `<li>${otherName} &mdash; ${typeLabel} (${j.year})</li>`;
+    })
+    .join("");
+
+  const planetLine = sys.planetName ? `<p>Planet: ${sys.planetName}</p>` : "";
+  const linksSection =
+    connected.length > 0
+      ? `<p>Hyper links:</p><ul>${connectedItems}</ul>`
+      : `<p>No hyper links.</p>`;
+
+  content.innerHTML = `
+    <h3>${sys.sysName}</h3>
+    ${planetLine}
+    <p>Type: ${sys.type.join(", ")}</p>
+    <p>Coordinates: (${sys.x.toFixed(1)}, ${sys.y.toFixed(1)}, ${sys.z.toFixed(1)})</p>
+    ${linksSection}
+  `;
+  panel.hidden = false;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -198,6 +240,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // MapStateImpl encapsulates init/render/animate and link toggles
   mapState.init();
+
+  // Wire system detail panel close button
+  const systemDetailClose = document.getElementById("systemDetailClose");
+  const systemDetailPanel = document.getElementById("systemDetail");
+  if (systemDetailClose && systemDetailPanel) {
+    systemDetailClose.addEventListener("click", () => {
+      systemDetailPanel.hidden = true;
+    });
+  }
+
+  // Show system detail panel whenever the camera zooms to a star
+  mapState.onZoom = (idx: number) => {
+    showSystemDetail(systemsArr[idx], jumpList, systemsArr);
+  };
 
   // Comment 5: wire onZoom so label/Named Worlds clicks also update currentFocus + hash
   mapState.onZoom = (idx) => {

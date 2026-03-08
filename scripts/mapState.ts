@@ -58,6 +58,7 @@ export class MapStateImpl implements MapState {
     THREE.Sprite,
     { fontSize: string; marginTop: string; planetFontSize: string; planetMarginTop: string }
   >();
+  onZoom: ((idx: number) => void) | null = null;
   private glowSprite: THREE.Sprite | null = null;
   private cameraAnim: {
     startPos: THREE.Vector3;
@@ -383,6 +384,7 @@ export class MapStateImpl implements MapState {
       startTime: performance.now(),
       duration: 1000,
     };
+    this.onZoom?.(idx);
   };
 
   focusOnSystem = (name: string): boolean => {
@@ -391,6 +393,13 @@ export class MapStateImpl implements MapState {
     const idx = this.systemsData.findIndex((s) => s.sysName.toLowerCase().includes(query));
     if (idx === -1) return false;
 
+    const star = this.systems[idx];
+    this.placeGlow(star);
+    this.controls.target.copy(star.position);
+    this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
+    this.controls.update();
+    this.render();
+    this.onZoom?.(idx);
     this.zoomToStar(idx);
     return true;
   };
