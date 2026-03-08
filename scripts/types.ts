@@ -72,6 +72,7 @@ export type MapState = {
   init: () => void;
   cleanup: () => void;
   focusOnSystem: (name: string) => boolean;
+  zoomToStar: (idx: number) => void;
 };
 
 // Build a Set of valid system IDs for quick membership checks

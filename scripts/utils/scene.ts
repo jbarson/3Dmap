@@ -65,7 +65,10 @@ function makeStarTexture(starType: string | undefined): THREE.CanvasTexture {
   return tex;
 }
 
-export function buildStarSprite(system: System): {
+export function buildStarSprite(
+  system: System,
+  onClick: () => void,
+): {
   sprite: THREE.Sprite;
   label: CSS2DObject;
   planetLabel?: CSS2DObject;
@@ -86,6 +89,7 @@ export function buildStarSprite(system: System): {
   const nameDiv = document.createElement("div");
   nameDiv.className = "starLabel";
   nameDiv.textContent = system.sysName;
+  nameDiv.addEventListener("click", onClick);
   const label = new CSS2DObject(nameDiv);
   // Anchor at star center; center=(0.5,0) means top-edge of div is at the
   // projected screen point, so the label always appears below the star.
@@ -99,6 +103,7 @@ export function buildStarSprite(system: System): {
     const planetDiv = document.createElement("div");
     planetDiv.className = "planetLabel";
     planetDiv.textContent = system.planetName;
+    planetDiv.addEventListener("click", onClick);
     planetLabel = new CSS2DObject(planetDiv);
     planetLabel.position.set(0, 0, 0);
     planetLabel.center.set(0.5, 0);
