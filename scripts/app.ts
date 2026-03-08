@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
   if (dateSlider) {
-    dateSlider.addEventListener("change", function () {
+    dateSlider.addEventListener("input", function () {
       const dateValStr = dateSlider.value;
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
