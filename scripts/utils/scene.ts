@@ -89,7 +89,15 @@ export function buildStarSprite(
   const nameDiv = document.createElement("div");
   nameDiv.className = "starLabel";
   nameDiv.textContent = system.sysName;
+  nameDiv.setAttribute("role", "button");
+  nameDiv.tabIndex = 0;
   nameDiv.addEventListener("click", onClick);
+  nameDiv.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
+  });
   const label = new CSS2DObject(nameDiv);
   // Anchor at star center; center=(0.5,0) means top-edge of div is at the
   // projected screen point, so the label always appears below the star.
@@ -103,7 +111,15 @@ export function buildStarSprite(
     const planetDiv = document.createElement("div");
     planetDiv.className = "planetLabel";
     planetDiv.textContent = system.planetName;
+    planetDiv.setAttribute("role", "button");
+    planetDiv.tabIndex = 0;
     planetDiv.addEventListener("click", onClick);
+    planetDiv.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick();
+      }
+    });
     planetLabel = new CSS2DObject(planetDiv);
     planetLabel.position.set(0, 0, 0);
     planetLabel.center.set(0.5, 0);

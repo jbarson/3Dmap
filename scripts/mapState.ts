@@ -331,8 +331,7 @@ export class MapStateImpl implements MapState {
     this.labelRenderer.render(this.scene, cam);
   };
 
-  zoomToStar = (idx: number): void => {
-    const star = this.systems[idx];
+  private placeGlow(star: THREE.Sprite): void {
     if (this.glowSprite) {
       this.scene.remove(this.glowSprite);
       (this.glowSprite.material as THREE.SpriteMaterial).dispose();
@@ -350,7 +349,12 @@ export class MapStateImpl implements MapState {
     this.glowSprite.scale.setScalar(star.scale.x * 2.5);
     this.glowSprite.position.copy(star.position);
     this.scene.add(this.glowSprite);
+  }
 
+  zoomToStar = (idx: number): void => {
+    const star = this.systems[idx];
+    if (!star) return;
+    this.placeGlow(star);
     this.cameraAnim = {
       startPos: this.camera.position.clone(),
       endPos: star.position.clone().add(new THREE.Vector3(0, 0, 800)),
@@ -367,28 +371,8 @@ export class MapStateImpl implements MapState {
     const idx = this.systemsData.findIndex((s) => s.sysName.toLowerCase().includes(query));
     if (idx === -1) return false;
 
-    // Remove previous glow
-    if (this.glowSprite) {
-      this.scene.remove(this.glowSprite);
-      (this.glowSprite.material as THREE.SpriteMaterial).dispose();
-      this.glowSprite = null;
-    }
-
     const star = this.systems[idx];
-
-    // Add additive glow sprite
-    const glowMaterial = new THREE.SpriteMaterial({
-      map: (star.material as THREE.SpriteMaterial).map,
-      color: 0x88ccff,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-      opacity: 0.7,
-      depthWrite: false,
-    });
-    this.glowSprite = new THREE.Sprite(glowMaterial);
-    this.glowSprite.scale.setScalar(star.scale.x * 2.5);
-    this.glowSprite.position.copy(star.position);
-    this.scene.add(this.glowSprite);
+    this.placeGlow(star);
 
     this.controls.target.copy(star.position);
     this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
