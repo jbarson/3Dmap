@@ -198,3 +198,46 @@ h2 {
   color: #ccc;
   margin-left: 4px;
 }
+
+#systemDetail {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 40, 0.95);
+  border: 1px solid #556;
+  border-radius: 6px;
+  color: #eef;
+  font-size: 0.85em;
+  max-width: 340px;
+  min-width: 220px;
+  padding: 12px 14px;
+  z-index: 11;
+}
+#systemDetail[hidden] {
+  display: none;
+}
+#systemDetailClose {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  float: right;
+  font-size: 1.2em;
+  line-height: 1;
+  padding: 0 0 4px 8px;
+}
+#systemDetailClose:hover {
+  color: #fff;
+}
+#systemDetailContent h3 {
+  margin: 0 0 6px;
+  font-size: 1em;
+}
+#systemDetailContent ul {
+  margin: 4px 0;
+  padding-left: 16px;
+}
+#systemDetailContent li {
+  margin: 2px 0;
+}
