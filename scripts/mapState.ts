@@ -300,8 +300,13 @@ export class MapStateImpl implements MapState {
         const inFrustum = frustum.containsPoint(sprite.position);
 
         // Hide labels entirely when off-screen so CSS2DRenderer skips DOM updates
-        refs.label.visible = inFrustum && !nearCamera;
-        if (refs.planetLabel) refs.planetLabel.visible = inFrustum && !nearCamera;
+        if (!inFrustum) {
+          refs.label.visible = false;
+          if (refs.planetLabel) refs.planetLabel.visible = false;
+          continue;
+        }
+        refs.label.visible = true;
+        if (refs.planetLabel) refs.planetLabel.visible = true;
 
         const labelClass = nearCamera ? "invis" : "starLabel";
         if (refs.label.element.className !== labelClass) {
