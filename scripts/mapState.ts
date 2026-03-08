@@ -59,6 +59,14 @@ export class MapStateImpl implements MapState {
     { fontSize: string; marginTop: string; planetFontSize: string; planetMarginTop: string }
   >();
   private glowSprite: THREE.Sprite | null = null;
+  private cameraAnim: {
+    startPos: THREE.Vector3;
+    endPos: THREE.Vector3;
+    startTarget: THREE.Vector3;
+    endTarget: THREE.Vector3;
+    startTime: number;
+    duration: number;
+  } | null = null;
 
   // Derived constants — computed once from config, reused every frame
   private readonly tanHalfFov = Math.tan((CAMERA_FOV * Math.PI) / 360);
@@ -156,19 +164,32 @@ export class MapStateImpl implements MapState {
     }
     const bgGeometry = new THREE.BufferGeometry();
     bgGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    // Circular soft-dot texture so points render as rounds instead of squares
+    const dotCanvas = document.createElement("canvas");
+    dotCanvas.width = 16;
+    dotCanvas.height = 16;
+    const dotCtx = dotCanvas.getContext("2d")!;
+    const dotGrad = dotCtx.createRadialGradient(8, 8, 0, 8, 8, 8);
+    dotGrad.addColorStop(0, "rgba(255,255,255,1)");
+    dotGrad.addColorStop(1, "rgba(255,255,255,0)");
+    dotCtx.fillStyle = dotGrad;
+    dotCtx.fillRect(0, 0, 16, 16);
     const bgMaterial = new THREE.PointsMaterial({
+      map: new THREE.CanvasTexture(dotCanvas),
       color: 0xffffff,
       size: 10,
       sizeAttenuation: true,
       transparent: true,
       opacity: 0.6,
+      alphaTest: 0.01,
     });
     this.bgPoints = new THREE.Points(bgGeometry, bgMaterial);
     this.scene.add(this.bgPoints);
 
     // --- Star sprites ---
     for (const system of this.systemsData) {
-      const built = buildStarSprite(system);
+      const idx = this.systems.length;
+      const built = buildStarSprite(system, () => this.zoomToStar(idx));
       built.sprite.position.set(
         system.x * this.Scale,
         system.y * this.Scale,
@@ -237,6 +258,22 @@ export class MapStateImpl implements MapState {
 
   animate = () => {
     requestAnimationFrame(this.animate);
+    if (this.cameraAnim) {
+      const { startPos, endPos, startTarget, endTarget, startTime, duration } = this.cameraAnim;
+      const raw = (performance.now() - startTime) / duration;
+      const t = Math.min(raw, 1);
+      const ease = t * t * (3 - 2 * t); // smoothstep
+      this.camera.position.lerpVectors(startPos, endPos, ease);
+      this.controls.target.lerpVectors(startTarget, endTarget, ease);
+      if (t >= 1) {
+        this.camera.position.copy(endPos);
+        this.controls.target.copy(endTarget);
+        this.cameraAnim = null;
+      }
+      this.controls.update();
+      this.render();
+      return;
+    }
     this.controls.update();
     this.render();
   };
@@ -294,22 +331,12 @@ export class MapStateImpl implements MapState {
     this.labelRenderer.render(this.scene, cam);
   };
 
-  focusOnSystem = (name: string): boolean => {
-    const query = name.toLowerCase().trim();
-    if (!query) return false;
-    const idx = this.systemsData.findIndex((s) => s.sysName.toLowerCase().includes(query));
-    if (idx === -1) return false;
-
-    // Remove previous glow
+  private placeGlow(star: THREE.Sprite): void {
     if (this.glowSprite) {
       this.scene.remove(this.glowSprite);
       (this.glowSprite.material as THREE.SpriteMaterial).dispose();
       this.glowSprite = null;
     }
-
-    const star = this.systems[idx];
-
-    // Add additive glow sprite
     const glowMaterial = new THREE.SpriteMaterial({
       map: (star.material as THREE.SpriteMaterial).map,
       color: 0x88ccff,
@@ -322,6 +349,30 @@ export class MapStateImpl implements MapState {
     this.glowSprite.scale.setScalar(star.scale.x * 2.5);
     this.glowSprite.position.copy(star.position);
     this.scene.add(this.glowSprite);
+  }
+
+  zoomToStar = (idx: number): void => {
+    const star = this.systems[idx];
+    if (!star) return;
+    this.placeGlow(star);
+    this.cameraAnim = {
+      startPos: this.camera.position.clone(),
+      endPos: star.position.clone().add(new THREE.Vector3(0, 0, 800)),
+      startTarget: this.controls.target.clone(),
+      endTarget: star.position.clone(),
+      startTime: performance.now(),
+      duration: 1000,
+    };
+  };
+
+  focusOnSystem = (name: string): boolean => {
+    const query = name.toLowerCase().trim();
+    if (!query) return false;
+    const idx = this.systemsData.findIndex((s) => s.sysName.toLowerCase().includes(query));
+    if (idx === -1) return false;
+
+    const star = this.systems[idx];
+    this.placeGlow(star);
 
     this.controls.target.copy(star.position);
     this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));

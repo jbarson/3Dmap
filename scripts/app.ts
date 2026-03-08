@@ -118,5 +118,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // MapStateImpl encapsulates init/render/animate and link toggles
   mapState.init();
+
+  // Build Named Worlds list from systems that have a planetName
+  const planetList = document.getElementById("planetList");
+  if (planetList) {
+    systemsArr.forEach((sys, idx) => {
+      if (!sys.planetName) return;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = `${sys.planetName} (${sys.sysName})`;
+      btn.addEventListener("click", () => mapState.zoomToStar(idx));
+      planetList.appendChild(btn);
+    });
+  }
+
   mapState.animate();
 });
