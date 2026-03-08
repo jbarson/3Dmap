@@ -9,17 +9,47 @@ body {
   font-family: Helvetica, sans-serif;
   overflow: hidden;
 }
+#menuToggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  background: #444;
+  border: 1px solid #888;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1.2em;
+  padding: 5px 10px;
+  cursor: pointer;
+  line-height: 1;
+}
+#menuToggle:hover {
+  background: #666;
+}
+#controlsPanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 360px;
+  background: rgba(40, 40, 40, 0.95);
+  z-index: 9;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  overflow-y: auto;
+  padding-top: 50px;
+  padding-left: 16px;
+}
+#controlsPanel.open {
+  transform: translateX(0);
+}
 .title {
   padding: 10px;
 }
 .dateSpan {
   background-color: #666666;
   border-radius: 5px;
-  margin-left: 50px;
-  height: 20px;
   padding: 5px;
-  position: absolute;
-  z-index: 5;
 }
 .dateSpan input {
   vertical-align: middle;

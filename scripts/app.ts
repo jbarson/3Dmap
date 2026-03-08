@@ -10,6 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
 
+  const menuToggle = document.getElementById("menuToggle");
+  const controlsPanel = document.getElementById("controlsPanel");
+  if (menuToggle && controlsPanel) {
+    menuToggle.addEventListener("click", () => {
+      controlsPanel.classList.toggle("open");
+    });
+  }
+
   //the following is to link the slider with the text box*/
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
