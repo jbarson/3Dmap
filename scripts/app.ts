@@ -250,13 +250,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Show system detail panel whenever the camera zooms to a star
+  // Show detail panel and sync URL hash whenever the camera zooms to a star
   mapState.onZoom = (idx: number) => {
     showSystemDetail(systemsArr[idx], jumpList, systemsArr);
-  };
-
-  // Comment 5: wire onZoom so label/Named Worlds clicks also update currentFocus + hash
-  mapState.onZoom = (idx) => {
     currentFocus = systemsArr[idx]?.sysName ?? "";
     updateHash();
   };
