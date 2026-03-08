@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <button id="menuToggle" aria-label="Toggle controls menu">&#9776;</button>
+    <button id="menuToggle" aria-label="Toggle controls menu" aria-controls="controlsPanel" aria-expanded="false">&#9776;</button>
     <div id="controlsPanel">
     <div class="title">
       <h1>Hyper Links in the Ten Worlds Universe by Date Discovered</h1>
       <a href="https://cuthalion.ca">Home</a>
       <br />
-      <span class="dateSpan">
+      <div class="dateSpan">
         <label for="dateSlider">Date:</label>
         <input id="dateSlider" type="range" min="2110" max="2213" value="2213" />
         <span id="dateBox">2213</span>
@@ -54,7 +54,7 @@
             <label for="epsiLink">Epsilon <em>3.9 - 4.4pc</em></label>
           </li>
         </ul>
-      </span>
+      </div>
     </div>
     </div>
     <div id="container"></div>
