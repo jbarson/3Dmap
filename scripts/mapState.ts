@@ -71,6 +71,10 @@ export class MapStateImpl implements MapState {
   // Derived constants — computed once from config, reused every frame
   private readonly tanHalfFov = Math.tan((CAMERA_FOV * Math.PI) / 360);
   private readonly visDistSq = VISIBILITY_DISTANCE * VISIBILITY_DISTANCE;
+
+  // Frustum culling — reused every frame to avoid GC pressure
+  private readonly frustum = new THREE.Frustum();
+  private readonly projScreenMatrix = new THREE.Matrix4();
   private bgPoints: THREE.Points | null = null;
   private typeMaterials = new Map<JumpType, THREE.LineBasicMaterial>();
 
@@ -281,14 +285,24 @@ export class MapStateImpl implements MapState {
   render = () => {
     const cam = this.camera;
     const camPos = cam.position;
-    const { visDistSq, tanHalfFov } = this;
+    const { visDistSq, tanHalfFov, frustum, projScreenMatrix } = this;
     const viewH = window.innerHeight;
+
+    // Build frustum once per frame to cull off-screen labels
+    projScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(projScreenMatrix);
 
     for (const sprite of this.systems) {
       const refs = this.labelRefs.get(sprite);
       if (refs) {
         const distSq = sprite.position.distanceToSquared(camPos);
         const nearCamera = distSq < visDistSq;
+        const inFrustum = frustum.containsPoint(sprite.position);
+
+        // Hide labels entirely when off-screen so CSS2DRenderer skips DOM updates
+        refs.label.visible = inFrustum && !nearCamera;
+        if (refs.planetLabel) refs.planetLabel.visible = inFrustum && !nearCamera;
+
         const labelClass = nearCamera ? "invis" : "starLabel";
         if (refs.label.element.className !== labelClass) {
           refs.label.element.className = labelClass;
