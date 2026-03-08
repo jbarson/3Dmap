@@ -164,12 +164,24 @@ export class MapStateImpl implements MapState {
     }
     const bgGeometry = new THREE.BufferGeometry();
     bgGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    // Circular soft-dot texture so points render as rounds instead of squares
+    const dotCanvas = document.createElement("canvas");
+    dotCanvas.width = 16;
+    dotCanvas.height = 16;
+    const dotCtx = dotCanvas.getContext("2d")!;
+    const dotGrad = dotCtx.createRadialGradient(8, 8, 0, 8, 8, 8);
+    dotGrad.addColorStop(0, "rgba(255,255,255,1)");
+    dotGrad.addColorStop(1, "rgba(255,255,255,0)");
+    dotCtx.fillStyle = dotGrad;
+    dotCtx.fillRect(0, 0, 16, 16);
     const bgMaterial = new THREE.PointsMaterial({
+      map: new THREE.CanvasTexture(dotCanvas),
       color: 0xffffff,
       size: 10,
       sizeAttenuation: true,
       transparent: true,
       opacity: 0.6,
+      alphaTest: 0.01,
     });
     this.bgPoints = new THREE.Points(bgGeometry, bgMaterial);
     this.scene.add(this.bgPoints);
