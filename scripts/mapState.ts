@@ -380,6 +380,7 @@ export class MapStateImpl implements MapState {
     this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
     this.controls.update();
     this.render();
+    this.onZoom?.(idx);
     return true;
   };
 }

@@ -1,10 +1,10 @@
 import { systemsArr } from "./systemsList";
 import { jumpList } from "./jumpLinks";
 import { validateData } from "./types";
-import type { Jump, MapState, System } from "./types";
+import type { Jump, JumpType, MapState, System } from "./types";
 import { MapStateImpl } from "./mapState";
 
-const JUMP_TYPE_LABEL: Record<string, string> = {
+const JUMP_TYPE_LABEL: Record<JumpType, string> = {
   A: "Alpha",
   B: "Beta",
   G: "Gamma",
@@ -32,7 +32,7 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
 
   const planetLine = sys.planetName ? `<p>Planet: ${sys.planetName}</p>` : "";
   const linksSection =
-    connectedItems.length > 0
+    connected.length > 0
       ? `<p>Hyper links:</p><ul>${connectedItems}</ul>`
       : `<p>No hyper links.</p>`;
 
