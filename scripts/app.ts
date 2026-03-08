@@ -18,12 +18,23 @@ const LINK_CHECKBOX_IDS: { id: string; letter: string }[] = [
 // Build the hash string from current UI state (omit defaults)
 function buildHash(
   dateSlider: HTMLInputElement | null,
-  linkCheckboxes: HTMLInputElement[],
+  linkCheckboxes: (HTMLInputElement | null)[],
   focusedSystem: string,
 ): string {
   const params = new URLSearchParams();
 
-  const dateVal = dateSlider ? Number(dateSlider.value) : DATE_DEFAULT;
+  // Comment 1: parse as integer and fall back to DATE_DEFAULT; also clamp to slider min/max
+  let dateVal = DATE_DEFAULT;
+  if (dateSlider) {
+    const parsed = Number.parseInt(dateSlider.value, 10);
+    dateVal = Number.isNaN(parsed) ? DATE_DEFAULT : parsed;
+    const sliderMin = dateSlider.min !== "" ? Number.parseInt(dateSlider.min, 10) : undefined;
+    const sliderMax = dateSlider.max !== "" ? Number.parseInt(dateSlider.max, 10) : undefined;
+    if (sliderMin !== undefined && Number.isFinite(sliderMin) && dateVal < sliderMin)
+      dateVal = sliderMin;
+    if (sliderMax !== undefined && Number.isFinite(sliderMax) && dateVal > sliderMax)
+      dateVal = sliderMax;
+  }
   if (dateVal !== DATE_DEFAULT) {
     params.set("date", String(dateVal));
   }
@@ -32,17 +43,15 @@ function buildHash(
     params.set("focus", focusedSystem);
   }
 
-  // Collect which link types are checked
+  // Comment 4: "Hide Hyper Links" checkboxes — checked = hidden.
+  // Default state is no boxes checked (all links visible).
+  // Encode links param only when some boxes are checked (some links hidden).
   const checkedLetters = LINK_CHECKBOX_IDS.filter((_, i) => linkCheckboxes[i]?.checked).map(
     (x) => x.letter,
   );
-  const allChecked = checkedLetters.length === LINK_CHECKBOX_IDS.length;
-  const noneChecked = checkedLetters.length === 0;
-  // Only encode links param when it's a non-trivial partial selection
-  if (!allChecked && !noneChecked) {
+  // Only encode when non-default (some links hidden)
+  if (checkedLetters.length > 0) {
     params.set("links", checkedLetters.join(","));
-  } else if (noneChecked) {
-    params.set("links", "");
   }
 
   const str = params.toString();
@@ -120,14 +129,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Ordered list of link checkboxes matching LINK_CHECKBOX_IDS order
-  const linkCheckboxes: HTMLInputElement[] = [
-    mapState.alphaCheckbox,
-    mapState.betaCheckbox,
-    mapState.gammaCheckbox,
-    mapState.deltaCheckbox,
-    mapState.epsiCheckbox,
-  ].filter(Boolean) as HTMLInputElement[];
+  // Comment 3: use .map() to preserve index alignment with LINK_CHECKBOX_IDS
+  const linkCheckboxes = LINK_CHECKBOX_IDS.map(
+    ({ id }) => document.getElementById(id) as HTMLInputElement | null,
+  );
 
   // Track the currently focused system name for hash serialization
   let currentFocus = "";
@@ -181,10 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `Focused on "${systemSearch.value}"`
         : `System "${systemSearch.value}" not found`;
     }
-    if (found) {
-      currentFocus = systemSearch.value;
-      updateHash();
-    }
+    // currentFocus and updateHash are handled by the onZoom callback
   }
 
   if (systemSearchBtn) systemSearchBtn.addEventListener("click", runSearch);
@@ -197,26 +199,40 @@ document.addEventListener("DOMContentLoaded", () => {
   // MapStateImpl encapsulates init/render/animate and link toggles
   mapState.init();
 
+  // Comment 5: wire onZoom so label/Named Worlds clicks also update currentFocus + hash
+  mapState.onZoom = (idx) => {
+    currentFocus = systemsArr[idx]?.sysName ?? "";
+    updateHash();
+  };
+
   // --- Restore state from URL hash ---
   const rawHash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
   if (rawHash) {
     const params = new URLSearchParams(rawHash);
 
-    // Restore date slider
+    // Comment 2: validate dateParam is finite and clamp to slider min/max before applying
     const dateParam = params.get("date");
     if (dateParam !== null && dateSlider) {
-      dateSlider.value = dateParam;
-      dateSlider.dispatchEvent(new Event("input"));
+      const parsedDate = Number(dateParam);
+      if (Number.isFinite(parsedDate)) {
+        const min = dateSlider.min !== "" ? Number(dateSlider.min) : undefined;
+        const max = dateSlider.max !== "" ? Number(dateSlider.max) : undefined;
+        let clamped = parsedDate;
+        if (min !== undefined && Number.isFinite(min) && clamped < min) clamped = min;
+        if (max !== undefined && Number.isFinite(max) && clamped > max) clamped = max;
+        dateSlider.value = String(clamped);
+        dateSlider.dispatchEvent(new Event("input"));
+      }
     }
 
     // Restore link checkbox states
     const linksParam = params.get("links");
     if (linksParam !== null) {
-      const enabledLetters = new Set(linksParam ? linksParam.split(",") : []);
+      const hiddenLetters = new Set(linksParam ? linksParam.split(",") : []);
       LINK_CHECKBOX_IDS.forEach(({ letter }, i) => {
         const cb = linkCheckboxes[i];
         if (!cb) return;
-        const shouldBeChecked = enabledLetters.has(letter);
+        const shouldBeChecked = hiddenLetters.has(letter);
         if (cb.checked !== shouldBeChecked) {
           cb.checked = shouldBeChecked;
           cb.dispatchEvent(new Event("change"));
@@ -229,9 +245,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (focusParam) {
       const found = mapState.focusOnSystem(focusParam);
       if (found) {
-        currentFocus = focusParam;
         if (systemSearch) systemSearch.value = focusParam;
         if (searchStatus) searchStatus.textContent = `Focused on "${focusParam}"`;
+        // currentFocus is set by the onZoom callback fired inside focusOnSystem
       }
     }
   }
