@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Icosahedral Layout Inspector</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #222; color: #eee; font: 13px sans-serif; }
+h2 { padding: 8px 12px; background: #333; }
+#wrap { position: relative; display: inline-block; margin: 8px; }
+#wrap img { display: block; }
+#wrap canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+#controls { padding: 8px 12px; background: #333; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+input[type=range] { width: 120px; }
+#info { padding: 6px 12px; font-size: 11px; color: #aaa; background: #2a2a2a; }
+</style>
+</head>
+<body>
+<h2>Icosahedral Map Layout Inspector</h2>
+<div id="controls">
+  <label><input type="checkbox" id="showGrid" checked> show triangle grid</label>
+  <label><input type="checkbox" id="showNums" checked> face numbers</label>
+  <label>opacity <input type="range" id="opacity" min="0" max="1" step="0.05" value="0.7"></label>
+  <label>x-offset <input type="range" id="xoff" min="-200" max="200" step="1" value="0"> <span id="xv">0</span>px</label>
+  <label>y-offset <input type="range" id="yoff" min="-200" max="200" step="1" value="0"> <span id="yv">0</span>px</label>
+  <label>tw <input type="range" id="tw" min="300" max="500" step="1" value="390"> <span id="twv">390</span>px</label>
+  <label>th <input type="range" id="th" min="200" max="450" step="1" value="338"> <span id="thv">338</span>px</label>
+</div>
+<div id="info">Adjust sliders to align the grid with the image edges. Note down the values when aligned.</div>
+<div id="wrap">
+  <img id="mapImg" src="/altiplano_ico.png" style="max-width:100%;">
+  <canvas id="overlay"></canvas>
+</div>
+
+<script>
+const img = document.getElementById('mapImg');
+const canvas = document.getElementById('overlay');
+const ctx = canvas.getContext('2d');
+
+// Layout parameters (adjustable via sliders)
+let params = {
+  xoff: 0, yoff: 0,
+  tw: 390, th: 338
+};
+
+// From pixel analysis:
+// 5 "main columns" (△+▽ stacked, rows 0–676) at x=200,580,980,1370,1760
+// 5 "between columns" (△+▽ stacked, rows 338–1014) at x=390,780,1180,1570,1950
+// tw ≈ 390, th ≈ 338, IH = 3*th = 1014
+
+function drawTriangle(cx, tipY, down, label, color) {
+  const { tw, th } = params;
+  const hw = tw / 2;
+  ctx.beginPath();
+  if (!down) {
+    // △: tip at top (tipY), base at tipY+th
+    ctx.moveTo(cx, tipY);
+    ctx.lineTo(cx - hw, tipY + th);
+    ctx.lineTo(cx + hw, tipY + th);
+  } else {
+    // ▽: tip at bottom (tipY+th), base at tipY
+    ctx.moveTo(cx - hw, tipY);
+    ctx.lineTo(cx + hw, tipY);
+    ctx.lineTo(cx, tipY + th);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  if (document.getElementById('showNums').checked) {
+    const lx = cx;
+    const ly = down ? tipY + th * 0.67 : tipY + th * 0.33;
+    ctx.fillStyle = color;
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, lx, ly);
+  }
+}
+
+function redraw() {
+  const scale = img.clientWidth / img.naturalWidth;
+  canvas.width  = img.clientWidth;
+  canvas.height = img.clientHeight;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!document.getElementById('showGrid').checked) return;
+
+  ctx.globalAlpha = parseFloat(document.getElementById('opacity').value);
+
+  const { tw: twN, th: thN, xoff, yoff } = params;
+  const tw = twN * scale;
+  const th = thN * scale;
+  const ox = xoff * scale;
+  const oy = yoff * scale;
+
+  // Main column tip x positions (in natural image coords → scaled)
+  const mainXs = [200, 580, 980, 1370, 1760].map(x => x * scale + ox);
+  const betXs  = [390, 780, 1180, 1570, 1950].map(x => x * scale + ox);
+
+  // Main columns: △ (tip at oy), then ▽ (tip at oy+th)
+  mainXs.forEach((cx, i) => {
+    drawTriangle(cx, oy,      false, `A${i}`, '#0f0');  // top cap △
+    drawTriangle(cx, oy + th, true,  `B${i}`, '#0ff');  // upper mid ▽
+  });
+
+  // Between columns: △ (tip at oy+th), then ▽ (tip at oy+2*th)
+  betXs.forEach((cx, i) => {
+    drawTriangle(cx, oy + th,     false, `C${i}`, '#ff0');  // lower mid △
+    drawTriangle(cx, oy + 2 * th, true,  `D${i}`, '#f80');  // bot cap ▽
+  });
+
+  ctx.globalAlpha = 1;
+}
+
+// Slider wiring
+['xoff','yoff','tw','th'].forEach(id => {
+  const el = document.getElementById(id);
+  const vEl = document.getElementById(id + 'v');
+  el.addEventListener('input', () => {
+    params[id] = parseFloat(el.value);
+    if (vEl) vEl.textContent = el.value;
+    redraw();
+  });
+  params[id] = parseFloat(el.value);
+});
+['showGrid','showNums','opacity'].forEach(id => {
+  document.getElementById(id).addEventListener('input', redraw);
+  document.getElementById(id).addEventListener('change', redraw);
+});
+
+img.addEventListener('load', redraw);
+if (img.complete) redraw();
+window.addEventListener('resize', redraw);
+</script>
+</body>
+</html>

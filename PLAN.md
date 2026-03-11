@@ -288,7 +288,10 @@ Update `css/style.css`:
 
 | File                     | Change                                                                                |
 | ------------------------ | ------------------------------------------------------------------------------------- |
-| `index.html`             | Add `<div id="labels">` overlay                                                       |
+| `index.html`             | Add `<div id="labels">` overlay; add link to High-Res Globe                           |
+| `highres_globe.html`     | New file: Interactive 3D globe viewer for high-resolution planet maps                 |
+| `vite.config.js`         | Update to include `highres_globe.html` as a build entry point                         |
+| `public/pngs/*_dilated.png` | Processed high-resolution planet textures with filled seams and poles              |
 | `css/style.css`          | Remove CSS3D rules; add label overlay and `.label`/`.planetLabel` styles              |
 | `scripts/config.ts`      | Add `JUMP_TYPE_COLOR` map; remove `LINK_SHRINK`                                       |
 | `scripts/types.ts`       | Update `MapState` type (Sprite/Line instead of CSS3DObject)                           |
