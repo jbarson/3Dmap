@@ -42,7 +42,7 @@ body { background: #050510; overflow: hidden; font-family: sans-serif; }
 </style>
 </head>
 <body>
-<div id="info"><span id="planet-name">High-Res Damso Globe</span> (Equirectangular) · drag to rotate · scroll to zoom</div>
+<div id="info"><span id="planet-name">High-Res Earth Globe</span> (Equirectangular) · drag to rotate · scroll to zoom</div>
 <div id="planet-selector"></div>
 
 <script type="importmap">
@@ -78,6 +78,8 @@ window.addEventListener('resize', () => {
 // Planet list
 const planets = [
     { name: 'Earth', path: '/pngs/Earth_dilated.png' },
+    { name: 'Altiplano', path: '/pngs/Map_Altiplano_dilated.png' },
+    { name: 'Olympia', path: '/pngs/Map_Olympia_dilated.png' },
     { name: 'Concord', path: '/pngs/Map_Concord_dilated.png' },
     { name: 'Damso', path: '/pngs/Map_Damso_dilated.png' },
     { name: 'Medina', path: '/pngs/Map_Medina_dilated.png' },
@@ -119,8 +121,6 @@ function switchPlanet(name) {
             tex.minFilter = THREE.LinearMipmapLinearFilter;
             tex.magFilter = THREE.LinearFilter;
             globeMat.uniforms.map.value = tex;
-            
-            // For Earth (4k), the texSize is same as others
             globeMat.uniforms.texSize.value.set(4096, 2048);
         });
     } else {
@@ -150,13 +150,10 @@ const globeMat = new THREE.ShaderMaterial({
     vertexShader: `
       varying vec2 vUv;
       varying vec3 vNormal;
-      varying vec3 vViewPosition;
       void main() {
         vUv = uv;
         vNormal = normalize(normalMatrix * normal);
-        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        vViewPosition = -mvPosition.xyz;
-        gl_Position = projectionMatrix * mvPosition;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
     fragmentShader: `
@@ -166,7 +163,6 @@ const globeMat = new THREE.ShaderMaterial({
       uniform vec3 sunPos;
       varying vec2 vUv;
       varying vec3 vNormal;
-      varying vec3 vViewPosition;
 
       void main() {
         vec2 off = 1.0 / texSize;
@@ -180,14 +176,11 @@ const globeMat = new THREE.ShaderMaterial({
         vec4 laplacian = (n + s + e + w) - 4.0 * center;
         vec4 sharpened = center - sharpness * laplacian;
 
-        // Use a "Full-Bright" model with a very high ambient base (0.8) 
-        // and subtle diffuse (0.4) to preserve original colors while keeping some 3D form.
         vec3 normal = normalize(vNormal);
         float diffuse = max(dot(normal, sunPos), 0.0);
-        float ambient = 0.8; // High floor so nothing is ever truly dark
+        float ambient = 0.8; 
         vec3 light = (diffuse * 0.4 + ambient) * vec3(1.0, 1.0, 1.0);
 
-        // Clamping to avoid blowing out colors on the bright side
         gl_FragColor = vec4(clamp(sharpened.rgb * light, 0.0, 1.0), 1.0);
       }
     `
@@ -197,7 +190,7 @@ const geometry = new THREE.SphereGeometry(1, 256, 256);
 const globe = new THREE.Mesh(geometry, globeMat);
 scene.add(globe);
 
-// Atmosphere rim glow (Subtler rim to not distract from the bright surface)
+// Atmosphere rim glow
 const atmoMat = new THREE.ShaderMaterial({
     transparent: true,
     side: THREE.BackSide,
@@ -222,7 +215,7 @@ const atmoMat = new THREE.ShaderMaterial({
       void main() {
         vec3 viewDir = normalize(cameraPosition - vWorldPos);
         float rim = 1.0 - max(0.0, dot(vWorldNorm, viewDir));
-        rim = pow(rim, 6.0); // Sharper falloff
+        rim = pow(rim, 6.0);
         float sunDot = dot(normalize(vWorldPos), uSunDir);
         float lit = smoothstep(-0.2, 0.4, sunDot);
         vec3 col = mix(vec3(0.05, 0.1, 0.3), vec3(0.4, 0.6, 1.0), lit);
