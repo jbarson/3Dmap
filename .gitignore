@@ -47,3 +47,6 @@ coverage/
 !.vscode/launch.json
 .idea/
 *.swp
+
+# Large texture files
+public/pngs/
