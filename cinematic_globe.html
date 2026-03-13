@@ -301,6 +301,55 @@ const atmoMat = new THREE.ShaderMaterial({
 });
 scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.08, 128, 128), atmoMat));
 
+// --- Ring System ---
+const ringMat = new THREE.ShaderMaterial({
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false,
+    uniforms: {
+        uTime: commonUniforms.uTime
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        void main() {
+            vUv = uv;
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        uniform float uTime;
+        
+        void main() {
+            float dist = length(vPosition.xy);
+            float innerEdge = smoothstep(1.615, 1.65, dist);
+            float outerEdge = 1.0 - smoothstep(1.85, 1.885, dist);
+            float mask = innerEdge * outerEdge;
+            
+            float band = sin(dist * 40.0) * 0.5 + 0.5;
+            band = mix(0.2, 0.5, band) * mask;
+            gl_FragColor = vec4(0.65, 0.65, 0.7, band);
+        }
+    `
+});
+
+const ringGeo = new THREE.RingGeometry(1.615, 1.885, 128);
+const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+ringMesh.rotation.x = Math.PI / 2;
+ringMesh.rotation.y = 0.3;
+ringMesh.visible = false;
+scene.add(ringMesh);
+
+const ringShadowMat = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.3
+});
+
 // --- Lighting ---
 const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
 sunLight.position.copy(sunDirection).multiplyScalar(10);
@@ -314,7 +363,7 @@ const planets = [
     { name: 'Concord', base: 'Map_Concord', seed: [42.0, 42.0, 42.0], scale: 1.2 },
     { name: 'Damso', base: 'Map_Damso', seed: [1.1, 2.2, 3.3], scale: 4.0 },
     { name: 'Medina', base: 'Map_Medina', seed: [55.5, 66.6, 77.7], scale: 2.5 },
-    { name: 'Novaya', base: 'Map_Novaya', seed: [8.8, 9.9, 0.0], scale: 1.5 },
+    { name: 'Novaya', base: 'Map_Novaya', seed: [8.8, 9.9, 0.0], scale: 1.5, hasRing: true },
     { name: 'Pacifica', base: 'Map_Pacifica', seed: [33.3, 22.2, 11.1], scale: 2.0 },
     { name: 'Refuge', base: 'Map_Refuge', seed: [7.7, 6.6, 5.5], scale: 3.0 },
     { name: 'Schwarzvaal', base: 'Map_Schwartzvaal', seed: [100.1, 200.2, 300.3], scale: 0.8 },
@@ -334,6 +383,10 @@ function switchPlanet(name) {
     // Update cloud pattern parameters
     commonUniforms.uCloudSeed.value.set(p.seed[0], p.seed[1], p.seed[2]);
     commonUniforms.uCloudScale.value = p.scale;
+
+    // Show/hide ring
+    const hasRing = p.hasRing || false;
+    ringMesh.visible = hasRing;
 
     const loadTexture = (suffix) => {
         const path = `/pngs/${p.base}${suffix}.png`;
@@ -389,6 +442,9 @@ function animate(time) {
     controls.update();
     planetMesh.rotation.y += 0.0005;
     cloudMesh.rotation.y += 0.0005;
+    if (ringMesh.visible) {
+        ringMesh.rotation.z += 0.0002;
+    }
     renderer.render(scene, camera);
 }
 requestAnimationFrame(animate);
