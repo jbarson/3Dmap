@@ -37,6 +37,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "sharp": "^0.34.5",
     "three": "^0.179.1"
   }
 }

@@ -1,6 +1,15 @@
 import { defineConfig } from "vite";
+import { resolve } from "path";
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve("index.html"),
+        planetDetail: resolve("planet-detail.html"),
+      },
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",

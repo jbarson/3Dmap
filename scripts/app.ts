@@ -6,6 +6,25 @@ import { MapStateImpl } from "./mapState";
 import { debounce } from "./utils/debounce";
 
 const DATE_DEFAULT = 2213;
+
+// Planets that have a planet-detail entry. Maps star-map planetName → ?planet= key.
+// Most names match directly; Novoya Rossiya/Nova Brazil is the one exception.
+const GLOBE_PLANET_KEY: Partial<Record<string, string>> = {
+  "Novoya Rossiya/Nova Brazil": "Novaya",
+};
+const GLOBE_PLANETS = new Set([
+  "Altiplano",
+  "Concord",
+  "Damso",
+  "Medina",
+  "Novoya Rossiya/Nova Brazil",
+  "Olympia",
+  "Pacifica",
+  "Refuge",
+  "Schwarzvaal",
+  "Xing Cheng",
+]);
+
 // Map checkbox element IDs to their link-type letters
 const LINK_CHECKBOX_IDS: { id: string; letter: string }[] = [
   { id: "alphaLink", letter: "A" },
@@ -85,6 +104,11 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
     .join("");
 
   const planetLine = sys.planetName ? `<p>Planet: ${sys.planetName}</p>` : "";
+  const globeKey = sys.planetName ? (GLOBE_PLANET_KEY[sys.planetName] ?? sys.planetName) : null;
+  const globeLink =
+    sys.planetName && GLOBE_PLANETS.has(sys.planetName)
+      ? `<p><a class="globe-link" href="/planet-detail.html?planet=${encodeURIComponent(globeKey!)}" target="_blank" rel="noopener">View planet &rarr;</a></p>`
+      : "";
   const linksSection =
     connected.length > 0
       ? `<p>Hyper links:</p><ul>${connectedItems}</ul>`
@@ -93,6 +117,7 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
   content.innerHTML = `
     <h3>${sys.sysName}</h3>
     ${planetLine}
+    ${globeLink}
     <p>Type: ${sys.type.join(", ")}</p>
     <p>Coordinates: (${sys.x.toFixed(1)}, ${sys.y.toFixed(1)}, ${sys.z.toFixed(1)})</p>
     ${linksSection}
@@ -110,8 +135,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const controlsPanel = document.getElementById("controlsPanel") as HTMLElement | null;
   if (menuToggle && controlsPanel) {
     menuToggle.setAttribute("aria-controls", "controlsPanel");
-    controlsPanel.hidden = true;
-    controlsPanel.setAttribute("aria-hidden", "true");
+    controlsPanel.classList.add("open");
+    controlsPanel.hidden = false;
+    controlsPanel.setAttribute("aria-hidden", "false");
+    menuToggle.setAttribute("aria-expanded", "true");
     menuToggle.addEventListener("click", () => {
       const isOpen = controlsPanel.classList.toggle("open");
       menuToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");

@@ -1,0 +1,224 @@
+{
+  "planets": {
+    "Altiplano": {
+      "name": "Altiplano",
+      "star": "Delta Pavonis",
+      "colonyName": "Altiplano",
+      "orbitalDistanceAU": 1.18,
+      "stellarLuminosity": 1.47,
+      "orbitalEccentricity": 0.0814,
+      "blackbodyTempK": 258.7436025392294,
+      "surfaceTempK": 298.5791474929384,
+      "albedo": 0.34,
+      "moons": 0,
+      "solarStormIntensity": 11,
+      "radiation": 164093.91820031113,
+      "tectonics": "hotspot",
+      "axialTiltExcursion": 11.502376747071965,
+      "axialTiltDegrees": 29.4,
+      "localDay": {
+        "hours": 27,
+        "minutes": 18,
+        "seconds": 11
+      }
+    },
+    "Concord": {
+      "name": "Concord",
+      "star": "Gamma Leporis",
+      "colonyName": "Concord",
+      "orbitalDistanceAU": 1.59,
+      "stellarLuminosity": 2.41,
+      "orbitalEccentricity": 0.0864,
+      "blackbodyTempK": 229.28275374369366,
+      "surfaceTempK": 294.01685725650304,
+      "albedo": 0.61,
+      "moons": 1,
+      "solarStormIntensity": 11,
+      "radiation": 5421.8771887040375,
+      "tectonics": "active",
+      "axialTiltExcursion": 3.5721645128316455,
+      "axialTiltDegrees": 35.8,
+      "localDay": {
+        "hours": 19,
+        "minutes": 6,
+        "seconds": 38
+      }
+    },
+    "Damso": {
+      "name": "Damso",
+      "star": "Beta Canum Venaticorum",
+      "colonyName": "Damso",
+      "orbitalDistanceAU": 3.13,
+      "stellarLuminosity": 1.21,
+      "orbitalEccentricity": 0.0461,
+      "blackbodyTempK": 94.41032235901942,
+      "surfaceTempK": 290.45379062360496,
+      "albedo": 0.9,
+      "moons": 2,
+      "solarStormIntensity": 11,
+      "radiation": 7.467539879824072,
+      "tectonics": "very active",
+      "axialTiltExcursion": 2.748335763894056,
+      "axialTiltDegrees": 33.1,
+      "localDay": {
+        "hours": 8,
+        "minutes": 18,
+        "seconds": 47
+      }
+    },
+    "Medina": {
+      "name": "Medina",
+      "star": "Sigma Draconis",
+      "colonyName": "Medina",
+      "orbitalDistanceAU": 0.6782,
+      "stellarLuminosity": 0.46,
+      "orbitalEccentricity": 0.061,
+      "blackbodyTempK": 242.01735247614252,
+      "surfaceTempK": 294.6721011180137,
+      "albedo": 0.29,
+      "moons": 1,
+      "solarStormIntensity": 11,
+      "radiation": 7256.661978338782,
+      "tectonics": "active",
+      "axialTiltExcursion": 0.10651419107459256,
+      "axialTiltDegrees": 22.3,
+      "localDay": {
+        "hours": 22,
+        "minutes": 46,
+        "seconds": 13
+      }
+    },
+    "NovayeNuevo": {
+      "name": "NovayeNuevo",
+      "star": "Alpha Mensae",
+      "colonyName": "Novaya Rossiya/Nuevo Brasillia",
+      "orbitalDistanceAU": 0.95,
+      "stellarLuminosity": 0.87,
+      "orbitalEccentricity": 0.0214,
+      "blackbodyTempK": 247.08363290841382,
+      "surfaceTempK": 304.597617877615,
+      "albedo": 0.31,
+      "moons": 3,
+      "solarStormIntensity": 11,
+      "radiation": 7026.442419071321,
+      "tectonics": "active",
+      "axialTiltExcursion": 3.0225777188372196,
+      "axialTiltDegrees": 31.6,
+      "localDay": {
+        "hours": 17,
+        "minutes": 3,
+        "seconds": 2
+      }
+    },
+    "Olympia": {
+      "name": "Olympia",
+      "star": "Alpha Centauri B",
+      "colonyName": "Olympia",
+      "orbitalDistanceAU": 0.75,
+      "stellarLuminosity": 0.53,
+      "orbitalEccentricity": 0.0091,
+      "blackbodyTempK": 231.2971319206637,
+      "surfaceTempK": 304.96568941291076,
+      "albedo": 0.32,
+      "moons": 1,
+      "solarStormIntensity": 11,
+      "radiation": 140866.95717769748,
+      "tectonics": 0,
+      "axialTiltExcursion": 2.3160347292164807,
+      "axialTiltDegrees": 19.2,
+      "localDay": {
+        "hours": 34,
+        "minutes": 15,
+        "seconds": 21
+      }
+    },
+    "Pacifica": {
+      "name": "Pacifica",
+      "star": "BD-05°1844 (A)",
+      "colonyName": "Pacifica",
+      "orbitalDistanceAU": 0.482,
+      "stellarLuminosity": 0.24,
+      "orbitalEccentricity": 0.012,
+      "blackbodyTempK": 225.32733101624717,
+      "surfaceTempK": 293.9656019266469,
+      "albedo": 0.34,
+      "moons": 1,
+      "solarStormIntensity": 11,
+      "radiation": 227755.23399828584,
+      "tectonics": "stagnant",
+      "axialTiltExcursion": 0.0006828079182414113,
+      "axialTiltDegrees": 18.1,
+      "localDay": {
+        "hours": 98,
+        "minutes": 7,
+        "seconds": 2
+      }
+    },
+    "Refuge": {
+      "name": "Refuge",
+      "star": "41 Arae A",
+      "colonyName": "Refuge",
+      "orbitalDistanceAU": 0.62,
+      "stellarLuminosity": 0.47,
+      "orbitalEccentricity": 0.1221,
+      "blackbodyTempK": 243.2964956327864,
+      "surfaceTempK": 296.4476901044804,
+      "albedo": 0.45,
+      "moons": 0,
+      "solarStormIntensity": 11,
+      "radiation": 48725.90937424398,
+      "tectonics": "active",
+      "axialTiltExcursion": 0.3619962602623624,
+      "axialTiltDegrees": 44.8,
+      "localDay": {
+        "hours": 29,
+        "minutes": 2,
+        "seconds": 41
+      }
+    },
+    "Schwarzvaal": {
+      "name": "Schwarzvaal",
+      "star": "107 Piscium",
+      "colonyName": "Schwarzvaal",
+      "orbitalDistanceAU": 0.76,
+      "stellarLuminosity": 0.51,
+      "orbitalEccentricity": 0.01214,
+      "blackbodyTempK": 227.5713887235897,
+      "surfaceTempK": 272.2415983476032,
+      "albedo": 0.32,
+      "moons": 0,
+      "solarStormIntensity": 11,
+      "radiation": 81394.64246995989,
+      "tectonics": "inactive",
+      "axialTiltExcursion": 2.9090714870677266,
+      "axialTiltDegrees": 13.1,
+      "localDay": {
+        "hours": 31,
+        "minutes": 37,
+        "seconds": 17
+      }
+    },
+    "XingCheng": {
+      "name": "XingCheng",
+      "star": "Zeta Tucanae",
+      "colonyName": "Xing Cheng",
+      "orbitalDistanceAU": 1.09,
+      "stellarLuminosity": 1.24,
+      "orbitalEccentricity": 0.0341,
+      "blackbodyTempK": 262.3476160096211,
+      "surfaceTempK": 301.6927109795609,
+      "albedo": 0.36,
+      "moons": 1,
+      "solarStormIntensity": 11,
+      "radiation": 21762.758089260227,
+      "tectonics": "active",
+      "axialTiltExcursion": 7.444899996856043,
+      "axialTiltDegrees": 18.6,
+      "localDay": {
+        "hours": 29,
+        "minutes": 32,
+        "seconds": 1
+      }
+    }
+  }
+}
