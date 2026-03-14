@@ -5,9 +5,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, "index.html"),
-        globe: resolve(__dirname, "highres_globe.html"),
-        cinematic: resolve(__dirname, "cinematic_globe.html"),
+        main: resolve("index.html"),
+        planetDetail: resolve("planet-detail.html"),
       },
     },
   },

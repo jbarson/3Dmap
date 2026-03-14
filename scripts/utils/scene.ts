@@ -4,15 +4,15 @@ import type { System } from "../types";
 
 // Sprite sizes (scene units) keyed by first letter of spectral class
 const STAR_SIZE: Record<string, number> = {
-  A: 400,
-  F: 320,
-  G: 180,
-  K: 150,
-  M: 90,
-  D: 60,
+  A: 200,
+  F: 160,
+  G: 120,
+  K: 100,
+  M: 70,
+  D: 50,
 };
 
-const DEFAULT_STAR_SIZE = 100;
+const DEFAULT_STAR_SIZE = 80;
 
 // Spectral colours: [core rgba, mid rgba] — outer edge is always transparent
 const STAR_COLORS: Record<string, [string, string]> = {

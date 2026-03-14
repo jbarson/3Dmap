@@ -1,98 +1,371 @@
+:root {
+  --accent: #00e5ff;
+  --accent-dim: rgba(0, 229, 255, 0.15);
+  --accent-border: rgba(0, 229, 255, 0.25);
+  --panel-bg: rgba(8, 13, 22, 0.97);
+  --text: #c8dce8;
+  --text-dim: #5a7a8a;
+  --section-rule: rgba(255, 255, 255, 0.06);
+  --panel-width: 310px;
+  --font-ui: "Rajdhani", Helvetica, sans-serif;
+  --font-mono: "Share Tech Mono", "Courier New", monospace;
+}
+
 html,
 body {
   height: 100%;
   color: white;
 }
 body {
-  background-color: #000000;
+  background-color: #000;
   margin: 0;
-  font-family: Helvetica, sans-serif;
+  font-family: var(--font-ui);
   overflow: hidden;
 }
+
+/* ── Menu toggle ── */
 #menuToggle {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  top: 12px;
+  left: 12px;
   z-index: 10;
-  background: #444;
-  border: 1px solid #888;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 1.2em;
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid var(--accent-border);
+  border-radius: 3px;
+  color: var(--accent);
+  font-size: 1.1em;
   padding: 5px 10px;
   cursor: pointer;
   line-height: 1;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 #menuToggle:hover {
-  background: #666;
+  background: rgba(0, 229, 255, 0.18);
+  border-color: var(--accent);
 }
+
+/* ── Slide-in panel ── */
 #controlsPanel {
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
-  width: 360px;
-  background: rgba(40, 40, 40, 0.95);
+  width: var(--panel-width);
+  background: var(--panel-bg);
+  border-right: 1px solid var(--accent-border);
   z-index: 9;
   transform: translateX(-100%);
   transition: transform 0.25s ease;
   overflow-y: auto;
-  padding-top: 50px;
-  padding-left: 16px;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+/* Cyan accent bar across the top */
+#controlsPanel::before {
+  content: "";
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+  flex-shrink: 0;
 }
 #controlsPanel.open {
   transform: translateX(0);
 }
-.title {
-  padding: 10px;
+
+/* ── Panel header ── */
+.panel-header {
+  padding: 46px 16px 14px;
+  border-bottom: 1px solid var(--section-rule);
 }
-.dateSpan {
-  background-color: #666666;
-  border-radius: 5px;
-  padding: 5px;
-}
-.dateSpan input {
-  vertical-align: middle;
-  margin: 5px;
-}
-.dateSpan span {
-  margin: 5px;
-}
-.dateSpan ul {
-  list-style-type: none;
-  margin: 8px 0 0;
+h1 {
+  font-family: var(--font-ui);
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 2px;
   padding: 0;
 }
+.panel-subtitle {
+  font-size: 0.72em;
+  font-weight: 400;
+  letter-spacing: 0.07em;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
+.panel-nav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.nav-link {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  padding: 2px 9px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.nav-link:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.nav-link--highlight {
+  color: #f90;
+  border-color: rgba(255, 153, 0, 0.3);
+}
+.nav-link--highlight:hover {
+  color: #ffd;
+  border-color: rgba(255, 153, 0, 0.65);
+}
 
-/* Make labels match app text and align with checkboxes */
-.dateSpan li {
+/* ── Controls body ── */
+.controls-body {
+  flex: 1;
+  padding: 4px 0;
+}
+.control-section {
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--section-rule);
+}
+.control-section:last-child {
+  border-bottom: none;
+}
+
+/* Section headers with trailing rule */
+.section-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 4px 0;
+  gap: 8px;
+  font-size: 0.65em;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
 }
-.dateSpan label {
-  font-family: inherit;
-  font-size: 1em;
-  font-weight: 400;
-  line-height: 1.4;
-  color: #fff;
+.section-header::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--accent-border);
+}
+
+/* ── Date / timeline ── */
+.date-control {
+  margin-bottom: 10px;
+}
+.date-display {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.date-label {
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: default;
+}
+.date-value {
+  font-family: var(--font-mono);
+  font-size: 1.8em;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+/* Custom range slider */
+#dateSlider {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 3px;
+  background: rgba(0, 229, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
   cursor: pointer;
 }
-.dateSpan label em {
-  font-style: italic;
-  color: #ccc;
+#dateSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 7px var(--accent);
+  cursor: pointer;
+}
+#dateSlider::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 7px var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+/* ── Search ── */
+.searchDiv {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#systemSearch {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 0.88em;
+  padding: 4px 8px;
+  flex: 1;
+  min-width: 0;
+  transition: border-color 0.15s;
+}
+#systemSearch:focus {
+  outline: none;
+  border-color: rgba(0, 229, 255, 0.5);
+}
+#systemSearch::placeholder {
+  color: var(--text-dim);
+}
+#systemSearchBtn {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  border-radius: 2px;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 0.8em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+#systemSearchBtn:hover {
+  background: rgba(0, 229, 255, 0.22);
+}
+#searchStatus {
+  font-size: 0.75em;
+  color: var(--text-dim);
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
+/* ── Link type filters ── */
+.link-filters {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 6px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.filter-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.filter-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.filter-row input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.filter-row input[type="checkbox"]:checked::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 1px;
+  left: 3px;
+  width: 4px;
+  height: 7px;
+  border: 2px solid #000;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+.filter-name {
   font-size: 0.9em;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  letter-spacing: 0.04em;
+}
+.filter-range {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  font-style: normal;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
 }
 
-h1,
-h2 {
-  font-size: 1em;
-  font-weight: normal;
-  padding-left: 20px;
+/* ── Named worlds ── */
+#planetList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+#planetList button {
+  display: block;
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  color: #7ab8d8;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 0.88em;
+  font-weight: 400;
+  padding: 3px 4px 3px 10px;
+  text-align: left;
+  transition:
+    color 0.15s,
+    border-left-color 0.15s;
+  width: 100%;
+}
+#planetList button:hover {
+  color: #fff;
+  border-left-color: var(--accent);
 }
 
-/* WebGL canvas and label overlay positioning */
+/* ── WebGL canvas and label overlay positioning ── */
 #container {
   position: absolute;
   top: 0;
@@ -100,7 +373,6 @@ h2 {
   width: 100%;
   height: 100%;
 }
-
 #labels {
   position: absolute;
   top: 0;
@@ -111,106 +383,56 @@ h2 {
   z-index: 1;
 }
 
-/* CSS2D star name labels */
+/* ── CSS2D star/planet labels ── */
 .starLabel {
   font-size: 20px;
+  font-weight: 600;
   color: #ffffff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+  padding: 0 3px;
   text-shadow:
-    0 0 6px rgba(0, 0, 0, 0.9),
-    0 0 2px rgba(0, 0, 0, 1);
+    0 1px 3px rgba(0, 0, 0, 1),
+    0 0 8px rgba(0, 0, 0, 1);
   pointer-events: auto;
   cursor: pointer;
   white-space: nowrap;
   transition: opacity 0.1s ease-out;
 }
-
-/* CSS2D planet name labels */
 .planetLabel {
   font-size: 15px;
+  font-weight: 600;
   font-style: italic;
   color: #ccddff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+  padding: 0 3px;
   text-shadow:
-    0 0 5px rgba(0, 0, 0, 0.9),
-    0 0 2px rgba(0, 0, 0, 1);
+    0 1px 3px rgba(0, 0, 0, 1),
+    0 0 8px rgba(0, 0, 0, 1);
   pointer-events: auto;
   cursor: pointer;
   white-space: nowrap;
   transition: opacity 0.1s ease-out;
 }
-
-#planetList button {
-  display: block;
-  background: none;
-  border: none;
-  color: #adf;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.9em;
-  padding: 3px 0;
-  text-align: left;
-  text-decoration: underline;
-}
-#planetList button:hover {
-  color: #fff;
-}
-
 .invis {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.1s ease-out;
 }
 
-/* Search box */
-.searchDiv {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 6px 0 2px;
-}
-#systemSearch {
-  background: #333;
-  border: 1px solid #888;
-  border-radius: 3px;
-  color: #fff;
-  font-family: inherit;
-  font-size: 0.9em;
-  padding: 3px 6px;
-  width: 130px;
-}
-#systemSearch::placeholder {
-  color: #aaa;
-}
-#systemSearchBtn {
-  background: #555;
-  border: 1px solid #888;
-  border-radius: 3px;
-  color: #fff;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.9em;
-  padding: 3px 8px;
-}
-#systemSearchBtn:hover {
-  background: #777;
-}
-#searchStatus {
-  font-size: 0.8em;
-  color: #ccc;
-  margin-left: 4px;
-}
-
+/* ── System detail panel ── */
 #systemDetail {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(30, 30, 40, 0.95);
-  border: 1px solid #556;
-  border-radius: 6px;
+  top: 60px;
+  right: 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 4px;
   color: #eef;
-  font-size: 0.85em;
-  max-width: 340px;
-  min-width: 220px;
+  font-family: var(--font-ui);
+  font-size: 0.88em;
+  width: 260px;
   padding: 12px 14px;
   z-index: 11;
 }
@@ -220,12 +442,13 @@ h2 {
 #systemDetailClose {
   background: none;
   border: none;
-  color: #aaa;
+  color: var(--text-dim);
   cursor: pointer;
   float: right;
   font-size: 1.2em;
   line-height: 1;
   padding: 0 0 4px 8px;
+  transition: color 0.15s;
 }
 #systemDetailClose:hover {
   color: #fff;
@@ -233,6 +456,9 @@ h2 {
 #systemDetailContent h3 {
   margin: 0 0 6px;
   font-size: 1em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
 }
 #systemDetailContent ul {
   margin: 4px 0;
@@ -240,14 +466,32 @@ h2 {
 }
 #systemDetailContent li {
   margin: 2px 0;
+}
+.globe-link {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.85em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--accent-border);
+  border-radius: 2px;
+  padding: 2px 8px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.globe-link:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
 @media (max-width: 480px) {
-  #controlsPanel {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
+  :root {
+    --panel-width: 100%;
   }
   #menuToggle {
-    top: 6px;
-    left: 6px;
+    top: 8px;
+    left: 8px;
   }
 }
