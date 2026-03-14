@@ -66,27 +66,6 @@
         "seconds": 47
       }
     },
-    "GaltsWorld": {
-      "name": "GaltsWorld",
-      "star": "Eta Boötis Gas Giant",
-      "colonyName": "Galt's World",
-      "orbitalDistanceAU": 0.01264,
-      "orbitalEccentricity": 0.2341,
-      "blackbodyTempK": 249.14882410602308,
-      "surfaceTempK": 56354.061744509825,
-      "albedo": 0.5,
-      "moons": 1,
-      "solarStormIntensity": 1,
-      "radiation": 11592413840469.922,
-      "tectonics": 0,
-      "axialTiltExcursion": 1.307415824717328e-9,
-      "axialTiltDegrees": 0.1,
-      "localDay": {
-        "hours": 75,
-        "minutes": 42,
-        "seconds": 4
-      }
-    },
     "Medina": {
       "name": "Medina",
       "star": "Sigma Draconis",

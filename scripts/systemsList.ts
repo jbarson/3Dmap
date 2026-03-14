@@ -232,7 +232,6 @@ export const systemsArr: System[] = [
     z: 8.32,
     type: ["G V"],
     sysName: "Beta Comae Berenices *",
-    planetName: "Galt's World",
   },
   { id: 534, x: 2.78, y: 0.26, z: 9.13, type: ["G IV"], sysName: "Eta Boötis *" },
   { id: 506, x: 4.28, y: -4.77, z: 6.21, type: ["G V"], sysName: "61 Virginis *" },
