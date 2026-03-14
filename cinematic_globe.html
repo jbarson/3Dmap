@@ -153,7 +153,8 @@ const surfaceUniforms = {
     uTime: commonUniforms.uTime,
     uCloudCoverage: commonUniforms.uCloudCoverage,
     uCloudSeed: commonUniforms.uCloudSeed,
-    uCloudScale: commonUniforms.uCloudScale
+    uCloudScale: commonUniforms.uCloudScale,
+    uAlbedo: { value: 0.35 }
 };
 
 surfaceMat.onBeforeCompile = (shader) => {
@@ -164,6 +165,7 @@ surfaceMat.onBeforeCompile = (shader) => {
     shader.uniforms.uCloudCoverage = surfaceUniforms.uCloudCoverage;
     shader.uniforms.uCloudSeed = surfaceUniforms.uCloudSeed;
     shader.uniforms.uCloudScale = surfaceUniforms.uCloudScale;
+    shader.uniforms.uAlbedo = surfaceUniforms.uAlbedo;
 
     shader.vertexShader = `
         varying vec3 vLocalNormal;
@@ -180,6 +182,7 @@ surfaceMat.onBeforeCompile = (shader) => {
         uniform sampler2D uSpecularMap;
         uniform float uTime;
         uniform float uCloudCoverage;
+        uniform float uAlbedo;
         varying vec3 vLocalNormal;
         ${noiseGLSL}
     \n` + shader.fragmentShader;
@@ -207,7 +210,7 @@ surfaceMat.onBeforeCompile = (shader) => {
         float cloudShadow = mix(1.0, 0.5, clouds * dayWeight);
 
         // Apply
-        diffuseColor.rgb *= (dayWeight * cloudShadow);
+        diffuseColor.rgb *= (dayWeight * cloudShadow * (0.5 + uAlbedo * 1.5));
         diffuseColor.rgb += (nightLights * (1.0 - dayWeight));
         `
     );
@@ -341,7 +344,7 @@ const ringMesh = new THREE.Mesh(ringGeo, ringMat);
 ringMesh.rotation.x = Math.PI / 2;
 ringMesh.rotation.y = 0.3;
 ringMesh.visible = false;
-scene.add(ringMesh);
+planetMesh.add(ringMesh);
 
 const ringShadowMat = new THREE.MeshBasicMaterial({
     color: 0x000000,
@@ -358,16 +361,16 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.1));
 
 // --- Planet Data & Switching ---
 const planets = [
-    { name: 'Altiplano', base: 'Map_Altiplano', seed: [12.3, 45.6, 78.9], scale: 1.8 },
-    { name: 'Olympia', base: 'Map_Olympia', seed: [98.7, 65.4, 32.1], scale: 3.5 },
-    { name: 'Concord', base: 'Map_Concord', seed: [42.0, 42.0, 42.0], scale: 1.2 },
-    { name: 'Damso', base: 'Map_Damso', seed: [1.1, 2.2, 3.3], scale: 4.0 },
-    { name: 'Medina', base: 'Map_Medina', seed: [55.5, 66.6, 77.7], scale: 2.5 },
-    { name: 'Novaya', base: 'Map_Novaya', seed: [8.8, 9.9, 0.0], scale: 1.5, hasRing: true },
-    { name: 'Pacifica', base: 'Map_Pacifica', seed: [33.3, 22.2, 11.1], scale: 2.0 },
-    { name: 'Refuge', base: 'Map_Refuge', seed: [7.7, 6.6, 5.5], scale: 3.0 },
-    { name: 'Schwarzvaal', base: 'Map_Schwartzvaal', seed: [100.1, 200.2, 300.3], scale: 0.8 },
-    { name: 'Xing Cheng', base: 'Map_XingCheng', seed: [0.1, 0.2, 0.3], scale: 5.0 }
+    { name: 'Altiplano', base: 'Map_Altiplano', seed: [12.3, 45.6, 78.9], scale: 1.8, albedo: 0.34, cloudCover: 0.55, axialTilt: 29.4, diameterKm: 10883 },
+    { name: 'Olympia', base: 'Map_Olympia', seed: [98.7, 65.4, 32.1], scale: 3.5, albedo: 0.32, cloudCover: 0.33, axialTilt: 23.5, diameterKm: 12288 },
+    { name: 'Concord', base: 'Map_Concord', seed: [42.0, 42.0, 42.0], scale: 1.2, albedo: 0.61, cloudCover: 0.57, axialTilt: 25.1, diameterKm: 11326 },
+    { name: 'Damso', base: 'Map_Damso', seed: [1.1, 2.2, 3.3], scale: 4.0, albedo: 0.9, cloudCover: 0.47, axialTilt: 33.1, diameterKm: 13563 },
+    { name: 'Medina', base: 'Map_Medina', seed: [55.5, 66.6, 77.7], scale: 2.5, albedo: 0.29, cloudCover: 0.62, axialTilt: 18.2, diameterKm: 9854 },
+    { name: 'Novaya', base: 'Map_Novaya', seed: [8.8, 9.9, 0.0], scale: 1.5, albedo: 0.31, cloudCover: 0.49, axialTilt: 31.6, diameterKm: 10954, hasRing: true },
+    { name: 'Pacifica', base: 'Map_Pacifica', seed: [33.3, 22.2, 11.1], scale: 2.0, albedo: 0.34, cloudCover: 0.81, axialTilt: 2.1, diameterKm: 15584 },
+    { name: 'Refuge', base: 'Map_Refuge', seed: [7.7, 6.6, 5.5], scale: 3.0, albedo: 0.45, cloudCover: 0.55, axialTilt: 16.8, diameterKm: 8972 },
+    { name: 'Schwarzvaal', base: 'Map_Schwartzvaal', seed: [100.1, 200.2, 300.3], scale: 0.8, albedo: 0.32, cloudCover: 0.27, axialTilt: 21.4, diameterKm: 10240 },
+    { name: 'Xing Cheng', base: 'Map_XingCheng', seed: [0.1, 0.2, 0.3], scale: 5.0, albedo: 0.36, cloudCover: 0.49, axialTilt: 28.3, diameterKm: 12672 }
 ];
 
 const texLoader = new THREE.TextureLoader();
@@ -387,6 +390,40 @@ function switchPlanet(name) {
     // Show/hide ring
     const hasRing = p.hasRing || false;
     ringMesh.visible = hasRing;
+
+    // Set albedo
+    surfaceUniforms.uAlbedo.value = p.albedo || 0.35;
+
+    // Set axial tilt (convert degrees to radians, tilt around X axis)
+    if (p.axialTilt !== undefined) {
+        planetMesh.rotation.x = (p.axialTilt * Math.PI) / 180;
+        cloudMesh.rotation.x = (p.axialTilt * Math.PI) / 180;
+    }
+
+    // Set planet scale based on diameter (relative to Earth ~12742km)
+    const EARTH_DIAMETER = 12742;
+    if (p.diameterKm) {
+        const scale = p.diameterKm / EARTH_DIAMETER;
+        planetMesh.scale.setScalar(scale);
+        cloudMesh.scale.setScalar(scale);
+        ringMesh.scale.setScalar(scale);
+    }
+
+    // Set cloud coverage from planet data
+    if (p.cloudCover !== undefined) {
+        commonUniforms.uCloudCoverage.value = p.cloudCover;
+        document.getElementById('cloud-coverage').value = Math.round(p.cloudCover * 100);
+        document.getElementById('cloud-val').textContent = Math.round(p.cloudCover * 100) + '%';
+    }
+
+    // Set camera angle for ring visibility
+    if (hasRing) {
+        camera.position.set(1.5, 1.2, 2.5);
+        camera.lookAt(0, 0, 0);
+    } else {
+        camera.position.set(0, 0, 3);
+        camera.lookAt(0, 0, 0);
+    }
 
     const loadTexture = (suffix) => {
         const path = `/pngs/${p.base}${suffix}.png`;
