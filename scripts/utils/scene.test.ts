@@ -16,9 +16,7 @@ describe("buildStarSprite", () => {
       }),
       fillRect: vi.fn(),
     } as unknown as Partial<CanvasRenderingContext2D>;
-    getContextSpy = vi
-      .spyOn(HTMLCanvasElement.prototype, "getContext")
-      .mockReturnValue(mockContext);
+    getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(mockContext);
   });
 
   afterEach(() => {
@@ -105,18 +103,20 @@ describe("buildStarSprite", () => {
     expect(sprite.scale.x).toBe(80); // DEFAULT_STAR_SIZE
   });
 
-  it("throws if canvas 2D context is not available", () => {
+  it("throws if canvas 2D context is not available", async () => {
     getContextSpy.mockReturnValue(null);
+    vi.resetModules();
+    const { buildStarSprite: buildStarSpriteFresh } = await import("./scene");
+
     const system: System = {
       id: 4,
       x: 0,
       y: 0,
       z: 0,
-      // Use a new star type to avoid hitting the cache
-      type: ["Z V"],
+      type: ["G V"],
       sysName: "Test",
     };
-    expect(() => buildStarSprite(system, vi.fn())).toThrow(/Failed to obtain 2D rendering context/);
+    expect(() => buildStarSpriteFresh(system, vi.fn())).toThrow(/Failed to obtain 2D rendering context/);
   });
 });
 
