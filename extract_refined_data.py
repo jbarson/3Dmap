@@ -27,22 +27,21 @@ def extract_data():
         js_name = 'Novaya' if p_key == 'NovayeNuevo' else ('Xing Cheng' if p_key == 'XingCheng' else p_key)
         
         for row in sheet:
-            row_values = [str(v) for v in row.values()]
-            if 'Mean Atmospheric Pressure' in row_values:
+            row_values_set = {str(v) for v in row.values()}
+            if 'Mean Atmospheric Pressure' in row_values_set:
                 p_data['atmPressure'] = row.get('Unnamed: 4')
-            if 'O2 %' in row_values: p_data['atmo_O2'] = row.get('Unnamed: 2')
-            if 'N2 %' in row_values: p_data['atmo_N2'] = row.get('Unnamed: 2')
-            if 'CO2 %' in row_values: p_data['atmo_CO2'] = row.get('Unnamed: 2')
-            if 'Surf Temp' in row_values:
+            if 'O2 %' in row_values_set: p_data['atmo_O2'] = row.get('Unnamed: 2')
+            if 'N2 %' in row_values_set: p_data['atmo_N2'] = row.get('Unnamed: 2')
+            if 'CO2 %' in row_values_set: p_data['atmo_CO2'] = row.get('Unnamed: 2')
+            if 'Surf Temp' in row_values_set:
                 p_data['surfTempK'] = row.get('Unnamed: 1')
-            if 'Hydrosphere %' in row_values:
+            if 'Hydrosphere %' in row_values_set:
                 p_data['hydroPercent'] = row.get('Unnamed: 2')
-            if 'magnetopause ht ' in row_values:
+            if 'magnetopause ht ' in row_values_set:
                 p_data['magnetopauseHt'] = row.get('Unnamed: 1')
 
-        # Fallback for Moon Data from individual sheet if it exists
-        for row in sheet:
-            if row.get('Planetary Parameters') == 'Lunar Data' or 'Lunar Data' in [str(v) for v in row.values()]:
+            # Fallback for Moon Data from individual sheet if it exists
+            if row.get('Planetary Parameters') == 'Lunar Data' or 'Lunar Data' in row_values_set:
                 p_data['moonDiameter'] = row.get('Unnamed: 1')
                 p_data['moonDist'] = row.get('Unnamed: 9')
 
