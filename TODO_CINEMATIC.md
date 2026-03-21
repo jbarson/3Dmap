@@ -5,4 +5,3 @@
 - [x] **3. Surface Temperature & Visual Tints**
 - [x] **4. Scientific Data HUD**
 - [ ] **6. Hydrographic Reflection / Specular Highlights**
-

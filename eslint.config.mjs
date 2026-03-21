@@ -11,7 +11,14 @@ import prettier from "eslint-plugin-prettier";
 export default [
   // Ignore build artifacts and generated types
   {
-    ignores: ["dist/**", "node_modules/**", "coverage/**", "**/*.d.ts", ".eslintrc.cjs", ".claude/**"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "coverage/**",
+      "**/*.d.ts",
+      ".eslintrc.cjs",
+      ".claude/**",
+    ],
   },
 
   // JavaScript rules

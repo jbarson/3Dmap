@@ -58,7 +58,7 @@ export class MapStateImpl implements MapState {
     THREE.Sprite,
     { fontSize: string; marginTop: string; planetFontSize: string; planetMarginTop: string }
   >();
-  onZoom: ((idx: number) => void) | null = null;
+
   private glowSprite: THREE.Sprite | null = null;
   private cameraAnim: {
     startPos: THREE.Vector3;
@@ -76,7 +76,7 @@ export class MapStateImpl implements MapState {
   // Frustum culling — reused every frame to avoid GC pressure
   private readonly frustum = new THREE.Frustum();
   private readonly projScreenMatrix = new THREE.Matrix4();
-  onZoom: ((idx: number) => void) | null = null;
+
   private bgPoints: THREE.Points | null = null;
   private typeMaterials = new Map<JumpType, THREE.LineBasicMaterial>();
 
