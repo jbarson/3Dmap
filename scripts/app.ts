@@ -85,13 +85,18 @@ const JUMP_TYPE_LABEL: Record<JumpType, string> = {
   E: "Epsilon",
 };
 
+let idToNameCache: Map<number, string> | null = null;
+
 function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): void {
   const panel = document.getElementById("systemDetail");
   const content = document.getElementById("systemDetailContent");
   if (!panel || !content) return;
 
-  const idToName = new Map<number, string>();
-  for (const s of allSystems) idToName.set(s.id, s.sysName);
+  if (!idToNameCache) {
+    idToNameCache = new Map<number, string>();
+    for (const s of allSystems) idToNameCache.set(s.id, s.sysName);
+  }
+  const idToName = idToNameCache;
 
   const connected = jumps.filter((j) => j.bridge[0] === sys.id || j.bridge[1] === sys.id);
   const connectedItems = connected
