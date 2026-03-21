@@ -140,10 +140,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const controlsPanel = document.getElementById("controlsPanel") as HTMLElement | null;
   if (menuToggle && controlsPanel) {
     menuToggle.setAttribute("aria-controls", "controlsPanel");
-    controlsPanel.classList.add("open");
-    controlsPanel.hidden = false;
-    controlsPanel.setAttribute("aria-hidden", "false");
-    menuToggle.setAttribute("aria-expanded", "true");
+    const isMobile = window.matchMedia("(max-width: 480px)").matches;
+    if (!isMobile) {
+      controlsPanel.classList.add("open");
+      controlsPanel.hidden = false;
+      controlsPanel.setAttribute("aria-hidden", "false");
+      menuToggle.setAttribute("aria-expanded", "true");
+    } else {
+      controlsPanel.classList.remove("open");
+      controlsPanel.hidden = true;
+      controlsPanel.setAttribute("aria-hidden", "true");
+      menuToggle.setAttribute("aria-expanded", "false");
+    }
     menuToggle.addEventListener("click", () => {
       const isOpen = controlsPanel.classList.toggle("open");
       menuToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
