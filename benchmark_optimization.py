@@ -81,7 +81,7 @@ def highly_optimized_extract_data(data):
         js_name = 'Novaya' if p_key == 'NovayeNuevo' else ('Xing Cheng' if p_key == 'XingCheng' else p_key)
 
         for row in sheet:
-            # Only convert to string if necessary, and use a set for O(1) lookup
+            # Use a set of stringified values for O(1) lookup
             row_values_set = {str(v) for v in row.values()}
 
             if 'Mean Atmospheric Pressure' in row_values_set:
