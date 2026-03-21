@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const controlsPanel = document.getElementById("controlsPanel") as HTMLElement | null;
   if (menuToggle && controlsPanel) {
     menuToggle.setAttribute("aria-controls", "controlsPanel");
-    const isMobile = window.innerWidth <= 480;
+    const isMobile = window.matchMedia("(max-width: 480px)").matches;
     if (!isMobile) {
       controlsPanel.classList.add("open");
       controlsPanel.hidden = false;
