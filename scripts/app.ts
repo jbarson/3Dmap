@@ -165,14 +165,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
   if (dateSlider) {
+    let rAFId: number | null = null;
+    let pendingDateVal = Number(dateSlider.value);
+
     dateSlider.addEventListener("input", function () {
       const dateValStr = dateSlider.value;
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
-      for (let n = 0; n < jumpList.length; n++) {
-        // Treat links from the selected year as discovered; hide only strictly later years
-        const mat = mapState.links[n].material as import("three").LineBasicMaterial;
-        mat.opacity = jumpList[n].year > dateVal ? 0 : 1;
+
+      pendingDateVal = dateVal;
+      if (rAFId === null) {
+        rAFId = requestAnimationFrame(() => {
+          for (let n = 0; n < jumpList.length; n++) {
+            // Treat links from the selected year as discovered; hide only strictly later years
+            const mat = mapState.links[n].material as import("three").LineBasicMaterial;
+            mat.opacity = jumpList[n].year > pendingDateVal ? 0 : 1;
+          }
+          rAFId = null;
+        });
       }
     });
   }
