@@ -27,7 +27,7 @@ const GLOBE_PLANETS = new Set([
 ]);
 
 // Map checkbox element IDs to their link-type letters
-const LINK_CHECKBOX_IDS: { id: string; letter: string }[] = [
+const LINK_CHECKBOX_IDS: { id: string; letter: JumpType }[] = [
   { id: "alphaLink", letter: "A" },
   { id: "betaLink", letter: "B" },
   { id: "gammaLink", letter: "G" },
@@ -192,21 +192,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const allLinks = document.getElementById("allLinks") as HTMLInputElement | null;
   if (allLinks) {
     allLinks.addEventListener("change", function (this: HTMLInputElement) {
-      if (this.checked) {
-        for (let i = 0; i < mapState.linkTypes.length; i++) {
-          const el = mapState.linkTypes[i] as HTMLInputElement;
-          if (el && el.checked === false) {
-            el.checked = true;
-            el.dispatchEvent(new Event("change"));
-          }
-        }
-      } else {
-        for (let j = 0; j < mapState.linkTypes.length; j++) {
-          const el = mapState.linkTypes[j] as HTMLInputElement;
-          if (el && el.checked === true) {
-            el.checked = false;
-            el.dispatchEvent(new Event("change"));
-          }
+      for (let i = 0; i < mapState.linkTypes.length; i++) {
+        const el = mapState.linkTypes[i] as HTMLInputElement;
+        if (el && el.checked !== this.checked) {
+          el.checked = this.checked;
+          el.dispatchEvent(new Event("change"));
         }
       }
     });
@@ -226,18 +216,11 @@ document.addEventListener("DOMContentLoaded", () => {
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
   }, 500);
 
-  const linkHandlers = [
-    { cb: mapState.alphaCheckbox, toggle: () => mapState.toggleAlpha() },
-    { cb: mapState.betaCheckbox, toggle: () => mapState.toggleBeta() },
-    { cb: mapState.gammaCheckbox, toggle: () => mapState.toggleGamma() },
-    { cb: mapState.deltaCheckbox, toggle: () => mapState.toggleDelta() },
-    { cb: mapState.epsiCheckbox, toggle: () => mapState.toggleEpsi() },
-  ];
-
-  linkHandlers.forEach(({ cb, toggle }) => {
+  LINK_CHECKBOX_IDS.forEach(({ letter }, i) => {
+    const cb = linkCheckboxes[i];
     if (cb) {
-      cb.addEventListener("change", () => {
-        toggle();
+      cb.addEventListener("change", function () {
+        mapState.toggleLinks(letter);
         updateHash();
       });
     }

@@ -145,7 +145,6 @@ export function labelStyleChanged(cached: string | undefined, next: string): boo
  * @param viewHeight    viewport height in pixels
  * @param dist          distance from camera to sprite in world units
  * @param tanHalfFov    Math.tan(cameraFovDegrees * Math.PI / 360)
- * @param fontSize      current label font size in px (used to stack planet label)
  */
 export function computeLabelMarginTop(
   spriteScaleX: number,
