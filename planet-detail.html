@@ -101,6 +101,16 @@ body { background: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, Gene
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+function escapeHtml(unsafe) {
+    if (unsafe == null) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // --- Renderer Setup ---
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -685,7 +695,7 @@ function switchPlanet(name, updateUrl = true) {
     // Update HUD
     const hud = document.getElementById('hud');
     hud.innerHTML = `
-        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${(p.displayName || name).toUpperCase()}</div>
+        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${escapeHtml((p.displayName || name).toUpperCase())}</div>
         <div class="hud-item"><span class="hud-label">Diameter:</span><span class="hud-value">${p.diameterKm.toLocaleString()} km</span></div>
         <div class="hud-item"><span class="hud-label">Day Length:</span><span class="hud-value">${p.dayHours}h</span></div>
         <div class="hud-item"><span class="hud-label">Surf Temp:</span><span class="hud-value">${p.surfTempK} K</span></div>
