@@ -72,6 +72,11 @@
         border-radius: 4px;
         transition: all 0.3s;
         background: rgba(255, 255, 255, 0.05);
+        display: block;
+      }
+      .planet-link:focus-visible {
+        outline: 2px solid #00e5ff;
+        outline-offset: -2px;
       }
       .planet-link:hover {
         background: rgba(255, 255, 255, 0.15);
@@ -183,7 +188,7 @@
     float noise(vec3 p) {
         vec3 i = floor(p); vec3 f = fract(p);
         f = f*f*(3.0-2.0*f);
-        return mix(mix(mix(hash(i), hash(i+vec3(1,0,0)), f.x), mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)), f.x), f.y),
+        return mix(mix(mix(hash(i), hash(i+vec3(1,0,0)), f.x), mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)), f.y), f.y),
                    mix(mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)), f.x), mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)), f.x), f.y), f.z);
     }
     float fbm(vec3 p) {
@@ -931,8 +936,12 @@
         const link = document.createElement("a");
         link.className = "planet-link" + (p.name === "Altiplano" ? " active" : "");
         link.dataset.name = p.name;
+        link.href = "?planet=" + encodeURIComponent(p.name);
         link.textContent = p.displayName || p.name;
-        link.onclick = () => switchPlanet(p.name);
+        link.onclick = (e) => {
+          e.preventDefault();
+          switchPlanet(p.name);
+        };
         selector.appendChild(link);
       });
 
