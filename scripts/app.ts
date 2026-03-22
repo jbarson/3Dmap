@@ -4,6 +4,7 @@ import { validateData } from "./types";
 import type { Jump, JumpType, MapState, System } from "./types";
 import { MapStateImpl } from "./mapState";
 import { debounce } from "./utils/debounce";
+import { escapeHtml } from "./utils/escapeHtml";
 
 const DATE_DEFAULT = 2213;
 
@@ -104,11 +105,11 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
       const otherId = j.bridge[0] === sys.id ? j.bridge[1] : j.bridge[0];
       const otherName = idToName.get(otherId) ?? `#${otherId}`;
       const typeLabel = JUMP_TYPE_LABEL[j.type] ?? j.type;
-      return `<li>${otherName} &mdash; ${typeLabel} (${j.year})</li>`;
+      return `<li>${escapeHtml(otherName)} &mdash; ${escapeHtml(typeLabel)} (${j.year})</li>`;
     })
     .join("");
 
-  const planetLine = sys.planetName ? `<p>Planet: ${sys.planetName}</p>` : "";
+  const planetLine = sys.planetName ? `<p>Planet: ${escapeHtml(sys.planetName)}</p>` : "";
   const globeKey = sys.planetName ? (GLOBE_PLANET_KEY[sys.planetName] ?? sys.planetName) : null;
   const globeLink =
     sys.planetName && GLOBE_PLANETS.has(sys.planetName)
@@ -120,10 +121,10 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
       : `<p>No hyper links.</p>`;
 
   content.innerHTML = `
-    <h3>${sys.sysName}</h3>
+    <h3>${escapeHtml(sys.sysName)}</h3>
     ${planetLine}
     ${globeLink}
-    <p>Type: ${sys.type.join(", ")}</p>
+    <p>Type: ${escapeHtml(sys.type.join(", "))}</p>
     <p>Coordinates: (${sys.x.toFixed(1)}, ${sys.y.toFixed(1)}, ${sys.z.toFixed(1)})</p>
     ${linksSection}
   `;
