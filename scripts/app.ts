@@ -169,7 +169,9 @@ function setupDateSlider(
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
       for (let n = 0; n < jumpList.length; n++) {
-        const mat = mapState.links[n].material as import("three").LineBasicMaterial;
+        const link = mapState.links[n];
+        if (!link) continue;
+        const mat = link.material as import("three").LineBasicMaterial;
         mat.opacity = jumpList[n].year > dateVal ? 0 : 1;
       }
     });
@@ -336,12 +338,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const { dateSlider } = setupDateSlider(mapState, jumpList);
 
   let currentFocus = "";
+  let linkCheckboxes: (HTMLInputElement | null)[] = [];
   const updateHash = debounce(() => {
     const hash = buildHash(dateSlider, linkCheckboxes, currentFocus);
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
   }, 500);
 
-  const linkCheckboxes = setupLinkCheckboxes(mapState, updateHash);
+  linkCheckboxes = setupLinkCheckboxes(mapState, updateHash);
 
   if (dateSlider) {
     dateSlider.addEventListener("input", updateHash);
