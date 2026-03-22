@@ -89,7 +89,7 @@
           if (node.isMesh) {
             const mats = Array.isArray(node.material) ? node.material : [node.material];
             mats.forEach((mat) => {
-              if (mat.map) {
+              if (mat && mat.map) {
                 mat.color.set(0xffffff);
               }
             });
