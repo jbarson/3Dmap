@@ -72,6 +72,11 @@
         border-radius: 4px;
         transition: all 0.3s;
         background: rgba(255, 255, 255, 0.05);
+        display: block;
+      }
+      .planet-link:focus-visible {
+        outline: 2px solid #00e5ff;
+        outline-offset: -2px;
       }
       .planet-link:hover {
         background: rgba(255, 255, 255, 0.15);
@@ -132,6 +137,16 @@
     <script type="module">
       import * as THREE from "three";
       import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      function escapeHtml(unsafe) {
+        if (unsafe == null) return "";
+        return String(unsafe)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
 
       // --- Renderer Setup ---
       const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -871,7 +886,7 @@
         // Update HUD
         const hud = document.getElementById("hud");
         hud.innerHTML = `
-        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${(p.displayName || name).toUpperCase()}</div>
+        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${escapeHtml((p.displayName || name).toUpperCase())}</div>
         <div class="hud-item"><span class="hud-label">Diameter:</span><span class="hud-value">${p.diameterKm.toLocaleString()} km</span></div>
         <div class="hud-item"><span class="hud-label">Day Length:</span><span class="hud-value">${p.dayHours}h</span></div>
         <div class="hud-item"><span class="hud-label">Surf Temp:</span><span class="hud-value">${p.surfTempK} K</span></div>
@@ -931,8 +946,12 @@
         const link = document.createElement("a");
         link.className = "planet-link" + (p.name === "Altiplano" ? " active" : "");
         link.dataset.name = p.name;
+        link.href = "?planet=" + encodeURIComponent(p.name);
         link.textContent = p.displayName || p.name;
-        link.onclick = () => switchPlanet(p.name);
+        link.onclick = (e) => {
+          e.preventDefault();
+          switchPlanet(p.name);
+        };
         selector.appendChild(link);
       });
 
