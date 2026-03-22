@@ -11,7 +11,7 @@ This document defines the foundational mandates and technical standards for the 
 
 ### **1.2 Context Efficiency**
 - Minimize unnecessary turns and context usage.
-- Prefer targeted, surgical reads (`read_file` with line ranges) and parallel tool calls.
+- Prefer targeted, surgical reads of files (e.g., specifying line ranges) and parallel tool calls.
 - Use sub-agents for repetitive batch tasks or high-volume output.
 
 ## 2. Engineering Excellence
@@ -29,8 +29,8 @@ This document defines the foundational mandates and technical standards for the 
 - **Enums**: Use the project's existing `JumpType` and other shared types in `scripts/types.ts`.
 
 ### **2.3 Coding Style**
-- **Conventions**: kebab-case for files, PascalCase for classes/interfaces, camelCase for functions/variables.
-- **Imports**: Group and sort imports (External → Internal → Types). Use absolute paths from the project root.
+- **Conventions**: kebab-case for new files (existing mixed/camelCase filenames in `scripts/` are legacy), PascalCase for classes/interfaces, camelCase for functions/variables.
+- **Imports**: Group and sort imports (External → Internal → Types). Use relative imports consistent with the existing project structure (for example, `./utils/...`).
 - **Naming**: Be descriptive and semantic. Avoid cryptic abbreviations.
 
 ## 3. Validation & Testing
@@ -51,7 +51,7 @@ Before completing any task, you MUST run:
 
 ### **4.1 Research -> Strategy -> Execution**
 - Always research existing patterns before implementing.
-- Use `enter_plan_mode` for complex architectural changes.
+- For complex architectural changes, start by writing a brief design note (for example, updating PLAN.md) before implementation.
 - Reproduce bugs with test cases before applying fixes.
 
 ### **4.2 Inline Documentation**
