@@ -93,7 +93,6 @@ import type { MapState, SystemData } from "./types";
 ### Formatting (Prettier)
 
 - 2-space indentation
-- Single quotes for strings
 - Trailing commas
 - Semicolons always
 
