@@ -226,31 +226,22 @@ document.addEventListener("DOMContentLoaded", () => {
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
   }, 500);
 
-  if (mapState.alphaCheckbox)
-    mapState.alphaCheckbox.addEventListener("change", function () {
-      mapState.toggleAlpha();
-      updateHash();
-    });
-  if (mapState.betaCheckbox)
-    mapState.betaCheckbox.addEventListener("change", function () {
-      mapState.toggleBeta();
-      updateHash();
-    });
-  if (mapState.gammaCheckbox)
-    mapState.gammaCheckbox.addEventListener("change", function () {
-      mapState.toggleGamma();
-      updateHash();
-    });
-  if (mapState.deltaCheckbox)
-    mapState.deltaCheckbox.addEventListener("change", function () {
-      mapState.toggleDelta();
-      updateHash();
-    });
-  if (mapState.epsiCheckbox)
-    mapState.epsiCheckbox.addEventListener("change", function () {
-      mapState.toggleEpsi();
-      updateHash();
-    });
+  const linkHandlers = [
+    { cb: mapState.alphaCheckbox, toggle: () => mapState.toggleAlpha() },
+    { cb: mapState.betaCheckbox, toggle: () => mapState.toggleBeta() },
+    { cb: mapState.gammaCheckbox, toggle: () => mapState.toggleGamma() },
+    { cb: mapState.deltaCheckbox, toggle: () => mapState.toggleDelta() },
+    { cb: mapState.epsiCheckbox, toggle: () => mapState.toggleEpsi() },
+  ];
+
+  linkHandlers.forEach(({ cb, toggle }) => {
+    if (cb) {
+      cb.addEventListener("change", () => {
+        toggle();
+        updateHash();
+      });
+    }
+  });
 
   if (dateSlider) {
     dateSlider.addEventListener("input", updateHash);
