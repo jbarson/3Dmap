@@ -13,15 +13,6 @@ export interface System {
 
 export type JumpType = "A" | "B" | "G" | "D" | "E";
 
-// JUMP_TYPE_CLASS kept for any legacy CSS references (unused in WebGL renderer)
-export const JUMP_TYPE_CLASS: Record<JumpType, string> = {
-  A: "alpha",
-  B: "beta",
-  G: "gamma",
-  D: "delta",
-  E: "epsilon",
-};
-
 export interface Jump {
   bridge: [number, number]; // [fromId, toId]
   type: JumpType;
