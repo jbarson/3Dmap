@@ -131,12 +131,7 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
   panel.hidden = false;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  // One-time data validation for developer visibility in console
-  validateData(systemsArr, jumpList);
-
-  const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
-
+function setupMenuToggle(): void {
   const menuToggle = document.getElementById("menuToggle") as HTMLButtonElement | null;
   const controlsPanel = document.getElementById("controlsPanel") as HTMLElement | null;
   if (menuToggle && controlsPanel) {
@@ -160,8 +155,12 @@ document.addEventListener("DOMContentLoaded", () => {
       controlsPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
     });
   }
+}
 
-  //the following is to link the slider with the text box*/
+function setupDateSlider(
+  mapState: MapState,
+  jumpList: Jump[],
+): { dateSlider: HTMLInputElement | null; dateBox: HTMLElement | null } {
   const dateSlider = document.getElementById("dateSlider") as HTMLInputElement | null;
   const dateBox = document.getElementById("dateBox");
   if (dateSlider) {
@@ -170,12 +169,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const dateVal = Number(dateValStr);
       if (dateBox) dateBox.textContent = String(dateVal);
       for (let n = 0; n < jumpList.length; n++) {
-        // Treat links from the selected year as discovered; hide only strictly later years
         const mat = mapState.links[n].material as import("three").LineBasicMaterial;
         mat.opacity = jumpList[n].year > dateVal ? 0 : 1;
       }
     });
   }
+  return { dateSlider, dateBox };
+}
+
+function setupLinkCheckboxes(
+  mapState: MapState,
+  updateHash: () => void,
+): (HTMLInputElement | null)[] {
   mapState.linkTypes = [];
   mapState.alphaCheckbox = document.getElementById("alphaLink") as HTMLInputElement | null;
   mapState.betaCheckbox = document.getElementById("betaLink") as HTMLInputElement | null;
@@ -189,6 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mapState.deltaCheckbox,
     mapState.epsiCheckbox,
   ].filter(Boolean) as HTMLInputElement[];
+
   const allLinks = document.getElementById("allLinks") as HTMLInputElement | null;
   if (allLinks) {
     allLinks.addEventListener("change", function (this: HTMLInputElement) {
@@ -202,19 +208,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Comment 3: use .map() to preserve index alignment with LINK_CHECKBOX_IDS
   const linkCheckboxes = LINK_CHECKBOX_IDS.map(
     ({ id }) => document.getElementById(id) as HTMLInputElement | null,
   );
-
-  // Track the currently focused system name for hash serialization
-  let currentFocus = "";
-
-  // Debounced hash writer
-  const updateHash = debounce(() => {
-    const hash = buildHash(dateSlider, linkCheckboxes, currentFocus);
-    history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
-  }, 500);
 
   LINK_CHECKBOX_IDS.forEach(({ letter }, i) => {
     const cb = linkCheckboxes[i];
@@ -226,11 +222,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  if (dateSlider) {
-    dateSlider.addEventListener("input", updateHash);
-  }
+  return linkCheckboxes;
+}
 
-  // Search box: focus camera on the named system
+function setupSearch(mapState: MapState): {
+  systemSearch: HTMLInputElement | null;
+  searchStatus: HTMLElement | null;
+} {
   const systemSearch = document.getElementById("systemSearch") as HTMLInputElement | null;
   const systemSearchBtn = document.getElementById("systemSearchBtn");
   const searchStatus = document.getElementById("searchStatus");
@@ -243,7 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `Focused on "${systemSearch.value}"`
         : `System "${systemSearch.value}" not found`;
     }
-    // currentFocus and updateHash are handled by the onZoom callback
   }
 
   if (systemSearchBtn) systemSearchBtn.addEventListener("click", runSearch);
@@ -253,10 +250,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // MapStateImpl encapsulates init/render/animate and link toggles
-  mapState.init();
+  return { systemSearch, searchStatus };
+}
 
-  // Wire system detail panel close button
+function setupSystemDetailPanel(): void {
   const systemDetailClose = document.getElementById("systemDetailClose");
   const systemDetailPanel = document.getElementById("systemDetail");
   if (systemDetailClose && systemDetailPanel) {
@@ -264,62 +261,9 @@ document.addEventListener("DOMContentLoaded", () => {
       systemDetailPanel.hidden = true;
     });
   }
+}
 
-  // Show detail panel and sync URL hash whenever the camera zooms to a star
-  mapState.onZoom = (idx: number) => {
-    showSystemDetail(systemsArr[idx], jumpList, systemsArr);
-    currentFocus = systemsArr[idx]?.sysName ?? "";
-    updateHash();
-  };
-
-  // --- Restore state from URL hash ---
-  const rawHash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
-  if (rawHash) {
-    const params = new URLSearchParams(rawHash);
-
-    // Comment 2: validate dateParam is finite and clamp to slider min/max before applying
-    const dateParam = params.get("date");
-    if (dateParam !== null && dateSlider) {
-      const parsedDate = Number(dateParam);
-      if (Number.isFinite(parsedDate)) {
-        const min = dateSlider.min !== "" ? Number(dateSlider.min) : undefined;
-        const max = dateSlider.max !== "" ? Number(dateSlider.max) : undefined;
-        let clamped = parsedDate;
-        if (min !== undefined && Number.isFinite(min) && clamped < min) clamped = min;
-        if (max !== undefined && Number.isFinite(max) && clamped > max) clamped = max;
-        dateSlider.value = String(clamped);
-        dateSlider.dispatchEvent(new Event("input"));
-      }
-    }
-
-    // Restore link checkbox states
-    const linksParam = params.get("links");
-    if (linksParam !== null) {
-      const hiddenLetters = new Set(linksParam ? linksParam.split(",") : []);
-      LINK_CHECKBOX_IDS.forEach(({ letter }, i) => {
-        const cb = linkCheckboxes[i];
-        if (!cb) return;
-        const shouldBeChecked = hiddenLetters.has(letter);
-        if (cb.checked !== shouldBeChecked) {
-          cb.checked = shouldBeChecked;
-          cb.dispatchEvent(new Event("change"));
-        }
-      });
-    }
-
-    // Restore focused system (after init so the scene is ready)
-    const focusParam = params.get("focus");
-    if (focusParam) {
-      const found = mapState.focusOnSystem(focusParam);
-      if (found) {
-        if (systemSearch) systemSearch.value = focusParam;
-        if (searchStatus) searchStatus.textContent = `Focused on "${focusParam}"`;
-        // currentFocus is set by the onZoom callback fired inside focusOnSystem
-      }
-    }
-  }
-
-  // Build Named Worlds list from systems that have a planetName
+function setupNamedWorlds(mapState: MapState, systemsArr: System[]): void {
   const planetList = document.getElementById("planetList");
   if (planetList) {
     systemsArr.forEach((sys, idx) => {
@@ -331,6 +275,92 @@ document.addEventListener("DOMContentLoaded", () => {
       planetList.appendChild(btn);
     });
   }
+}
+
+function restoreStateFromHash(
+  mapState: MapState,
+  dateSlider: HTMLInputElement | null,
+  linkCheckboxes: (HTMLInputElement | null)[],
+  systemSearch: HTMLInputElement | null,
+  searchStatus: HTMLElement | null,
+): void {
+  const rawHash = location.hash.startsWith("#") ? location.hash.slice(1) : location.hash;
+  if (!rawHash) return;
+
+  const params = new URLSearchParams(rawHash);
+
+  const dateParam = params.get("date");
+  if (dateParam !== null && dateSlider) {
+    const parsedDate = Number(dateParam);
+    if (Number.isFinite(parsedDate)) {
+      const min = dateSlider.min !== "" ? Number(dateSlider.min) : undefined;
+      const max = dateSlider.max !== "" ? Number(dateSlider.max) : undefined;
+      let clamped = parsedDate;
+      if (min !== undefined && Number.isFinite(min) && clamped < min) clamped = min;
+      if (max !== undefined && Number.isFinite(max) && clamped > max) clamped = max;
+      dateSlider.value = String(clamped);
+      dateSlider.dispatchEvent(new Event("input"));
+    }
+  }
+
+  const linksParam = params.get("links");
+  if (linksParam !== null) {
+    const hiddenLetters = new Set(linksParam ? linksParam.split(",") : []);
+    LINK_CHECKBOX_IDS.forEach(({ letter }, i) => {
+      const cb = linkCheckboxes[i];
+      if (!cb) return;
+      const shouldBeChecked = hiddenLetters.has(letter);
+      if (cb.checked !== shouldBeChecked) {
+        cb.checked = shouldBeChecked;
+        cb.dispatchEvent(new Event("change"));
+      }
+    });
+  }
+
+  const focusParam = params.get("focus");
+  if (focusParam) {
+    const found = mapState.focusOnSystem(focusParam);
+    if (found) {
+      if (systemSearch) systemSearch.value = focusParam;
+      if (searchStatus) searchStatus.textContent = `Focused on "${focusParam}"`;
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  validateData(systemsArr, jumpList);
+
+  const mapState: MapState = new MapStateImpl(systemsArr, jumpList);
+
+  setupMenuToggle();
+  const { dateSlider } = setupDateSlider(mapState, jumpList);
+
+  let currentFocus = "";
+  const updateHash = debounce(() => {
+    const hash = buildHash(dateSlider, linkCheckboxes, currentFocus);
+    history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
+  }, 500);
+
+  const linkCheckboxes = setupLinkCheckboxes(mapState, updateHash);
+
+  if (dateSlider) {
+    dateSlider.addEventListener("input", updateHash);
+  }
+
+  const { systemSearch, searchStatus } = setupSearch(mapState);
+
+  mapState.init();
+
+  setupSystemDetailPanel();
+
+  mapState.onZoom = (idx: number) => {
+    showSystemDetail(systemsArr[idx], jumpList, systemsArr);
+    currentFocus = systemsArr[idx]?.sysName ?? "";
+    updateHash();
+  };
+
+  restoreStateFromHash(mapState, dateSlider, linkCheckboxes, systemSearch, searchStatus);
+  setupNamedWorlds(mapState, systemsArr);
 
   mapState.animate();
 });
