@@ -113,6 +113,7 @@ export class MapStateImpl implements MapState {
     }
     for (const line of this.links) {
       line.geometry.dispose();
+      (line.material as THREE.Material).dispose();
     }
     // Dispose shared per-type materials
     for (const mat of this.typeMaterials.values()) {
@@ -125,7 +126,9 @@ export class MapStateImpl implements MapState {
     }
     if (this.bgPoints) {
       this.bgPoints.geometry.dispose();
-      (this.bgPoints.material as THREE.PointsMaterial).dispose();
+      const mat = this.bgPoints.material as THREE.PointsMaterial;
+      mat.map?.dispose();
+      mat.dispose();
     }
     this.renderer.domElement.remove();
     this.labelRenderer.domElement.remove();
