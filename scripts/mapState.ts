@@ -239,7 +239,7 @@ export class MapStateImpl implements MapState {
 
       const startPos = this.systems[fromIdx].position;
       const endPos = this.systems[toIdx].position;
-      const points = [startPos.clone(), endPos.clone()];
+      const points = [startPos, endPos];
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
       if (!this.typeMaterials.has(jump.type)) {
         this.typeMaterials.set(
