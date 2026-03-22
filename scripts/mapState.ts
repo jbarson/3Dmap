@@ -82,6 +82,7 @@ export class MapStateImpl implements MapState {
   private lastCamPos = new THREE.Vector3();
   private lastCamQuat = new THREE.Quaternion();
   private lastViewH = 0;
+  private lastViewW = 0;
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
@@ -291,17 +292,20 @@ export class MapStateImpl implements MapState {
     const cam = this.camera;
     const camPos = cam.position;
     const viewH = window.innerHeight;
+    const viewW = window.innerWidth;
 
-    // Only compute label updates and CSS3D rendering when camera or viewport changes
+    // Only compute label updates and CSS2D rendering when camera or viewport changes
     const cameraMoved =
       !this.lastCamPos.equals(camPos) ||
       !this.lastCamQuat.equals(cam.quaternion) ||
-      this.lastViewH !== viewH;
+      this.lastViewH !== viewH ||
+      this.lastViewW !== viewW;
 
     if (cameraMoved) {
       this.lastCamPos.copy(camPos);
       this.lastCamQuat.copy(cam.quaternion);
       this.lastViewH = viewH;
+      this.lastViewW = viewW;
 
       const { visDistSq, tanHalfFov, frustum, projScreenMatrix } = this;
 
