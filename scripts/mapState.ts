@@ -132,11 +132,17 @@ export class MapStateImpl implements MapState {
     this.renderer.dispose();
   };
 
-  toggleAlpha = () => this.toggleLinksVisibility(this.alphaLinks);
-  toggleBeta = () => this.toggleLinksVisibility(this.betaLinks);
-  toggleGamma = () => this.toggleLinksVisibility(this.gammaLinks);
-  toggleDelta = () => this.toggleLinksVisibility(this.deltaLinks);
-  toggleEpsi = () => this.toggleLinksVisibility(this.epsiLinks);
+  toggleLinks = (type: JumpType) => {
+    const typeToList: Record<JumpType, THREE.Line[]> = {
+      A: this.alphaLinks,
+      B: this.betaLinks,
+      G: this.gammaLinks,
+      D: this.deltaLinks,
+      E: this.epsiLinks,
+    };
+    const list = typeToList[type];
+    if (list) this.toggleLinksVisibility(list);
+  };
 
   init = () => {
     this.camera = new THREE.PerspectiveCamera(

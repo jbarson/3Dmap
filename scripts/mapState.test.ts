@@ -312,33 +312,33 @@ describe("MapStateImpl link toggling", () => {
 
   it("toggles alpha links visibility", () => {
     expect(mapState.alphaLinks[0].visible).toBe(true);
-    mapState.toggleAlpha();
+    mapState.toggleLinks("A");
     expect(mapState.alphaLinks[0].visible).toBe(false);
-    mapState.toggleAlpha();
+    mapState.toggleLinks("A");
     expect(mapState.alphaLinks[0].visible).toBe(true);
   });
 
   it("toggles beta links visibility", () => {
     expect(mapState.betaLinks[0].visible).toBe(true);
-    mapState.toggleBeta();
+    mapState.toggleLinks("B");
     expect(mapState.betaLinks[0].visible).toBe(false);
   });
 
   it("toggles gamma links visibility", () => {
     expect(mapState.gammaLinks[0].visible).toBe(true);
-    mapState.toggleGamma();
+    mapState.toggleLinks("G");
     expect(mapState.gammaLinks[0].visible).toBe(false);
   });
 
   it("toggles delta links visibility", () => {
     expect(mapState.deltaLinks[0].visible).toBe(true);
-    mapState.toggleDelta();
+    mapState.toggleLinks("D");
     expect(mapState.deltaLinks[0].visible).toBe(false);
   });
 
   it("toggles epsi links visibility", () => {
     expect(mapState.epsiLinks[0].visible).toBe(true);
-    mapState.toggleEpsi();
+    mapState.toggleLinks("E");
     expect(mapState.epsiLinks[0].visible).toBe(false);
   });
 });

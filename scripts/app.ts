@@ -27,7 +27,7 @@ const GLOBE_PLANETS = new Set([
 ]);
 
 // Map checkbox element IDs to their link-type letters
-const LINK_CHECKBOX_IDS: { id: string; letter: string }[] = [
+const LINK_CHECKBOX_IDS: { id: string; letter: JumpType }[] = [
   { id: "alphaLink", letter: "A" },
   { id: "betaLink", letter: "B" },
   { id: "gammaLink", letter: "G" },
@@ -226,31 +226,15 @@ document.addEventListener("DOMContentLoaded", () => {
     history.replaceState(null, "", hash ? "#" + hash : location.pathname + location.search);
   }, 500);
 
-  if (mapState.alphaCheckbox)
-    mapState.alphaCheckbox.addEventListener("change", function () {
-      mapState.toggleAlpha();
-      updateHash();
-    });
-  if (mapState.betaCheckbox)
-    mapState.betaCheckbox.addEventListener("change", function () {
-      mapState.toggleBeta();
-      updateHash();
-    });
-  if (mapState.gammaCheckbox)
-    mapState.gammaCheckbox.addEventListener("change", function () {
-      mapState.toggleGamma();
-      updateHash();
-    });
-  if (mapState.deltaCheckbox)
-    mapState.deltaCheckbox.addEventListener("change", function () {
-      mapState.toggleDelta();
-      updateHash();
-    });
-  if (mapState.epsiCheckbox)
-    mapState.epsiCheckbox.addEventListener("change", function () {
-      mapState.toggleEpsi();
-      updateHash();
-    });
+  LINK_CHECKBOX_IDS.forEach(({ letter }, i) => {
+    const cb = linkCheckboxes[i];
+    if (cb) {
+      cb.addEventListener("change", function () {
+        mapState.toggleLinks(letter);
+        updateHash();
+      });
+    }
+  });
 
   if (dateSlider) {
     dateSlider.addEventListener("input", updateHash);
