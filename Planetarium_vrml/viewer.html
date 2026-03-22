@@ -1,148 +1,158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Observatory VRML Viewer</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; overflow: hidden; font-family: monospace; }
-    canvas { display: block; }
-    #info {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: #aaa;
-      font-size: 12px;
-      pointer-events: none;
-    }
-    #loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #fff;
-      font-size: 18px;
-    }
-  </style>
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
-    }
-  }
-  </script>
-</head>
-<body>
-  <div id="loading">Loading…</div>
-  <div id="info">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
-
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
-
-    // Scene setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(devicePixelRatio);
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.shadowMap.enabled = true;
-    document.body.appendChild(renderer.domElement);
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000010);
-
-    const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.01, 10000);
-    camera.position.set(15, 5, 15);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.target.set(0, 1.5, 0);
-    controls.update();
-
-    const clock = new THREE.Clock();
-    let mixer = null;
-
-    // Ambient + directional light (VRML scenes often rely on default lighting)
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.2);
-    sun.position.set(10, 20, 10);
-    scene.add(sun);
-
-    // Load VRML
-    const loader = new VRMLLoader();
-    loader.load(
-      'observatory_clean.wrl',
-      (vrmlScene) => {
-        document.getElementById('loading').style.display = 'none';
-
-        // Center the scene
-        const box = new THREE.Box3().setFromObject(vrmlScene);
-        const center = box.getCenter(new THREE.Vector3());
-        vrmlScene.position.sub(center);
-        vrmlScene.position.y += (box.max.y - box.min.y) / 2;
-
-        // Fix VRML color-tinting-over-texture issue: reset diffuse color to white
-        // when a texture is present (VRML spec says texture replaces material color)
-        vrmlScene.traverse((node) => {
-          if (node.isMesh) {
-            const mats = Array.isArray(node.material) ? node.material : [node.material];
-            mats.forEach((mat) => {
-              if (mat.map) {
-                mat.color.set(0xffffff);
-              }
-            });
-          }
-        });
-
-        scene.add(vrmlScene);
-
-        // Start animations if any were parsed from the VRML routes
-        if (vrmlScene.animations && vrmlScene.animations.length > 0) {
-          mixer = new THREE.AnimationMixer(vrmlScene);
-          vrmlScene.animations.forEach((clip) => {
-            mixer.clipAction(clip).play();
-          });
-          console.log(`Playing ${vrmlScene.animations.length} animation clips`);
-        } else {
-          console.log('No animations found in VRML scene');
-        }
-
-        // Fit camera to scene
-        const size = box.getSize(new THREE.Vector3()).length();
-        controls.target.set(0, 0, 0);
-        camera.position.set(size * 0.6, size * 0.3, size * 0.6);
-        camera.far = size * 10;
-        camera.updateProjectionMatrix();
-        controls.update();
-      },
-      (xhr) => {
-        const pct = Math.round((xhr.loaded / xhr.total) * 100);
-        document.getElementById('loading').textContent = `Loading… ${pct}%`;
-      },
-      (err) => {
-        document.getElementById('loading').textContent = 'Error loading VRML: ' + err.message;
-        console.error(err);
+  <head>
+    <meta charset="UTF-8" />
+    <title>Observatory VRML Viewer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    );
+      body {
+        background: #000;
+        overflow: hidden;
+        font-family: monospace;
+      }
+      canvas {
+        display: block;
+      }
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: #aaa;
+        font-size: 12px;
+        pointer-events: none;
+      }
+      #loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 18px;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="loading">Loading…</div>
+    <div id="info">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
 
-    // Resize
-    window.addEventListener('resize', () => {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { VRMLLoader } from "three/addons/loaders/VRMLLoader.js";
+
+      // Scene setup
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(devicePixelRatio);
       renderer.setSize(innerWidth, innerHeight);
-    });
+      renderer.shadowMap.enabled = true;
+      document.body.appendChild(renderer.domElement);
 
-    // Render loop
-    function animate() {
-      requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000010);
+
+      const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.01, 10000);
+      camera.position.set(15, 5, 15);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.target.set(0, 1.5, 0);
       controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-  </script>
-</body>
+
+      const clock = new THREE.Clock();
+      let mixer = null;
+
+      // Ambient + directional light (VRML scenes often rely on default lighting)
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+      sun.position.set(10, 20, 10);
+      scene.add(sun);
+
+      // Load VRML
+      const loader = new VRMLLoader();
+      loader.load(
+        "observatory_clean.wrl",
+        (vrmlScene) => {
+          document.getElementById("loading").style.display = "none";
+
+          // Center the scene
+          const box = new THREE.Box3().setFromObject(vrmlScene);
+          const center = box.getCenter(new THREE.Vector3());
+          vrmlScene.position.sub(center);
+          vrmlScene.position.y += (box.max.y - box.min.y) / 2;
+
+          // Fix VRML color-tinting-over-texture issue: reset diffuse color to white
+          // when a texture is present (VRML spec says texture replaces material color)
+          vrmlScene.traverse((node) => {
+            if (node.isMesh) {
+              const mats = Array.isArray(node.material) ? node.material : [node.material];
+              mats.forEach((mat) => {
+                if (mat.map) {
+                  mat.color.set(0xffffff);
+                }
+              });
+            }
+          });
+
+          scene.add(vrmlScene);
+
+          // Start animations if any were parsed from the VRML routes
+          if (vrmlScene.animations && vrmlScene.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(vrmlScene);
+            vrmlScene.animations.forEach((clip) => {
+              mixer.clipAction(clip).play();
+            });
+            console.log(`Playing ${vrmlScene.animations.length} animation clips`);
+          } else {
+            console.log("No animations found in VRML scene");
+          }
+
+          // Fit camera to scene
+          const size = box.getSize(new THREE.Vector3()).length();
+          controls.target.set(0, 0, 0);
+          camera.position.set(size * 0.6, size * 0.3, size * 0.6);
+          camera.far = size * 10;
+          camera.updateProjectionMatrix();
+          controls.update();
+        },
+        (xhr) => {
+          const pct = Math.round((xhr.loaded / xhr.total) * 100);
+          document.getElementById("loading").textContent = `Loading… ${pct}%`;
+        },
+        (err) => {
+          document.getElementById("loading").textContent = "Error loading VRML: " + err.message;
+          console.error(err);
+        },
+      );
+
+      // Resize
+      window.addEventListener("resize", () => {
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(innerWidth, innerHeight);
+      });
+
+      // Render loop
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
 </html>

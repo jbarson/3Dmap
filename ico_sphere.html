@@ -1,145 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Icosahedral Globe</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #050510; overflow: hidden; }
-#info { position: fixed; top: 12px; left: 12px; color: #aaa; font: 13px/1.6 sans-serif; pointer-events: none; }
-#controls { position: fixed; bottom: 12px; left: 12px; color: #888; font: 12px sans-serif; }
-label { display: block; cursor: pointer; }
-input[type=range] { width: 140px; vertical-align: middle; }
-</style>
-</head>
-<body>
-<div id="info">Icosahedral Globe · drag to rotate · scroll to zoom</div>
-<div id="controls">
-  <label><input type="checkbox" id="wireframe"> show face edges</label>
-  <label>auto-rotate  <input type="range" id="rotspeed"   min="0"    max="2"    step="0.01"  value="0.15"></label>
-  <label>cloud cover  <input type="range" id="cloudcover" min="0.35" max="0.72" step="0.01"  value="0.52"> <span id="ccv"></span></label>
-  <label>cloud speed  <input type="range" id="cloudspeed" min="0"    max="5"    step="0.1"   value="1.0"></label>
-  <label>sun speed    <input type="range" id="sunspeed"   min="0"    max="3"    step="0.05"  value="0.6"></label>
-</div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Icosahedral Globe</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #050510;
+        overflow: hidden;
+      }
+      #info {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        color: #aaa;
+        font: 13px/1.6 sans-serif;
+        pointer-events: none;
+      }
+      #controls {
+        position: fixed;
+        bottom: 12px;
+        left: 12px;
+        color: #888;
+        font: 12px sans-serif;
+      }
+      label {
+        display: block;
+        cursor: pointer;
+      }
+      input[type="range"] {
+        width: 140px;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="info">Icosahedral Globe · drag to rotate · scroll to zoom</div>
+    <div id="controls">
+      <label><input type="checkbox" id="wireframe" /> show face edges</label>
+      <label
+        >auto-rotate <input type="range" id="rotspeed" min="0" max="2" step="0.01" value="0.15"
+      /></label>
+      <label
+        >cloud cover
+        <input type="range" id="cloudcover" min="0.35" max="0.72" step="0.01" value="0.52" />
+        <span id="ccv"></span
+      ></label>
+      <label
+        >cloud speed <input type="range" id="cloudspeed" min="0" max="5" step="0.1" value="1.0"
+      /></label>
+      <label
+        >sun speed <input type="range" id="sunspeed" min="0" max="3" step="0.05" value="0.6"
+      /></label>
+    </div>
 
-<script type="importmap">
-{ "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-} }
-</script>
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-// ─── Renderer / scene / camera ───────────────────────────────────────────────
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(devicePixelRatio);
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
+      // ─── Renderer / scene / camera ───────────────────────────────────────────────
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(devicePixelRatio);
+      renderer.setSize(innerWidth, innerHeight);
+      document.body.appendChild(renderer.domElement);
 
-const scene  = new THREE.Scene();
-scene.background = new THREE.Color(0x050510);
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x050510);
 
-const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
-camera.position.z = 2.8;
+      const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+      camera.position.z = 2.8;
 
-const ctrl = new OrbitControls(camera, renderer.domElement);
-ctrl.enableDamping = true;
+      const ctrl = new OrbitControls(camera, renderer.domElement);
+      ctrl.enableDamping = true;
 
-window.addEventListener('resize', () => {
-  renderer.setSize(innerWidth, innerHeight);
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-});
+      window.addEventListener("resize", () => {
+        renderer.setSize(innerWidth, innerHeight);
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+      });
 
-// ─── Icosahedron ─────────────────────────────────────────────────────────────
-const PHI = (1 + Math.sqrt(5)) / 2;
-const _N  = Math.sqrt(1 + PHI * PHI);
-const _a  = 1 / _N, _b = PHI / _N;
+      // ─── Icosahedron ─────────────────────────────────────────────────────────────
+      const PHI = (1 + Math.sqrt(5)) / 2;
+      const _N = Math.sqrt(1 + PHI * PHI);
+      const _a = 1 / _N,
+        _b = PHI / _N;
 
-const IV = [
-  [ 0,  _a,  _b], [ 0, -_a,  _b], [ 0,  _a, -_b], [ 0, -_a, -_b],
-  [ _a,  _b,  0], [-_a,  _b,  0], [ _a, -_b,  0], [-_a, -_b,  0],
-  [ _b,  0,  _a], [-_b,  0,  _a], [ _b,  0, -_a], [-_b,  0, -_a],
-];
+      const IV = [
+        [0, _a, _b],
+        [0, -_a, _b],
+        [0, _a, -_b],
+        [0, -_a, -_b],
+        [_a, _b, 0],
+        [-_a, _b, 0],
+        [_a, -_b, 0],
+        [-_a, -_b, 0],
+        [_b, 0, _a],
+        [-_b, 0, _a],
+        [_b, 0, -_a],
+        [-_b, 0, -_a],
+      ];
 
-const IF = [
-  [0,8,4],[0,4,5],[0,5,9],[0,9,1],[0,1,8],
-  [8,10,4],[4,10,2],[4,2,5],[5,2,11],[5,11,9],
-  [9,11,7],[9,7,1],[1,7,6],[1,6,8],[8,6,10],
-  [2,10,3],[2,3,11],[11,3,7],[7,3,6],[6,3,10],
-];
+      const IF = [
+        [0, 8, 4],
+        [0, 4, 5],
+        [0, 5, 9],
+        [0, 9, 1],
+        [0, 1, 8],
+        [8, 10, 4],
+        [4, 10, 2],
+        [4, 2, 5],
+        [5, 2, 11],
+        [5, 11, 9],
+        [9, 11, 7],
+        [9, 7, 1],
+        [1, 7, 6],
+        [1, 6, 8],
+        [8, 6, 10],
+        [2, 10, 3],
+        [2, 3, 11],
+        [11, 3, 7],
+        [7, 3, 6],
+        [6, 3, 10],
+      ];
 
-const FC = IF.map(f => {
-  let cx=0, cy=0, cz=0;
-  f.forEach(vi => { cx+=IV[vi][0]; cy+=IV[vi][1]; cz+=IV[vi][2]; });
-  cx/=3; cy/=3; cz/=3;
-  const r = Math.sqrt(cx*cx+cy*cy+cz*cz);
-  return [cx/r, cy/r, cz/r];
-});
+      const FC = IF.map((f) => {
+        let cx = 0,
+          cy = 0,
+          cz = 0;
+        f.forEach((vi) => {
+          cx += IV[vi][0];
+          cy += IV[vi][1];
+          cz += IV[vi][2];
+        });
+        cx /= 3;
+        cy /= 3;
+        cz /= 3;
+        const r = Math.sqrt(cx * cx + cy * cy + cz * cz);
+        return [cx / r, cy / r, cz / r];
+      });
 
-const FA = IF.map((f, fi) => {
-  const C = FC[fi], v0 = IV[f[0]];
-  let dx=v0[0]-C[0], dy=v0[1]-C[1], dz=v0[2]-C[2];
-  const d = dx*C[0]+dy*C[1]+dz*C[2];
-  dx-=d*C[0]; dy-=d*C[1]; dz-=d*C[2];
-  const r = Math.sqrt(dx*dx+dy*dy+dz*dz);
-  const X = [dx/r, dy/r, dz/r];
-  const Y = [C[1]*X[2]-C[2]*X[1], C[2]*X[0]-C[0]*X[2], C[0]*X[1]-C[1]*X[0]];
-  return { X, Y };
-});
+      const FA = IF.map((f, fi) => {
+        const C = FC[fi],
+          v0 = IV[f[0]];
+        let dx = v0[0] - C[0],
+          dy = v0[1] - C[1],
+          dz = v0[2] - C[2];
+        const d = dx * C[0] + dy * C[1] + dz * C[2];
+        dx -= d * C[0];
+        dy -= d * C[1];
+        dz -= d * C[2];
+        const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        const X = [dx / r, dy / r, dz / r];
+        const Y = [C[1] * X[2] - C[2] * X[1], C[2] * X[0] - C[0] * X[2], C[0] * X[1] - C[1] * X[0]];
+        return { X, Y };
+      });
 
-// ─── Image layout ─────────────────────────────────────────────────────────────
-const IW = 2152, IH = 1014;
-const _th = IH / 3;
-const _tw = 2 * _th / Math.sqrt(3);
+      // ─── Image layout ─────────────────────────────────────────────────────────────
+      const IW = 2152,
+        IH = 1014;
+      const _th = IH / 3;
+      const _tw = (2 * _th) / Math.sqrt(3);
 
-const FACE_PX = [
-  [[195,0],[0,_th],[_tw,_th]],
-  [[585,0],[_tw,_th],[2*_tw,_th]],
-  [[975,0],[2*_tw,_th],[3*_tw,_th]],
-  [[1365,0],[3*_tw,_th],[4*_tw,_th]],
-  [[1755,0],[4*_tw,_th],[5*_tw,_th]],
-  [[0,_th],[_tw/2,2*_th],[_tw,_th]],
-  [[_tw,_th],[_tw/2,2*_th],[3*_tw/2,2*_th]],
-  [[_tw,_th],[3*_tw/2,2*_th],[2*_tw,_th]],
-  [[2*_tw,_th],[3*_tw/2,2*_th],[5*_tw/2,2*_th]],
-  [[2*_tw,_th],[5*_tw/2,2*_th],[3*_tw,_th]],
-  [[3*_tw,_th],[5*_tw/2,2*_th],[7*_tw/2,2*_th]],
-  [[3*_tw,_th],[7*_tw/2,2*_th],[4*_tw,_th]],
-  [[4*_tw,_th],[7*_tw/2,2*_th],[9*_tw/2,2*_th]],
-  [[4*_tw,_th],[9*_tw/2,2*_th],[5*_tw,_th]],
-  [[5*_tw,_th],[9*_tw/2,2*_th],[11*_tw/2,2*_th]],
-  [[3*_tw/2,2*_th],[_tw/2,2*_th],[_tw,3*_th]],
-  [[3*_tw/2,2*_th],[2*_tw,3*_th],[5*_tw/2,2*_th]],
-  [[5*_tw/2,2*_th],[3*_tw,3*_th],[7*_tw/2,2*_th]],
-  [[7*_tw/2,2*_th],[4*_tw,3*_th],[9*_tw/2,2*_th]],
-  [[9*_tw/2,2*_th],[5*_tw,3*_th],[11*_tw/2,2*_th]],
-];
+      const FACE_PX = [
+        [
+          [195, 0],
+          [0, _th],
+          [_tw, _th],
+        ],
+        [
+          [585, 0],
+          [_tw, _th],
+          [2 * _tw, _th],
+        ],
+        [
+          [975, 0],
+          [2 * _tw, _th],
+          [3 * _tw, _th],
+        ],
+        [
+          [1365, 0],
+          [3 * _tw, _th],
+          [4 * _tw, _th],
+        ],
+        [
+          [1755, 0],
+          [4 * _tw, _th],
+          [5 * _tw, _th],
+        ],
+        [
+          [0, _th],
+          [_tw / 2, 2 * _th],
+          [_tw, _th],
+        ],
+        [
+          [_tw, _th],
+          [_tw / 2, 2 * _th],
+          [(3 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [_tw, _th],
+          [(3 * _tw) / 2, 2 * _th],
+          [2 * _tw, _th],
+        ],
+        [
+          [2 * _tw, _th],
+          [(3 * _tw) / 2, 2 * _th],
+          [(5 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [2 * _tw, _th],
+          [(5 * _tw) / 2, 2 * _th],
+          [3 * _tw, _th],
+        ],
+        [
+          [3 * _tw, _th],
+          [(5 * _tw) / 2, 2 * _th],
+          [(7 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [3 * _tw, _th],
+          [(7 * _tw) / 2, 2 * _th],
+          [4 * _tw, _th],
+        ],
+        [
+          [4 * _tw, _th],
+          [(7 * _tw) / 2, 2 * _th],
+          [(9 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [4 * _tw, _th],
+          [(9 * _tw) / 2, 2 * _th],
+          [5 * _tw, _th],
+        ],
+        [
+          [5 * _tw, _th],
+          [(9 * _tw) / 2, 2 * _th],
+          [(11 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [(3 * _tw) / 2, 2 * _th],
+          [_tw / 2, 2 * _th],
+          [_tw, 3 * _th],
+        ],
+        [
+          [(3 * _tw) / 2, 2 * _th],
+          [2 * _tw, 3 * _th],
+          [(5 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [(5 * _tw) / 2, 2 * _th],
+          [3 * _tw, 3 * _th],
+          [(7 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [(7 * _tw) / 2, 2 * _th],
+          [4 * _tw, 3 * _th],
+          [(9 * _tw) / 2, 2 * _th],
+        ],
+        [
+          [(9 * _tw) / 2, 2 * _th],
+          [5 * _tw, 3 * _th],
+          [(11 * _tw) / 2, 2 * _th],
+        ],
+      ];
 
-// Pre-compute gnomonic 2D projections of each face vertex in that face's local frame
-const FV2D = IF.map((f, fi) => {
-  const C = FC[fi], { X, Y } = FA[fi];
-  return f.map(vi => {
-    const v  = IV[vi];
-    const dp = v[0]*C[0] + v[1]*C[1] + v[2]*C[2];
-    const px = v[0]/dp - C[0], py = v[1]/dp - C[1], pz = v[2]/dp - C[2];
-    return [px*X[0]+py*X[1]+pz*X[2], px*Y[0]+py*Y[1]+pz*Y[2]];
-  });
-});
+      // Pre-compute gnomonic 2D projections of each face vertex in that face's local frame
+      const FV2D = IF.map((f, fi) => {
+        const C = FC[fi],
+          { X, Y } = FA[fi];
+        return f.map((vi) => {
+          const v = IV[vi];
+          const dp = v[0] * C[0] + v[1] * C[1] + v[2] * C[2];
+          const px = v[0] / dp - C[0],
+            py = v[1] / dp - C[1],
+            pz = v[2] / dp - C[2];
+          return [px * X[0] + py * X[1] + pz * X[2], px * Y[0] + py * Y[1] + pz * Y[2]];
+        });
+      });
 
-// ─── Build shader uniform arrays ──────────────────────────────────────────────
-const uFC_val   = FC.map(c  => new THREE.Vector3(...c));
-const uFX_val   = FA.map(({X}) => new THREE.Vector3(...X));
-const uFY_val   = FA.map(({Y}) => new THREE.Vector3(...Y));
-const uFV2D_val = FV2D.flatMap(verts => verts.map(([x,y]) => new THREE.Vector2(x, y)));
-const uFUV_val  = FACE_PX.flatMap(verts =>
-  verts.map(([px,py]) => new THREE.Vector2(px / IW, 1 - py / IH))
-);
+      // ─── Build shader uniform arrays ──────────────────────────────────────────────
+      const uFC_val = FC.map((c) => new THREE.Vector3(...c));
+      const uFX_val = FA.map(({ X }) => new THREE.Vector3(...X));
+      const uFY_val = FA.map(({ Y }) => new THREE.Vector3(...Y));
+      const uFV2D_val = FV2D.flatMap((verts) => verts.map(([x, y]) => new THREE.Vector2(x, y)));
+      const uFUV_val = FACE_PX.flatMap((verts) =>
+        verts.map(([px, py]) => new THREE.Vector2(px / IW, 1 - py / IH)),
+      );
 
-// ─── Surface shaders (GLSL 3.0) ───────────────────────────────────────────────
-const vertexShader = /* glsl */`
+      // ─── Surface shaders (GLSL 3.0) ───────────────────────────────────────────────
+      const vertexShader = /* glsl */ `
   out vec3 vPos;
   out vec3 vWorldNorm;
   void main() {
@@ -149,7 +310,7 @@ const vertexShader = /* glsl */`
   }
 `;
 
-const fragmentShader = /* glsl */`
+      const fragmentShader = /* glsl */ `
   precision highp float;
   in vec3 vPos;
   in vec3 vWorldNorm;
@@ -216,95 +377,115 @@ const fragmentShader = /* glsl */`
   }
 `;
 
-// ─── Canvas texture pre-processing: border dilation ───────────────────────────
-function dilateTexture(img, passes) {
-  const W = img.width, H = img.height;
-  const canvas = document.createElement('canvas');
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-  const id = ctx.getImageData(0, 0, W, H);
-  const d  = id.data;
+      // ─── Canvas texture pre-processing: border dilation ───────────────────────────
+      function dilateTexture(img, passes) {
+        const W = img.width,
+          H = img.height;
+        const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const id = ctx.getImageData(0, 0, W, H);
+        const d = id.data;
 
-  for (let pass = 0; pass < passes; pass++) {
-    const nd = new Uint8ClampedArray(d);
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const i = (y * W + x) * 4;
-        if (d[i] < 8 && d[i+1] < 8 && d[i+2] < 8) {
-          for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]) {
-            const nx = x+dx, ny = y+dy;
-            if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
-            const ni = (ny * W + nx) * 4;
-            if (d[ni] > 8 || d[ni+1] > 8 || d[ni+2] > 8) {
-              nd[i]=d[ni]; nd[i+1]=d[ni+1]; nd[i+2]=d[ni+2]; nd[i+3]=255;
-              break;
+        for (let pass = 0; pass < passes; pass++) {
+          const nd = new Uint8ClampedArray(d);
+          for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) {
+              const i = (y * W + x) * 4;
+              if (d[i] < 8 && d[i + 1] < 8 && d[i + 2] < 8) {
+                for (const [dx, dy] of [
+                  [-1, 0],
+                  [1, 0],
+                  [0, -1],
+                  [0, 1],
+                  [-1, -1],
+                  [1, -1],
+                  [-1, 1],
+                  [1, 1],
+                ]) {
+                  const nx = x + dx,
+                    ny = y + dy;
+                  if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+                  const ni = (ny * W + nx) * 4;
+                  if (d[ni] > 8 || d[ni + 1] > 8 || d[ni + 2] > 8) {
+                    nd[i] = d[ni];
+                    nd[i + 1] = d[ni + 1];
+                    nd[i + 2] = d[ni + 2];
+                    nd[i + 3] = 255;
+                    break;
+                  }
+                }
+              }
             }
           }
+          d.set(nd);
         }
+        ctx.putImageData(id, 0, 0);
+        return canvas;
       }
-    }
-    d.set(nd);
-  }
-  ctx.putImageData(id, 0, 0);
-  return canvas;
-}
 
-// ─── Load, dilate, build scene ────────────────────────────────────────────────
-const imgEl = new Image();
-imgEl.onload = () => {
-  const dilatedCanvas = dilateTexture(imgEl, 20);
+      // ─── Load, dilate, build scene ────────────────────────────────────────────────
+      const imgEl = new Image();
+      imgEl.onload = () => {
+        const dilatedCanvas = dilateTexture(imgEl, 20);
 
-  const tex = new THREE.CanvasTexture(dilatedCanvas);
-  tex.colorSpace      = THREE.SRGBColorSpace;
-  tex.minFilter       = THREE.LinearMipmapLinearFilter;
-  tex.generateMipmaps = true;
+        const tex = new THREE.CanvasTexture(dilatedCanvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.generateMipmaps = true;
 
-  const initialSunDir = new THREE.Vector3(1, 0.4, 0.3).normalize();
+        const initialSunDir = new THREE.Vector3(1, 0.4, 0.3).normalize();
 
-  const mat = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3,
-    uniforms: {
-      map:      { value: tex },
-      uFC:      { value: uFC_val },
-      uFX:      { value: uFX_val },
-      uFY:      { value: uFY_val },
-      uFV2D:    { value: uFV2D_val },
-      uFUV:     { value: uFUV_val },
-      uSunDir:  { value: initialSunDir.clone() },
-    },
-    vertexShader,
-    fragmentShader,
-  });
+        const mat = new THREE.ShaderMaterial({
+          glslVersion: THREE.GLSL3,
+          uniforms: {
+            map: { value: tex },
+            uFC: { value: uFC_val },
+            uFX: { value: uFX_val },
+            uFY: { value: uFY_val },
+            uFV2D: { value: uFV2D_val },
+            uFUV: { value: uFUV_val },
+            uSunDir: { value: initialSunDir.clone() },
+          },
+          vertexShader,
+          fragmentShader,
+        });
 
-  const geo  = new THREE.SphereGeometry(1, 256, 256);
-  const mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
+        const geo = new THREE.SphereGeometry(1, 256, 256);
+        const mesh = new THREE.Mesh(geo, mat);
+        scene.add(mesh);
 
-  // Wireframe overlay
-  const wfMesh = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(1.003, 0),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.18 })
-  );
-  wfMesh.visible = false;
-  scene.add(wfMesh);
+        // Wireframe overlay
+        const wfMesh = new THREE.Mesh(
+          new THREE.IcosahedronGeometry(1.003, 0),
+          new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.18,
+          }),
+        );
+        wfMesh.visible = false;
+        scene.add(wfMesh);
 
-  document.getElementById('wireframe').addEventListener('change', e => {
-    wfMesh.visible = e.target.checked;
-  });
+        document.getElementById("wireframe").addEventListener("change", (e) => {
+          wfMesh.visible = e.target.checked;
+        });
 
-  // ─── Cloud layer ──────────────────────────────────────────────────────────
-  const cloudMat = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3,
-    transparent: true,
-    depthWrite: false,
-    uniforms: {
-      uTime:      { value: 0 },
-      uCover:     { value: 0.52 },
-      uSunDir:    { value: initialSunDir.clone() },
-      uPlanetRot: { value: 0.0 },
-    },
-    vertexShader: /* glsl */`
+        // ─── Cloud layer ──────────────────────────────────────────────────────────
+        const cloudMat = new THREE.ShaderMaterial({
+          glslVersion: THREE.GLSL3,
+          transparent: true,
+          depthWrite: false,
+          uniforms: {
+            uTime: { value: 0 },
+            uCover: { value: 0.52 },
+            uSunDir: { value: initialSunDir.clone() },
+            uPlanetRot: { value: 0.0 },
+          },
+          vertexShader: /* glsl */ `
       out vec3 vPos;
       out vec3 vWorldNorm;
       void main() {
@@ -313,7 +494,7 @@ imgEl.onload = () => {
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
-    fragmentShader: /* glsl */`
+          fragmentShader: /* glsl */ `
       precision highp float;
       in vec3 vPos;
       in vec3 vWorldNorm;
@@ -487,22 +668,22 @@ imgEl.onload = () => {
         fragColor = vec4(cloudCol * cloudLight, density * 0.90);
       }
     `,
-  });
+        });
 
-  const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.028, 128, 128), cloudMat);
-  scene.add(cloudMesh);
+        const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.028, 128, 128), cloudMat);
+        scene.add(cloudMesh);
 
-  // ─── Atmosphere rim glow ──────────────────────────────────────────────────
-  const atmoMat = new THREE.ShaderMaterial({
-    glslVersion: THREE.GLSL3,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.BackSide,
-    uniforms: {
-      uSunDir: { value: initialSunDir.clone() },
-    },
-    vertexShader: /* glsl */`
+        // ─── Atmosphere rim glow ──────────────────────────────────────────────────
+        const atmoMat = new THREE.ShaderMaterial({
+          glslVersion: THREE.GLSL3,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          side: THREE.BackSide,
+          uniforms: {
+            uSunDir: { value: initialSunDir.clone() },
+          },
+          vertexShader: /* glsl */ `
       out vec3 vWorldNorm;
       out vec3 vWorldPos;
       void main() {
@@ -512,7 +693,7 @@ imgEl.onload = () => {
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
-    fragmentShader: /* glsl */`
+          fragmentShader: /* glsl */ `
       precision highp float;
       in vec3 vWorldNorm;
       in vec3 vWorldPos;
@@ -536,61 +717,63 @@ imgEl.onload = () => {
         fragColor = vec4(atmoCol * rim, alpha);
       }
     `,
-  });
+        });
 
-  const atmoMesh = new THREE.Mesh(new THREE.SphereGeometry(1.12, 64, 64), atmoMat);
-  scene.add(atmoMesh);
+        const atmoMesh = new THREE.Mesh(new THREE.SphereGeometry(1.12, 64, 64), atmoMat);
+        scene.add(atmoMesh);
 
-  // ─── Animate ──────────────────────────────────────────────────────────────
-  const rotSlider   = document.getElementById('rotspeed');
-  const coverSlider = document.getElementById('cloudcover');
-  const speedSlider = document.getElementById('cloudspeed');
-  const sunSlider   = document.getElementById('sunspeed');
-  const ccLabel     = document.getElementById('ccv');
+        // ─── Animate ──────────────────────────────────────────────────────────────
+        const rotSlider = document.getElementById("rotspeed");
+        const coverSlider = document.getElementById("cloudcover");
+        const speedSlider = document.getElementById("cloudspeed");
+        const sunSlider = document.getElementById("sunspeed");
+        const ccLabel = document.getElementById("ccv");
 
-  let elapsed  = 0;
-  let sunTheta = 0;        // sun azimuth around Y axis
-  const SUN_INCL = 0.41;  // ~23.5° axial tilt
+        let elapsed = 0;
+        let sunTheta = 0; // sun azimuth around Y axis
+        const SUN_INCL = 0.41; // ~23.5° axial tilt
 
-  const sunDir = new THREE.Vector3();
-  const clock  = new THREE.Clock();
+        const sunDir = new THREE.Vector3();
+        const clock = new THREE.Clock();
 
-  (function animate() {
-    requestAnimationFrame(animate);
-    ctrl.update();
-    const dt = clock.getDelta();
-    elapsed += dt;
+        (function animate() {
+          requestAnimationFrame(animate);
+          ctrl.update();
+          const dt = clock.getDelta();
+          elapsed += dt;
 
-    // Planet rotation
-    const s = parseFloat(rotSlider.value) * 0.001;
-    mesh.rotation.y    += s;
-    wfMesh.rotation.y   = mesh.rotation.y;
-    atmoMesh.rotation.y = mesh.rotation.y;
+          // Planet rotation
+          const s = parseFloat(rotSlider.value) * 0.001;
+          mesh.rotation.y += s;
+          wfMesh.rotation.y = mesh.rotation.y;
+          atmoMesh.rotation.y = mesh.rotation.y;
 
-    // Sun orbit (world-space)
-    const sunSpeed = parseFloat(sunSlider.value);
-    sunTheta += dt * sunSpeed * 0.0314; // full orbit in ~200 s at speed=1
-    sunDir.set(
-      Math.sin(sunTheta) * Math.cos(SUN_INCL),
-      Math.sin(SUN_INCL),
-      Math.cos(sunTheta) * Math.cos(SUN_INCL)
-    ).normalize();
+          // Sun orbit (world-space)
+          const sunSpeed = parseFloat(sunSlider.value);
+          sunTheta += dt * sunSpeed * 0.0314; // full orbit in ~200 s at speed=1
+          sunDir
+            .set(
+              Math.sin(sunTheta) * Math.cos(SUN_INCL),
+              Math.sin(SUN_INCL),
+              Math.cos(sunTheta) * Math.cos(SUN_INCL),
+            )
+            .normalize();
 
-    mat.uniforms.uSunDir.value.copy(sunDir);
-    cloudMat.uniforms.uSunDir.value.copy(sunDir);
-    atmoMat.uniforms.uSunDir.value.copy(sunDir);
+          mat.uniforms.uSunDir.value.copy(sunDir);
+          cloudMat.uniforms.uSunDir.value.copy(sunDir);
+          atmoMat.uniforms.uSunDir.value.copy(sunDir);
 
-    // Cloud uniforms
-    cloudMat.uniforms.uTime.value      = elapsed * parseFloat(speedSlider.value);
-    cloudMat.uniforms.uCover.value     = parseFloat(coverSlider.value);
-    cloudMat.uniforms.uPlanetRot.value = mesh.rotation.y;
+          // Cloud uniforms
+          cloudMat.uniforms.uTime.value = elapsed * parseFloat(speedSlider.value);
+          cloudMat.uniforms.uCover.value = parseFloat(coverSlider.value);
+          cloudMat.uniforms.uPlanetRot.value = mesh.rotation.y;
 
-    ccLabel.textContent = Math.round((1 - parseFloat(coverSlider.value) / 0.72) * 100) + '%';
+          ccLabel.textContent = Math.round((1 - parseFloat(coverSlider.value) / 0.72) * 100) + "%";
 
-    renderer.render(scene, camera);
-  })();
-};
-imgEl.src = '/altiplano_ico.png';
-</script>
-</body>
+          renderer.render(scene, camera);
+        })();
+      };
+      imgEl.src = "/altiplano_ico.png";
+    </script>
+  </body>
 </html>
