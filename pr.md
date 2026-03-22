@@ -1,9 +1,6 @@
-🧪 Add missing tests for MapStateImpl
+🧹 [code health improvement description]
 
-🎯 **What:** The `MapStateImpl` class in `scripts/mapState.ts` lacked tests because it requires significant mocking of THREE.js classes and DOM elements. This PR introduces a new test file `scripts/mapState.test.ts` that provides the necessary mocks and comprehensive tests. It also removes a duplicate `onZoom` declaration in `scripts/mapState.ts`.
-📊 **Coverage:** The tests now cover:
-- `MapStateImpl` instantiation and property initialization via `init()`.
-- Link visibility toggling (`toggleAlpha`, `toggleBeta`, `toggleGamma`, `toggleDelta`, `toggleEpsi`).
-- `focusOnSystem` query logic (finding systems, handling invalid inputs).
-- `zoomToStar` camera animation configuration and `onZoom` callback triggering.
-✨ **Result:** Test coverage for `MapStateImpl` is significantly improved, adding 12 new passing test cases and ensuring future modifications to the 3D map state logic can be made with confidence.
+🎯 **What:** The JSDoc block for the `computeLabelMarginTop` function included a parameter `@param fontSize` that does not exist in the actual function signature. The parameter was removed from the comment.
+💡 **Why:** Removing the unused `@param fontSize` comment prevents confusion and keeps the documentation accurate.
+✅ **Verification:** I ran `npm ci`, `npm run lint:fix`, `npm run lint:ci`, and `npm run test` to ensure code health and that the application is not broken by the changes.
+✨ **Result:** The codebase is cleaner and the documentation is now accurate.
