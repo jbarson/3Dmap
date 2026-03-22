@@ -16,7 +16,9 @@ describe("buildStarSprite", () => {
       }),
       fillRect: vi.fn(),
     } as unknown as Partial<CanvasRenderingContext2D>;
-    getContextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(mockContext);
+    getContextSpy = vi
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockReturnValue(mockContext);
   });
 
   afterEach(() => {
@@ -116,7 +118,9 @@ describe("buildStarSprite", () => {
       type: ["G V"],
       sysName: "Test",
     };
-    expect(() => buildStarSpriteFresh(system, vi.fn())).toThrow(/Failed to obtain 2D rendering context/);
+    expect(() => buildStarSpriteFresh(system, vi.fn())).toThrow(
+      /Failed to obtain 2D rendering context/,
+    );
   });
 });
 
