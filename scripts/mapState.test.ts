@@ -33,6 +33,14 @@ vi.mock("three", async () => {
         add: vi.fn().mockReturnThis(),
       };
       aspect = 1;
+      quaternion = {
+        x: 0,
+        y: 0,
+        z: 0,
+        w: 1,
+        equals: vi.fn().mockReturnValue(true),
+        copy: vi.fn().mockReturnThis(),
+      };
       updateProjectionMatrix = vi.fn();
       projectionMatrix = new actual.Matrix4();
       matrixWorldInverse = new actual.Matrix4();

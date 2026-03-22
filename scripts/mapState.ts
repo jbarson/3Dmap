@@ -81,6 +81,11 @@ export class MapStateImpl implements MapState {
   private bgPoints: THREE.Points | null = null;
   private typeMaterials = new Map<JumpType, THREE.LineBasicMaterial>();
 
+  private lastCamPos = new THREE.Vector3();
+  private lastCamQuat = new THREE.Quaternion();
+  private lastViewH = 0;
+  private lastViewW = 0;
+
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
     this.jumpData = jumpList;
@@ -288,69 +293,85 @@ export class MapStateImpl implements MapState {
   render = () => {
     const cam = this.camera;
     const camPos = cam.position;
-    const { visDistSq, tanHalfFov, frustum, projScreenMatrix } = this;
     const viewH = window.innerHeight;
+    const viewW = window.innerWidth;
 
-    // Build frustum once per frame to cull off-screen labels
-    projScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
-    frustum.setFromProjectionMatrix(projScreenMatrix);
+    // Only compute label updates and CSS2D rendering when camera or viewport changes
+    const cameraMoved =
+      !this.lastCamPos.equals(camPos) ||
+      !this.lastCamQuat.equals(cam.quaternion) ||
+      this.lastViewH !== viewH ||
+      this.lastViewW !== viewW;
 
-    for (const sprite of this.systems) {
-      const refs = this.labelRefs.get(sprite);
-      if (refs) {
-        const distSq = sprite.position.distanceToSquared(camPos);
-        const nearCamera = distSq < visDistSq;
-        const inFrustum = frustum.containsPoint(sprite.position);
+    if (cameraMoved) {
+      this.lastCamPos.copy(camPos);
+      this.lastCamQuat.copy(cam.quaternion);
+      this.lastViewH = viewH;
+      this.lastViewW = viewW;
 
-        // Hide labels entirely when off-screen so CSS2DRenderer skips DOM updates
-        if (!inFrustum) {
-          refs.label.visible = false;
-          if (refs.planetLabel) refs.planetLabel.visible = false;
-          continue;
-        }
-        refs.label.visible = true;
-        if (refs.planetLabel) refs.planetLabel.visible = true;
+      const { visDistSq, tanHalfFov, frustum, projScreenMatrix } = this;
 
-        const labelClass = nearCamera ? "invis" : "starLabel";
-        if (refs.label.element.className !== labelClass) {
-          refs.label.element.className = labelClass;
-        }
-        if (refs.planetLabel) {
-          const planetLabelClass = nearCamera ? "invis" : "planetLabel";
-          if (refs.planetLabel.element.className !== planetLabelClass) {
-            refs.planetLabel.element.className = planetLabelClass;
+      // Build frustum once per frame to cull off-screen labels
+      projScreenMatrix.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+      frustum.setFromProjectionMatrix(projScreenMatrix);
+
+      for (const sprite of this.systems) {
+        const refs = this.labelRefs.get(sprite);
+        if (refs) {
+          const distSq = sprite.position.distanceToSquared(camPos);
+          const nearCamera = distSq < visDistSq;
+          const inFrustum = frustum.containsPoint(sprite.position);
+
+          // Hide labels entirely when off-screen so CSS2DRenderer skips DOM updates
+          if (!inFrustum) {
+            refs.label.visible = false;
+            if (refs.planetLabel) refs.planetLabel.visible = false;
+            continue;
           }
-        }
-        if (!nearCamera) {
-          const dist = Math.sqrt(distSq);
-          const scale = Math.max(0.4, Math.min(2.5, CAMERA_START_Z / dist));
-          const fontSize = `${Math.round(5 * scale)}px`;
-          const marginTop = `${computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov)}px`;
-          const planetFontSize = `${Math.round(4 * scale)}px`;
-          const planetMarginTop = `${computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov) + Math.round(5 * scale) + 2}px`;
+          refs.label.visible = true;
+          if (refs.planetLabel) refs.planetLabel.visible = true;
 
-          const cached = this.labelStyles.get(sprite);
-          if (!cached || cached.fontSize !== fontSize || cached.marginTop !== marginTop) {
-            refs.label.element.style.fontSize = fontSize;
-            refs.label.element.style.marginTop = marginTop;
+          const labelClass = nearCamera ? "invis" : "starLabel";
+          if (refs.label.element.className !== labelClass) {
+            refs.label.element.className = labelClass;
           }
           if (refs.planetLabel) {
-            if (
-              !cached ||
-              cached.planetFontSize !== planetFontSize ||
-              cached.planetMarginTop !== planetMarginTop
-            ) {
-              refs.planetLabel.element.style.fontSize = planetFontSize;
-              refs.planetLabel.element.style.marginTop = planetMarginTop;
+            const planetLabelClass = nearCamera ? "invis" : "planetLabel";
+            if (refs.planetLabel.element.className !== planetLabelClass) {
+              refs.planetLabel.element.className = planetLabelClass;
             }
           }
-          this.labelStyles.set(sprite, { fontSize, marginTop, planetFontSize, planetMarginTop });
+          if (!nearCamera) {
+            const dist = Math.sqrt(distSq);
+            const scale = Math.max(0.4, Math.min(2.5, CAMERA_START_Z / dist));
+            const fontSize = `${Math.round(5 * scale)}px`;
+            const marginTop = `${computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov)}px`;
+            const planetFontSize = `${Math.round(4 * scale)}px`;
+            const planetMarginTop = `${computeLabelMarginTop(sprite.scale.x, viewH, dist, tanHalfFov) + Math.round(5 * scale) + 2}px`;
+
+            const cached = this.labelStyles.get(sprite);
+            if (!cached || cached.fontSize !== fontSize || cached.marginTop !== marginTop) {
+              refs.label.element.style.fontSize = fontSize;
+              refs.label.element.style.marginTop = marginTop;
+            }
+            if (refs.planetLabel) {
+              if (
+                !cached ||
+                cached.planetFontSize !== planetFontSize ||
+                cached.planetMarginTop !== planetMarginTop
+              ) {
+                refs.planetLabel.element.style.fontSize = planetFontSize;
+                refs.planetLabel.element.style.marginTop = planetMarginTop;
+              }
+            }
+            this.labelStyles.set(sprite, { fontSize, marginTop, planetFontSize, planetMarginTop });
+          }
         }
       }
+      this.labelRenderer.render(this.scene, cam);
     }
 
     this.renderer.render(this.scene, cam);
-    this.labelRenderer.render(this.scene, cam);
   };
 
   private placeGlow(star: THREE.Sprite): void {
