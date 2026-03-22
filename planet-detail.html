@@ -52,6 +52,11 @@ body { background: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, Gene
     border-radius: 4px;
     transition: all 0.3s;
     background: rgba(255,255,255,0.05);
+    display: block;
+}
+.planet-link:focus-visible {
+    outline: 2px solid #0099ff;
+    outline-offset: -2px;
 }
 .planet-link:hover {
     background: rgba(255,255,255,0.15);
@@ -741,8 +746,12 @@ planets.forEach(p => {
     const link = document.createElement('a');
     link.className = 'planet-link' + (p.name === 'Altiplano' ? ' active' : '');
     link.dataset.name = p.name;
+    link.href = '?planet=' + encodeURIComponent(p.name);
     link.textContent = p.displayName || p.name;
-    link.onclick = () => switchPlanet(p.name);
+    link.onclick = (e) => {
+        e.preventDefault();
+        switchPlanet(p.name);
+    };
     selector.appendChild(link);
 });
 
