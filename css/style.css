@@ -495,3 +495,18 @@ h1 {
     left: 8px;
   }
 }
+
+/* ── Keyboard Accessibility ── */
+button:focus-visible,
+a:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="range"]:focus-visible,
+input[type="text"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+#systemSearch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
