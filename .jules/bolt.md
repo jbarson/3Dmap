@@ -1,0 +1,3 @@
+## 2024-05-18 - [Optimize Three.js Material Allocations]
+**Learning:** Instantiating new `THREE.SpriteMaterial` instances per object, even when sharing a texture map, causes unnecessary memory allocations and overhead for WebGL state changes in this specific Three.js architecture. Reusing shared materials significantly improves scene initialization speed and rendering performance.
+**Action:** When creating many identical or similar visual elements in Three.js, implement a cache map (e.g., keyed by spectral type) to reuse `Material` instances. Ensure a centralized cleanup function (like `clearSceneCache()`) is called during scene teardown to properly dispose of both cached textures and materials to prevent memory leaks.
