@@ -191,6 +191,7 @@ surfaceMat.onBeforeCompile = (shader: THREE.Shader) => {
 };
 
 const planetMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 128), surfaceMat);
+planetMesh.visible = false;
 scene.add(planetMesh);
 
 // --- Clouds ---
@@ -245,6 +246,7 @@ cloudMat.onBeforeCompile = (shader: THREE.Shader) => {
 };
 
 const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.015, 128, 128), cloudMat);
+cloudMesh.visible = false;
 scene.add(cloudMesh);
 
 // --- Atmosphere ---
@@ -291,6 +293,7 @@ const atmoMat = new THREE.ShaderMaterial({
     `,
 });
 const atmoMesh = new THREE.Mesh(new THREE.SphereGeometry(1.08, 128, 128), atmoMat);
+atmoMesh.visible = false;
 scene.add(atmoMesh);
 
 // --- Moon ---
@@ -623,6 +626,13 @@ function switchPlanet(name: string, updateUrl = true) {
   const p = planets.find((x) => x.name === name);
   if (!p) return;
 
+  // Hide planet during switch
+  planetMesh.visible = false;
+  cloudMesh.visible = false;
+  atmoMesh.visible = false;
+  if (moonMesh) moonMesh.visible = false;
+  ringMesh.visible = false;
+
   if (updateUrl) {
     const url = new URL(window.location.href);
     url.searchParams.set("planet", name);
@@ -652,9 +662,8 @@ function switchPlanet(name: string, updateUrl = true) {
   commonUniforms.uCloudSeed.value.set(p.seed[0], p.seed[1], p.seed[2]);
   commonUniforms.uCloudScale.value = p.scale;
 
-  // Show/hide ring
+  // Show/hide ring (will be shown after texture load)
   const hasRing = p.hasRing || false;
-  ringMesh.visible = hasRing;
 
   // Set albedo and temperature
   surfaceUniforms.uAlbedo.value = p.albedo || 0.35;
@@ -684,27 +693,6 @@ function switchPlanet(name: string, updateUrl = true) {
   // Set rotation speed (Earth day = 24 hours, so 24/dayHours = speed multiplier)
   const EARTH_DAY_HOURS = 24;
   rotationSpeed = p.dayHours ? EARTH_DAY_HOURS / p.dayHours : 1;
-
-  // Set moon properties
-  if (p.moon) {
-    moonMesh.visible = true;
-    const EARTH_DIAMETER = 12742;
-    const planetScale = p.diameterKm / EARTH_DIAMETER;
-    const moonRelScale = p.moon.diameterKm / EARTH_DIAMETER;
-    moonMesh.scale.setScalar(moonRelScale);
-
-    // For visual convenience, we bring moons much closer but keep them distinct
-    // Actual Moon is ~30 Earth diameters away (384k km / 12k km)
-    // We'll use a logarithmic or scaled distance to keep it visible
-    const MOON_VISUAL_DISTANCE_SCALE = 0.00004;
-    const moonDist = p.moon.distKm * MOON_VISUAL_DISTANCE_SCALE + planetScale * 1.5;
-    moonMesh.position.set(moonDist, 0, 0);
-
-    // Load moon texture if we have one (re-using bump map as albedo for now)
-    moonMat.color.set(new THREE.Color(0x999999));
-  } else {
-    moonMesh.visible = false;
-  }
 
   // Set stellar luminosity (affects sun light intensity)
   if (p.stellarLuminosity) {
@@ -753,35 +741,10 @@ function switchPlanet(name: string, updateUrl = true) {
     camera.lookAt(0, 0, 0);
   }
 
-  // Update HUD
+  // Show "Loading..." in HUD while textures load
   const hud = document.getElementById("hud");
   if (hud) {
-    hud.innerHTML = `
-        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${escapeHtml((p.displayName || name).toUpperCase())}</div>
-        <div class="hud-item"><span class="hud-label">Diameter:</span><span class="hud-value">${p.diameterKm.toLocaleString()} km</span></div>
-        <div class="hud-item"><span class="hud-label">Day Length:</span><span class="hud-value">${p.dayHours}h</span></div>
-        <div class="hud-item"><span class="hud-label">Surf Temp:</span><span class="hud-value">${p.surfTempK} K</span></div>
-        <div class="hud-item"><span class="hud-label">Hydrographics:</span><span class="hud-value">${(p.hydro * 100).toFixed(1)}%</span></div>
-        <div class="hud-item"><span class="hud-label">Axial Tilt:</span><span class="hud-value">${p.axialTilt}°</span></div>
-        
-        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">ATMOSPHERE</div>
-        <div class="hud-item"><span class="hud-label">Pressure:</span><span class="hud-value">${p.atmPressure} atm</span></div>
-        <div class="hud-item"><span class="hud-label">N2 / O2 / CO2:</span><span class="hud-value">${p.atmo.N2}/${p.atmo.O2}/${p.atmo.CO2}</span></div>
-
-        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">STELLAR DATA</div>
-        <div class="hud-item"><span class="hud-label">Star Temp:</span><span class="hud-value">${p.starTemp} K</span></div>
-        <div class="hud-item"><span class="hud-label">Luminosity:</span><span class="hud-value">${p.stellarLuminosity} L</span></div>
-        
-        ${
-          p.moon
-            ? `
-        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">LUNAR DATA</div>
-        <div class="hud-item"><span class="hud-label">Moon Size:</span><span class="hud-value">${p.moon.diameterKm.toLocaleString()} km</span></div>
-        <div class="hud-item"><span class="hud-label">Distance:</span><span class="hud-value">${p.moon.distKm.toLocaleString()} km</span></div>
-        `
-            : ""
-        }
-    `;
+    hud.innerHTML = `<div class="loading-hud">Loading planet data...</div>`;
   }
 
   Promise.all([
@@ -796,6 +759,70 @@ function switchPlanet(name: string, updateUrl = true) {
     surfaceUniforms.uSpecularMap.value = spec;
     surfaceUniforms.uNightMap.value = night;
     surfaceMat.needsUpdate = true;
+
+    // Now that textures are ready, show the planet and update HUD
+    planetMesh.visible = true;
+    cloudMesh.visible = true;
+    atmoMesh.visible = true;
+    ringMesh.visible = hasRing;
+    if (p.moon) {
+      moonMesh.visible = true;
+      const planetScale = p.diameterKm / EARTH_DIAMETER;
+      const moonRelScale = p.moon.diameterKm / EARTH_DIAMETER;
+      moonMesh.scale.setScalar(moonRelScale);
+
+      const MOON_VISUAL_DISTANCE_SCALE = 0.00004;
+      const moonDist = p.moon.distKm * MOON_VISUAL_DISTANCE_SCALE + planetScale * 1.5;
+      moonMesh.position.set(moonDist, 0, 0);
+      moonMat.color.set(new THREE.Color(0x999999));
+    }
+
+    if (hud) {
+      hud.innerHTML = `
+        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${escapeHtml(
+          (p.displayName || name).toUpperCase(),
+        )}</div>
+        <div class="hud-item"><span class="hud-label">Diameter:</span><span class="hud-value">${p.diameterKm.toLocaleString()} km</span></div>
+        <div class="hud-item"><span class="hud-label">Day Length:</span><span class="hud-value">${
+          p.dayHours
+        }h</span></div>
+        <div class="hud-item"><span class="hud-label">Surf Temp:</span><span class="hud-value">${
+          p.surfTempK
+        } K</span></div>
+        <div class="hud-item"><span class="hud-label">Hydrographics:</span><span class="hud-value">${(
+          p.hydro * 100
+        ).toFixed(1)}%</span></div>
+        <div class="hud-item"><span class="hud-label">Axial Tilt:</span><span class="hud-value">${
+          p.axialTilt
+        }°</span></div>
+        
+        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">ATMOSPHERE</div>
+        <div class="hud-item"><span class="hud-label">Pressure:</span><span class="hud-value">${
+          p.atmPressure
+        } atm</span></div>
+        <div class="hud-item"><span class="hud-label">N2 / O2 / CO2:</span><span class="hud-value">${
+          p.atmo.N2
+        }/${p.atmo.O2}/${p.atmo.CO2}</span></div>
+
+        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">STELLAR DATA</div>
+        <div class="hud-item"><span class="hud-label">Star Temp:</span><span class="hud-value">${
+          p.starTemp
+        } K</span></div>
+        <div class="hud-item"><span class="hud-label">Luminosity:</span><span class="hud-value">${
+          p.stellarLuminosity
+        } L</span></div>
+        
+        ${
+          p.moon
+            ? `
+        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">LUNAR DATA</div>
+        <div class="hud-item"><span class="hud-label">Moon Size:</span><span class="hud-value">${p.moon.diameterKm.toLocaleString()} km</span></div>
+        <div class="hud-item"><span class="hud-label">Distance:</span><span class="hud-value">${p.moon.distKm.toLocaleString()} km</span></div>
+        `
+            : ""
+        }
+      `;
+    }
   });
 }
 
