@@ -113,6 +113,7 @@ export class MapStateImpl implements MapState {
     }
     for (const line of this.links) {
       line.geometry.dispose();
+      (line.material as THREE.Material).dispose();
     }
     // Dispose shared per-type materials
     for (const mat of this.typeMaterials.values()) {
@@ -125,7 +126,9 @@ export class MapStateImpl implements MapState {
     }
     if (this.bgPoints) {
       this.bgPoints.geometry.dispose();
-      (this.bgPoints.material as THREE.PointsMaterial).dispose();
+      const mat = this.bgPoints.material as THREE.PointsMaterial;
+      mat.map?.dispose();
+      mat.dispose();
     }
     this.renderer.domElement.remove();
     this.labelRenderer.domElement.remove();
@@ -154,6 +157,14 @@ export class MapStateImpl implements MapState {
     this.camera.position.z = CAMERA_START_Z;
     this.scene = new THREE.Scene();
 
+    this.setupRenderers();
+    this.setupBackground();
+    this.setupStarSprites();
+    this.setupJumpLinks();
+    this.setupControls();
+  };
+
+  private setupRenderers() {
     // --- WebGL renderer ---
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -173,7 +184,9 @@ export class MapStateImpl implements MapState {
     this.labelRenderer.domElement.style.pointerEvents = "none";
     const labelsContainer = document.getElementById("labels");
     if (labelsContainer) labelsContainer.appendChild(this.labelRenderer.domElement);
+  }
 
+  private setupBackground() {
     // --- Background starfield ---
     const starCount = 2000;
     const positions = new Float32Array(starCount * 3);
@@ -203,7 +216,9 @@ export class MapStateImpl implements MapState {
     });
     this.bgPoints = new THREE.Points(bgGeometry, bgMaterial);
     this.scene.add(this.bgPoints);
+  }
 
+  private setupStarSprites() {
     // --- Star sprites ---
     for (const system of this.systemsData) {
       const idx = this.systems.length;
@@ -217,7 +232,9 @@ export class MapStateImpl implements MapState {
       this.systems.push(built.sprite);
       this.labelRefs.set(built.sprite, { label: built.label, planetLabel: built.planetLabel });
     }
+  }
 
+  private setupJumpLinks() {
     // --- Jump links as Lines ---
     const idToIndex = new Map<number, number>();
     for (let idx = 0; idx < this.systemsData.length; idx++) {
@@ -251,12 +268,14 @@ export class MapStateImpl implements MapState {
           }),
         );
       }
-      const line = new THREE.Line(geometry, this.typeMaterials.get(jump.type)!.clone());
+      const line = new THREE.Line(geometry, this.typeMaterials.get(jump.type)!);
       typeToList[jump.type].push(line);
       this.scene.add(line);
       this.links.push(line);
     }
+  }
 
+  private setupControls() {
     // --- Controls ---
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.rotateSpeed = CONTROLS_ROTATE_SPEED;
@@ -264,7 +283,7 @@ export class MapStateImpl implements MapState {
     this.controls.enableDamping = true;
     this.controls.maxDistance = CONTROLS_MAX_DISTANCE;
     this.addEventListener(window, "resize", this.debouncedResize);
-  };
+  }
 
   onWindowResize = () => {
     this.camera.aspect = window.innerWidth / window.innerHeight;
