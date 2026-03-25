@@ -268,7 +268,7 @@ export class MapStateImpl implements MapState {
           }),
         );
       }
-      const line = new THREE.Line(geometry, this.typeMaterials.get(jump.type)!.clone());
+      const line = new THREE.Line(geometry, this.typeMaterials.get(jump.type)!);
       typeToList[jump.type].push(line);
       this.scene.add(line);
       this.links.push(line);
