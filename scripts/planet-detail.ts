@@ -621,16 +621,30 @@ const planets: Planet[] = [
 
 const texLoader = new THREE.TextureLoader();
 const cache: Record<string, THREE.Texture> = {};
+const failedTextureCache: Record<string, THREE.Texture> = {};
+
+// 1x1 black pixel fallback
+const fallbackTexture = (() => {
+  const data = new Uint8Array([0, 0, 0, 255]);
+  const texture = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+})();
+
+let currentPlanetName = "";
 
 function switchPlanet(name: string, updateUrl = true) {
   const p = planets.find((x) => x.name === name);
   if (!p) return;
 
+  currentPlanetName = name;
+
   // Hide planet during switch
   planetMesh.visible = false;
   cloudMesh.visible = false;
   atmoMesh.visible = false;
-  if (moonMesh) moonMesh.visible = false;
+  moonMesh.visible = false;
   ringMesh.visible = false;
 
   if (updateUrl) {
@@ -684,8 +698,6 @@ function switchPlanet(name: string, updateUrl = true) {
     const scale = p.diameterKm / EARTH_DIAMETER;
     planetMesh.scale.setScalar(scale);
     cloudMesh.scale.setScalar(scale);
-    // ringMesh is a child of planetMesh, so it inherits scale.
-    // atmoMesh is not a child, so we scale it.
     atmoMesh.scale.setScalar(scale);
     ringMat.uniforms.uPlanetScale.value = scale;
   }
@@ -708,7 +720,6 @@ function switchPlanet(name: string, updateUrl = true) {
 
   if (p.atmPressure) {
     atmoMat.uniforms.uAtmPressure.value = p.atmPressure;
-    // Increase visual thickness for high pressure
     const atmoScale = 1.0 + 0.08 * (p.atmPressure > 1 ? Math.sqrt(p.atmPressure) : p.atmPressure);
     atmoMesh.scale.setScalar((p.diameterKm / EARTH_DIAMETER) * atmoScale);
   }
@@ -717,11 +728,9 @@ function switchPlanet(name: string, updateUrl = true) {
   const atmoColor = new THREE.Color(0.2, 0.5, 1.0); // Default Earth blue
   if (p.atmo) {
     if (p.atmo.CO2 > 0.01) {
-      // High CO2: yellowish haze
       atmoColor.lerp(new THREE.Color(0.8, 0.7, 0.4), 0.4);
     }
     if (p.atmo.O2 > 0.25) {
-      // High Oxygen: deeper/clearer blue
       atmoColor.lerp(new THREE.Color(0.1, 0.3, 0.9), 0.2);
     }
   }
@@ -753,8 +762,11 @@ function switchPlanet(name: string, updateUrl = true) {
     loadTexture(p.base, "_bump"),
     loadTexture(p.base, "_night"),
   ]).then(([diffuse, spec, bump, night]) => {
-    surfaceMat.map = diffuse as THREE.Texture;
-    surfaceMat.bumpMap = bump as THREE.Texture;
+    // Race condition check: only apply if this is still the current planet
+    if (currentPlanetName !== name) return;
+
+    surfaceMat.map = diffuse;
+    surfaceMat.bumpMap = bump;
     surfaceMat.bumpScale = 0.005;
     surfaceUniforms.uSpecularMap.value = spec;
     surfaceUniforms.uNightMap.value = night;
@@ -826,17 +838,28 @@ function switchPlanet(name: string, updateUrl = true) {
   });
 }
 
-const loadTexture = (base: string, suffix: string) => {
+const loadTexture = (base: string, suffix: string): Promise<THREE.Texture> => {
   const path = `/pngs/${base}${suffix}.png`;
   if (cache[path]) return Promise.resolve(cache[path]);
-  return new Promise((res) => {
-    texLoader.load(path, (t) => {
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      t.wrapS = THREE.RepeatWrapping;
-      cache[path] = t;
-      res(t);
-    });
+  if (failedTextureCache[path]) return Promise.resolve(failedTextureCache[path]);
+
+  return new Promise<THREE.Texture>((res) => {
+    texLoader.load(
+      path,
+      (t) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        t.wrapS = THREE.RepeatWrapping;
+        cache[path] = t;
+        res(t);
+      },
+      undefined,
+      () => {
+        console.error(`Failed to load texture: ${path}`);
+        failedTextureCache[path] = fallbackTexture;
+        res(fallbackTexture);
+      },
+    );
   });
 };
 
@@ -844,12 +867,20 @@ const loadTexture = (base: string, suffix: string) => {
  * Prefetches all planet textures in the background to avoid delay when switching.
  */
 function prefetchPlanets() {
-  planets.forEach((p) => {
-    // Load each suffix in parallel for this planet
-    ["_dilated", "_specular", "_bump", "_night"].forEach((suffix) => {
-      loadTexture(p.base, suffix);
+  // Use requestIdleCallback if available to avoid contention
+  const startPrefetch = () => {
+    planets.forEach((p) => {
+      ["_dilated", "_specular", "_bump", "_night"].forEach((suffix) => {
+        loadTexture(p.base, suffix);
+      });
     });
-  });
+  };
+
+  if ("requestIdleCallback" in window) {
+    (window as any).requestIdleCallback(startPrefetch);
+  } else {
+    setTimeout(startPrefetch, 2000);
+  }
 }
 
 const selector = document.getElementById("planet-selector");
@@ -872,7 +903,27 @@ if (selector) {
 const urlParams = new URLSearchParams(window.location.search);
 const initialPlanet = urlParams.get("planet") || "Altiplano";
 switchPlanet(initialPlanet, false);
-prefetchPlanets();
+
+// Wait for initial load before starting background prefetch
+// To be even safer, we could call prefetchPlanets inside switchPlanet's then block
+// but only once.
+let prefetched = false;
+function triggerPrefetchOnce() {
+  if (prefetched) return;
+  prefetched = true;
+  prefetchPlanets();
+}
+
+// Update the switchPlanet call to trigger prefetch
+const originalInitialPlanet = initialPlanet;
+Promise.all([
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_dilated"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_specular"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_bump"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_night"),
+]).then(() => {
+  triggerPrefetchOnce();
+});
 
 window.addEventListener("popstate", () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -898,12 +949,11 @@ function animate(time: number) {
   }
 
   if (moonMesh.visible) {
-    // Simple circular orbit
     const dist = moonMesh.position.length();
     const angle = time * 0.0002;
     moonMesh.position.set(
       Math.cos(angle) * dist,
-      Math.sin(angle * 0.3) * dist * 0.2, // Slight inclination
+      Math.sin(angle * 0.3) * dist * 0.2,
       Math.sin(angle) * dist,
     );
     moonMesh.rotation.y += 0.001;
