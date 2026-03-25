@@ -92,12 +92,12 @@ export function buildStarSprite(
   label: CSS2DObject;
   planetLabel?: CSS2DObject;
 } {
-  const starType = system.type?.[0]?.[0]?.toUpperCase();
-  const key = normalizeSpectralKey(starType);
+  const key = normalizeSpectralKey(system.type?.[0]);
+  const starType = key[0];
 
   let material = materialCache.get(key);
   if (!material) {
-    const texture = makeStarTexture(starType);
+    const texture = makeStarTexture(system.type?.[0]);
     material = new THREE.SpriteMaterial({
       map: texture,
       sizeAttenuation: true,
