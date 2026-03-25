@@ -129,6 +129,8 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
     ${linksSection}
   `;
   panel.hidden = false;
+  const closeBtn = document.getElementById("systemDetailClose");
+  if (closeBtn) closeBtn.focus();
 }
 
 function setupMenuToggle(): void {
@@ -270,8 +272,14 @@ function setupSystemDetailPanel(): void {
   const systemDetailClose = document.getElementById("systemDetailClose");
   const systemDetailPanel = document.getElementById("systemDetail");
   if (systemDetailClose && systemDetailPanel) {
-    systemDetailClose.addEventListener("click", () => {
+    const closePanel = () => {
       systemDetailPanel.hidden = true;
+    };
+    systemDetailClose.addEventListener("click", closePanel);
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !systemDetailPanel.hidden) {
+        closePanel();
+      }
     });
   }
 }
