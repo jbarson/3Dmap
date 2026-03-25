@@ -191,6 +191,7 @@ surfaceMat.onBeforeCompile = (shader: THREE.Shader) => {
 };
 
 const planetMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 128), surfaceMat);
+planetMesh.visible = false;
 scene.add(planetMesh);
 
 // --- Clouds ---
@@ -245,6 +246,7 @@ cloudMat.onBeforeCompile = (shader: THREE.Shader) => {
 };
 
 const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.015, 128, 128), cloudMat);
+cloudMesh.visible = false;
 scene.add(cloudMesh);
 
 // --- Atmosphere ---
@@ -291,6 +293,7 @@ const atmoMat = new THREE.ShaderMaterial({
     `,
 });
 const atmoMesh = new THREE.Mesh(new THREE.SphereGeometry(1.08, 128, 128), atmoMat);
+atmoMesh.visible = false;
 scene.add(atmoMesh);
 
 // --- Moon ---
@@ -618,10 +621,31 @@ const planets: Planet[] = [
 
 const texLoader = new THREE.TextureLoader();
 const cache: Record<string, THREE.Texture> = {};
+const failedTextureCache: Record<string, THREE.Texture> = {};
+
+// 1x1 black pixel fallback
+const fallbackTexture = (() => {
+  const data = new Uint8Array([0, 0, 0, 255]);
+  const texture = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+})();
+
+let currentPlanetName = "";
 
 function switchPlanet(name: string, updateUrl = true) {
   const p = planets.find((x) => x.name === name);
   if (!p) return;
+
+  currentPlanetName = name;
+
+  // Hide planet during switch
+  planetMesh.visible = false;
+  cloudMesh.visible = false;
+  atmoMesh.visible = false;
+  moonMesh.visible = false;
+  ringMesh.visible = false;
 
   if (updateUrl) {
     const url = new URL(window.location.href);
@@ -652,9 +676,8 @@ function switchPlanet(name: string, updateUrl = true) {
   commonUniforms.uCloudSeed.value.set(p.seed[0], p.seed[1], p.seed[2]);
   commonUniforms.uCloudScale.value = p.scale;
 
-  // Show/hide ring
+  // Show/hide ring (will be shown after texture load)
   const hasRing = p.hasRing || false;
-  ringMesh.visible = hasRing;
 
   // Set albedo and temperature
   surfaceUniforms.uAlbedo.value = p.albedo || 0.35;
@@ -675,8 +698,6 @@ function switchPlanet(name: string, updateUrl = true) {
     const scale = p.diameterKm / EARTH_DIAMETER;
     planetMesh.scale.setScalar(scale);
     cloudMesh.scale.setScalar(scale);
-    // ringMesh is a child of planetMesh, so it inherits scale.
-    // atmoMesh is not a child, so we scale it.
     atmoMesh.scale.setScalar(scale);
     ringMat.uniforms.uPlanetScale.value = scale;
   }
@@ -684,27 +705,6 @@ function switchPlanet(name: string, updateUrl = true) {
   // Set rotation speed (Earth day = 24 hours, so 24/dayHours = speed multiplier)
   const EARTH_DAY_HOURS = 24;
   rotationSpeed = p.dayHours ? EARTH_DAY_HOURS / p.dayHours : 1;
-
-  // Set moon properties
-  if (p.moon) {
-    moonMesh.visible = true;
-    const EARTH_DIAMETER = 12742;
-    const planetScale = p.diameterKm / EARTH_DIAMETER;
-    const moonRelScale = p.moon.diameterKm / EARTH_DIAMETER;
-    moonMesh.scale.setScalar(moonRelScale);
-
-    // For visual convenience, we bring moons much closer but keep them distinct
-    // Actual Moon is ~30 Earth diameters away (384k km / 12k km)
-    // We'll use a logarithmic or scaled distance to keep it visible
-    const MOON_VISUAL_DISTANCE_SCALE = 0.00004;
-    const moonDist = p.moon.distKm * MOON_VISUAL_DISTANCE_SCALE + planetScale * 1.5;
-    moonMesh.position.set(moonDist, 0, 0);
-
-    // Load moon texture if we have one (re-using bump map as albedo for now)
-    moonMat.color.set(new THREE.Color(0x999999));
-  } else {
-    moonMesh.visible = false;
-  }
 
   // Set stellar luminosity (affects sun light intensity)
   if (p.stellarLuminosity) {
@@ -720,7 +720,6 @@ function switchPlanet(name: string, updateUrl = true) {
 
   if (p.atmPressure) {
     atmoMat.uniforms.uAtmPressure.value = p.atmPressure;
-    // Increase visual thickness for high pressure
     const atmoScale = 1.0 + 0.08 * (p.atmPressure > 1 ? Math.sqrt(p.atmPressure) : p.atmPressure);
     atmoMesh.scale.setScalar((p.diameterKm / EARTH_DIAMETER) * atmoScale);
   }
@@ -729,11 +728,9 @@ function switchPlanet(name: string, updateUrl = true) {
   const atmoColor = new THREE.Color(0.2, 0.5, 1.0); // Default Earth blue
   if (p.atmo) {
     if (p.atmo.CO2 > 0.01) {
-      // High CO2: yellowish haze
       atmoColor.lerp(new THREE.Color(0.8, 0.7, 0.4), 0.4);
     }
     if (p.atmo.O2 > 0.25) {
-      // High Oxygen: deeper/clearer blue
       atmoColor.lerp(new THREE.Color(0.1, 0.3, 0.9), 0.2);
     }
   }
@@ -753,24 +750,79 @@ function switchPlanet(name: string, updateUrl = true) {
     camera.lookAt(0, 0, 0);
   }
 
-  // Update HUD
+  // Show "Loading..." in HUD while textures load
   const hud = document.getElementById("hud");
   if (hud) {
-    hud.innerHTML = `
-        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${escapeHtml((p.displayName || name).toUpperCase())}</div>
+    hud.innerHTML = `<div class="loading-hud">Loading planet data...</div>`;
+  }
+
+  Promise.all([
+    loadTexture(p.base, "_dilated"),
+    loadTexture(p.base, "_specular"),
+    loadTexture(p.base, "_bump"),
+    loadTexture(p.base, "_night"),
+  ]).then(([diffuse, spec, bump, night]) => {
+    // Race condition check: only apply if this is still the current planet
+    if (currentPlanetName !== name) return;
+
+    surfaceMat.map = diffuse;
+    surfaceMat.bumpMap = bump;
+    surfaceMat.bumpScale = 0.005;
+    surfaceUniforms.uSpecularMap.value = spec;
+    surfaceUniforms.uNightMap.value = night;
+    surfaceMat.needsUpdate = true;
+
+    // Now that textures are ready, show the planet and update HUD
+    planetMesh.visible = true;
+    cloudMesh.visible = true;
+    atmoMesh.visible = true;
+    ringMesh.visible = hasRing;
+    if (p.moon) {
+      moonMesh.visible = true;
+      const planetScale = p.diameterKm / EARTH_DIAMETER;
+      const moonRelScale = p.moon.diameterKm / EARTH_DIAMETER;
+      moonMesh.scale.setScalar(moonRelScale);
+
+      const MOON_VISUAL_DISTANCE_SCALE = 0.00004;
+      const moonDist = p.moon.distKm * MOON_VISUAL_DISTANCE_SCALE + planetScale * 1.5;
+      moonMesh.position.set(moonDist, 0, 0);
+      moonMat.color.set(new THREE.Color(0x999999));
+    }
+
+    if (hud) {
+      hud.innerHTML = `
+        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${escapeHtml(
+          (p.displayName || name).toUpperCase(),
+        )}</div>
         <div class="hud-item"><span class="hud-label">Diameter:</span><span class="hud-value">${p.diameterKm.toLocaleString()} km</span></div>
-        <div class="hud-item"><span class="hud-label">Day Length:</span><span class="hud-value">${p.dayHours}h</span></div>
-        <div class="hud-item"><span class="hud-label">Surf Temp:</span><span class="hud-value">${p.surfTempK} K</span></div>
-        <div class="hud-item"><span class="hud-label">Hydrographics:</span><span class="hud-value">${(p.hydro * 100).toFixed(1)}%</span></div>
-        <div class="hud-item"><span class="hud-label">Axial Tilt:</span><span class="hud-value">${p.axialTilt}°</span></div>
+        <div class="hud-item"><span class="hud-label">Day Length:</span><span class="hud-value">${
+          p.dayHours
+        }h</span></div>
+        <div class="hud-item"><span class="hud-label">Surf Temp:</span><span class="hud-value">${
+          p.surfTempK
+        } K</span></div>
+        <div class="hud-item"><span class="hud-label">Hydrographics:</span><span class="hud-value">${(
+          p.hydro * 100
+        ).toFixed(1)}%</span></div>
+        <div class="hud-item"><span class="hud-label">Axial Tilt:</span><span class="hud-value">${
+          p.axialTilt
+        }°</span></div>
         
         <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">ATMOSPHERE</div>
-        <div class="hud-item"><span class="hud-label">Pressure:</span><span class="hud-value">${p.atmPressure} atm</span></div>
-        <div class="hud-item"><span class="hud-label">N2 / O2 / CO2:</span><span class="hud-value">${p.atmo.N2}/${p.atmo.O2}/${p.atmo.CO2}</span></div>
+        <div class="hud-item"><span class="hud-label">Pressure:</span><span class="hud-value">${
+          p.atmPressure
+        } atm</span></div>
+        <div class="hud-item"><span class="hud-label">N2 / O2 / CO2:</span><span class="hud-value">${
+          p.atmo.N2
+        }/${p.atmo.O2}/${p.atmo.CO2}</span></div>
 
         <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">STELLAR DATA</div>
-        <div class="hud-item"><span class="hud-label">Star Temp:</span><span class="hud-value">${p.starTemp} K</span></div>
-        <div class="hud-item"><span class="hud-label">Luminosity:</span><span class="hud-value">${p.stellarLuminosity} L</span></div>
+        <div class="hud-item"><span class="hud-label">Star Temp:</span><span class="hud-value">${
+          p.starTemp
+        } K</span></div>
+        <div class="hud-item"><span class="hud-label">Luminosity:</span><span class="hud-value">${
+          p.stellarLuminosity
+        } L</span></div>
         
         ${
           p.moon
@@ -781,36 +833,56 @@ function switchPlanet(name: string, updateUrl = true) {
         `
             : ""
         }
-    `;
-  }
+      `;
+    }
+  });
+}
 
-  const loadTexture = (suffix: string) => {
-    const path = `/pngs/${p.base}${suffix}.png`;
-    if (cache[path]) return Promise.resolve(cache[path]);
-    return new Promise((res) => {
-      texLoader.load(path, (t) => {
+const loadTexture = (base: string, suffix: string): Promise<THREE.Texture> => {
+  const path = `/pngs/${base}${suffix}.png`;
+  if (cache[path]) return Promise.resolve(cache[path]);
+  if (failedTextureCache[path]) return Promise.resolve(failedTextureCache[path]);
+
+  return new Promise<THREE.Texture>((res) => {
+    texLoader.load(
+      path,
+      (t) => {
         t.colorSpace = THREE.SRGBColorSpace;
         t.anisotropy = renderer.capabilities.getMaxAnisotropy();
         t.wrapS = THREE.RepeatWrapping;
         cache[path] = t;
         res(t);
+      },
+      undefined,
+      () => {
+        console.error(`Failed to load texture: ${path}`);
+        failedTextureCache[path] = fallbackTexture;
+        res(fallbackTexture);
+      },
+    );
+  });
+};
+
+/**
+ * Prefetches all planet textures in the background to avoid delay when switching.
+ */
+function prefetchPlanets() {
+  // Use requestIdleCallback if available to avoid contention
+  const startPrefetch = () => {
+    planets.forEach((p) => {
+      ["_dilated", "_specular", "_bump", "_night"].forEach((suffix) => {
+        loadTexture(p.base, suffix);
       });
     });
   };
 
-  Promise.all([
-    loadTexture("_dilated"),
-    loadTexture("_specular"),
-    loadTexture("_bump"),
-    loadTexture("_night"),
-  ]).then(([diffuse, spec, bump, night]) => {
-    surfaceMat.map = diffuse as THREE.Texture;
-    surfaceMat.bumpMap = bump as THREE.Texture;
-    surfaceMat.bumpScale = 0.005;
-    surfaceUniforms.uSpecularMap.value = spec;
-    surfaceUniforms.uNightMap.value = night;
-    surfaceMat.needsUpdate = true;
-  });
+  if ("requestIdleCallback" in window) {
+    (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(
+      startPrefetch,
+    );
+  } else {
+    setTimeout(startPrefetch, 2000);
+  }
 }
 
 const selector = document.getElementById("planet-selector");
@@ -833,6 +905,27 @@ if (selector) {
 const urlParams = new URLSearchParams(window.location.search);
 const initialPlanet = urlParams.get("planet") || "Altiplano";
 switchPlanet(initialPlanet, false);
+
+// Wait for initial load before starting background prefetch
+// To be even safer, we could call prefetchPlanets inside switchPlanet's then block
+// but only once.
+let prefetched = false;
+function triggerPrefetchOnce() {
+  if (prefetched) return;
+  prefetched = true;
+  prefetchPlanets();
+}
+
+// Update the switchPlanet call to trigger prefetch
+const originalInitialPlanet = initialPlanet;
+Promise.all([
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_dilated"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_specular"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_bump"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_night"),
+]).then(() => {
+  triggerPrefetchOnce();
+});
 
 window.addEventListener("popstate", () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -858,12 +951,11 @@ function animate(time: number) {
   }
 
   if (moonMesh.visible) {
-    // Simple circular orbit
     const dist = moonMesh.position.length();
     const angle = time * 0.0002;
     moonMesh.position.set(
       Math.cos(angle) * dist,
-      Math.sin(angle * 0.3) * dist * 0.2, // Slight inclination
+      Math.sin(angle * 0.3) * dist * 0.2,
       Math.sin(angle) * dist,
     );
     moonMesh.rotation.y += 0.001;
