@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { Jump, MapState, System, JumpType } from "./types";
-import { buildStarSprite, computeLabelMarginTop } from "./utils/scene";
+import { buildStarSprite, computeLabelMarginTop, clearSceneCache } from "./utils/scene";
 import { debounce, type DebouncedFn } from "./utils/debounce";
 import {
   CAMERA_FAR,
@@ -108,9 +108,10 @@ export class MapStateImpl implements MapState {
     }
     this.eventListeners = [];
     this.controls.dispose();
-    for (const sprite of this.systems) {
-      (sprite.material as THREE.SpriteMaterial).dispose();
-    }
+
+    // Clear shared materials and textures
+    clearSceneCache();
+
     for (const line of this.links) {
       line.geometry.dispose();
       (line.material as THREE.Material).dispose();
