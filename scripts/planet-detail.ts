@@ -784,25 +784,11 @@ function switchPlanet(name: string, updateUrl = true) {
     `;
   }
 
-  const loadTexture = (suffix: string) => {
-    const path = `/pngs/${p.base}${suffix}.png`;
-    if (cache[path]) return Promise.resolve(cache[path]);
-    return new Promise((res) => {
-      texLoader.load(path, (t) => {
-        t.colorSpace = THREE.SRGBColorSpace;
-        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-        t.wrapS = THREE.RepeatWrapping;
-        cache[path] = t;
-        res(t);
-      });
-    });
-  };
-
   Promise.all([
-    loadTexture("_dilated"),
-    loadTexture("_specular"),
-    loadTexture("_bump"),
-    loadTexture("_night"),
+    loadTexture(p.base, "_dilated"),
+    loadTexture(p.base, "_specular"),
+    loadTexture(p.base, "_bump"),
+    loadTexture(p.base, "_night"),
   ]).then(([diffuse, spec, bump, night]) => {
     surfaceMat.map = diffuse as THREE.Texture;
     surfaceMat.bumpMap = bump as THREE.Texture;
@@ -810,6 +796,32 @@ function switchPlanet(name: string, updateUrl = true) {
     surfaceUniforms.uSpecularMap.value = spec;
     surfaceUniforms.uNightMap.value = night;
     surfaceMat.needsUpdate = true;
+  });
+}
+
+const loadTexture = (base: string, suffix: string) => {
+  const path = `/pngs/${base}${suffix}.png`;
+  if (cache[path]) return Promise.resolve(cache[path]);
+  return new Promise((res) => {
+    texLoader.load(path, (t) => {
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      t.wrapS = THREE.RepeatWrapping;
+      cache[path] = t;
+      res(t);
+    });
+  });
+};
+
+/**
+ * Prefetches all planet textures in the background to avoid delay when switching.
+ */
+function prefetchPlanets() {
+  planets.forEach((p) => {
+    // Load each suffix in parallel for this planet
+    ["_dilated", "_specular", "_bump", "_night"].forEach((suffix) => {
+      loadTexture(p.base, suffix);
+    });
   });
 }
 
@@ -833,6 +845,7 @@ if (selector) {
 const urlParams = new URLSearchParams(window.location.search);
 const initialPlanet = urlParams.get("planet") || "Altiplano";
 switchPlanet(initialPlanet, false);
+prefetchPlanets();
 
 window.addEventListener("popstate", () => {
   const urlParams = new URLSearchParams(window.location.search);
