@@ -632,9 +632,15 @@ function switchPlanet(name: string, updateUrl = true) {
   const planetNameEl = document.getElementById("planet-name");
   if (planetNameEl) planetNameEl.textContent = p.displayName || name;
 
-  document
-    .querySelectorAll(".planet-link")
-    .forEach((l) => l.classList.toggle("active", (l as HTMLElement).dataset.name === name));
+  document.querySelectorAll(".planet-link").forEach((l) => {
+    const isActive = (l as HTMLElement).dataset.name === name;
+    l.classList.toggle("active", isActive);
+    if (isActive) {
+      l.setAttribute("aria-current", "page");
+    } else {
+      l.removeAttribute("aria-current");
+    }
+  });
 
   const starmapLink = document.getElementById("starmap-link") as HTMLAnchorElement;
   if (starmapLink && p.sysName) {
