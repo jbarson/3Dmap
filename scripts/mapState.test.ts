@@ -136,6 +136,7 @@ vi.mock("./utils/scene", () => {
       };
     }),
     computeLabelMarginTop: vi.fn().mockReturnValue(10),
+    clearSceneCache: vi.fn(),
   };
 });
 
