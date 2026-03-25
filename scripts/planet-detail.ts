@@ -877,7 +877,9 @@ function prefetchPlanets() {
   };
 
   if ("requestIdleCallback" in window) {
-    (window as any).requestIdleCallback(startPrefetch);
+    (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(
+      startPrefetch,
+    );
   } else {
     setTimeout(startPrefetch, 2000);
   }
