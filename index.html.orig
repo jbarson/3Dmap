@@ -20,7 +20,6 @@
     <button
       id="menuToggle"
       aria-label="Toggle controls menu"
-      title="Toggle controls menu"
       aria-controls="controlsPanel"
       aria-expanded="false"
     >
@@ -109,7 +108,7 @@
       </div>
     </div>
     <aside id="systemDetail" aria-label="System details" hidden>
-      <button id="systemDetailClose" aria-label="Close" title="Close (Esc)">&times;</button>
+      <button id="systemDetailClose" aria-label="Close">&times;</button>
       <div id="systemDetailContent"></div>
     </aside>
     <div id="container"></div>

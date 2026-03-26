@@ -132,23 +132,23 @@ surfaceMat.onBeforeCompile = (shader: THREE.Shader) => {
     "#include <map_fragment>",
     `
         #include <map_fragment>
-        
+
         vec3 sunDir = normalize(uSunDir);
         float dotNL = dot(vNormal, sunDir);
         float dayWeight = smoothstep(-0.03, 0.03, dotNL);
-        
+
         // 1. Specular from Map
         float specMask = texture2D(uSpecularMap, vMapUv).r;
         // Enhance specular on planets with high hydrographics
         specMask *= (0.8 + uHydro * 1.5);
-        
+
         // 2. Night Lights from Map
         vec3 nightLights = texture2D(uNightMap, vMapUv).rgb * 2.0;
 
         // 3. Cloud shadows (Warped FBM for swirly patterns)
         vec3 cloudPos = vLocalNormal * vec3(1.5, 1.0, 1.0) + vec3(uTime * 0.005, 0.0, 0.0);
         float cloudVal = warpedFbm(cloudPos * uCloudScale, uTime * 0.1);
-        
+
         float cloudThreshold = 1.0 - uCloudCoverage;
         float clouds = smoothstep(cloudThreshold - 0.1, cloudThreshold + 0.3, cloudVal);
         float cloudShadow = mix(1.0, 0.5, clouds * dayWeight);
@@ -175,7 +175,7 @@ surfaceMat.onBeforeCompile = (shader: THREE.Shader) => {
 
         // Apply
         diffuseColor.rgb *= (dayWeight * cloudShadow * ringShadow * (0.5 + uAlbedo * 1.5));
-        
+
         // Temperature Tinting
         vec3 tempColor = vec3(1.0);
         if (uSurfTempK < 273.15) { // Below freezing: bluish icy tint
@@ -234,11 +234,11 @@ cloudMat.onBeforeCompile = (shader: THREE.Shader) => {
         #include <map_fragment>
         vec3 cloudPos = vLocalNormal * vec3(1.5, 1.0, 1.0) + vec3(uTime * 0.005, 0.0, 0.0);
         float cloudVal = warpedFbm(cloudPos * uCloudScale, uTime * 0.1);
-        
+
         float cloudThreshold = 1.0 - uCloudCoverage;
         float clouds = smoothstep(cloudThreshold - 0.1, cloudThreshold + 0.3, cloudVal);
         float lit = smoothstep(-0.02, 0.08, dot(vNormal, normalize(uSunDir)));
-        
+
         diffuseColor.rgb = vec3(0.95, 0.95, 1.0);
         diffuseColor.a = clouds * lit * 0.95;
         `,
@@ -281,11 +281,11 @@ const atmoMat = new THREE.ShaderMaterial({
             float fresnel = pow(1.0 - dot(vNormal, viewDir), 4.0);
             float dotNL = dot(normalize(vWorldPosition), normalize(uSunDir));
             float lit = smoothstep(-0.3, 0.5, dotNL);
-            
+
             // Base color shifts based on pressure
             vec3 deepColor = mix(vec3(0.02, 0.05, 0.2), uAtmoColor * 0.3, lit);
             vec3 brightColor = uAtmoColor;
-            
+
             vec3 color = mix(deepColor, brightColor, lit);
             float intensity = (0.4 + uAtmPressure * 0.6);
             gl_FragColor = vec4(color * fresnel * 2.5 * intensity, fresnel * lit * 0.8 * intensity);
@@ -336,26 +336,26 @@ const ringMat = new THREE.ShaderMaterial({
         uniform float uTime;
         uniform vec3 uSunDir;
         uniform float uPlanetScale;
-        
+
         void main() {
             vec3 L = normalize(uSunDir);
             vec3 P = vWorldPosition; // Planet center is at (0,0,0)
-            
+
             float d = dot(P, L);
             float distToAxis = length(P - d * L);
-            
+
             float shadow = 1.0;
             if (d < 0.0) {
                 // Sphere of radius uPlanetScale at origin
                 shadow = smoothstep(uPlanetScale * 0.98, uPlanetScale * 1.02, distToAxis);
                 shadow = mix(0.05, 1.0, shadow);
             }
-            
+
             float dist = length(vLocalPosition.xy);
             float innerEdge = smoothstep(1.615, 1.65, dist);
             float outerEdge = 1.0 - smoothstep(1.85, 1.885, dist);
             float mask = innerEdge * outerEdge;
-            
+
             float band = sin(dist * 60.0) * 0.5 + 0.5;
             band = mix(0.3, 0.6, band) * mask * shadow;
             gl_FragColor = vec4(0.75, 0.75, 0.8, band);
@@ -670,7 +670,6 @@ function switchPlanet(name: string, updateUrl = true) {
   if (starmapLink && p.sysName) {
     starmapLink.href = `/#focus=${encodeURIComponent(p.sysName)}`;
     starmapLink.title = `Back to ${p.sysName} in Star Map`;
-    starmapLink.setAttribute("aria-label", `Back to ${p.sysName} in Star Map`);
   }
 
   // Update cloud pattern parameters
@@ -808,7 +807,7 @@ function switchPlanet(name: string, updateUrl = true) {
         <div class="hud-item"><span class="hud-label">Axial Tilt:</span><span class="hud-value">${
           p.axialTilt
         }°</span></div>
-        
+
         <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">ATMOSPHERE</div>
         <div class="hud-item"><span class="hud-label">Pressure:</span><span class="hud-value">${
           p.atmPressure
@@ -824,7 +823,7 @@ function switchPlanet(name: string, updateUrl = true) {
         <div class="hud-item"><span class="hud-label">Luminosity:</span><span class="hud-value">${
           p.stellarLuminosity
         } L</span></div>
-        
+
         ${
           p.moon
             ? `

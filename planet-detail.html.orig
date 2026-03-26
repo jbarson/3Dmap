@@ -11,9 +11,7 @@
   </head>
   <body>
     <div id="info">Planet Detail · <span id="planet-name">Altiplano</span></div>
-    <a id="starmap-link" href="/" aria-label="Back to Star Map" title="Back to Star Map"
-      >← Star Map</a
-    >
+    <a id="starmap-link" href="/">← Star Map</a>
     <div id="planet-selector"></div>
     <div id="hud"></div>
 
