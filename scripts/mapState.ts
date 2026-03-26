@@ -61,6 +61,7 @@ export class MapStateImpl implements MapState {
 
   onZoom: ((idx: number) => void) | null = null;
   private glowSprite: THREE.Sprite | null = null;
+  private glowMaterial: THREE.SpriteMaterial | null = null;
   private cameraAnim: {
     startPos: THREE.Vector3;
     endPos: THREE.Vector3;
@@ -122,8 +123,11 @@ export class MapStateImpl implements MapState {
     }
     if (this.glowSprite) {
       this.scene.remove(this.glowSprite);
-      (this.glowSprite.material as THREE.SpriteMaterial).dispose();
       this.glowSprite = null;
+    }
+    if (this.glowMaterial) {
+      this.glowMaterial.dispose();
+      this.glowMaterial = null;
     }
     if (this.bgPoints) {
       this.bgPoints.geometry.dispose();
@@ -401,23 +405,32 @@ export class MapStateImpl implements MapState {
   };
 
   private placeGlow(star: THREE.Sprite): void {
-    if (this.glowSprite) {
-      this.scene.remove(this.glowSprite);
-      (this.glowSprite.material as THREE.SpriteMaterial).dispose();
-      this.glowSprite = null;
+    const starMap = (star.material as THREE.SpriteMaterial).map;
+
+    // Performance Optimization: Cache and reuse SpriteMaterial and Sprite
+    // to prevent allocations and GC overhead on every selection.
+    // Reusing the same material/sprite drastically improves responsiveness
+    // when clicking through many systems quickly.
+    if (!this.glowMaterial) {
+      this.glowMaterial = new THREE.SpriteMaterial({
+        map: starMap,
+        color: 0x88ccff,
+        blending: THREE.AdditiveBlending,
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false,
+      });
+    } else {
+      this.glowMaterial.map = starMap;
+      this.glowMaterial.needsUpdate = true;
     }
-    const glowMaterial = new THREE.SpriteMaterial({
-      map: (star.material as THREE.SpriteMaterial).map,
-      color: 0x88ccff,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-      opacity: 0.7,
-      depthWrite: false,
-    });
-    this.glowSprite = new THREE.Sprite(glowMaterial);
+
+    if (!this.glowSprite) {
+      this.glowSprite = new THREE.Sprite(this.glowMaterial);
+      this.scene.add(this.glowSprite);
+    }
     this.glowSprite.scale.setScalar(star.scale.x * 2.5);
     this.glowSprite.position.copy(star.position);
-    this.scene.add(this.glowSprite);
   }
 
   zoomToStar = (idx: number): void => {
