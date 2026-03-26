@@ -106,6 +106,9 @@ vi.mock("three/examples/jsm/controls/OrbitControls.js", () => {
         lerpVectors: vi.fn(),
       };
       update = vi.fn();
+      dispose = vi.fn();
+      addEventListener = vi.fn();
+      removeEventListener = vi.fn();
     },
   };
 });

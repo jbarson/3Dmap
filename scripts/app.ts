@@ -182,6 +182,7 @@ function setupDateSlider(
             const mat = link.material as import("three").LineBasicMaterial;
             mat.opacity = jumpList[n].year > pendingDateVal ? 0 : 1;
           }
+          mapState.requestRender();
           rAFId = null;
         });
       }

@@ -85,6 +85,7 @@ export class MapStateImpl implements MapState {
   private lastCamQuat = new THREE.Quaternion();
   private lastViewH = 0;
   private lastViewW = 0;
+  private needsRender = true;
 
   constructor(systemsArr: System[], jumpList: Jump[]) {
     this.systemsData = systemsArr;
@@ -107,6 +108,7 @@ export class MapStateImpl implements MapState {
       element.removeEventListener(event, handler);
     }
     this.eventListeners = [];
+    this.controls.removeEventListener("change", this.requestRender);
     this.controls.dispose();
     for (const sprite of this.systems) {
       (sprite.material as THREE.SpriteMaterial).dispose();
@@ -141,7 +143,10 @@ export class MapStateImpl implements MapState {
       E: this.epsiLinks,
     };
     const list = typeToList[type];
-    if (list) this.toggleLinksVisibility(list);
+    if (list) {
+      this.toggleLinksVisibility(list);
+      this.requestRender();
+    }
   };
 
   init = () => {
@@ -263,6 +268,10 @@ export class MapStateImpl implements MapState {
     this.controls.dampingFactor = CONTROLS_DAMPING;
     this.controls.enableDamping = true;
     this.controls.maxDistance = CONTROLS_MAX_DISTANCE;
+
+    // Force a render when the user interacts via controls
+    this.controls.addEventListener("change", this.requestRender);
+
     this.addEventListener(window, "resize", this.debouncedResize);
   };
 
@@ -271,11 +280,17 @@ export class MapStateImpl implements MapState {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    this.render();
+    this.requestRender();
+  };
+
+  requestRender = () => {
+    this.needsRender = true;
   };
 
   animate = () => {
     requestAnimationFrame(this.animate);
+    let currentNeedsRender = this.needsRender;
+
     if (this.cameraAnim) {
       const { startPos, endPos, startTarget, endTarget, startTime, duration } = this.cameraAnim;
       const raw = (performance.now() - startTime) / duration;
@@ -288,12 +303,17 @@ export class MapStateImpl implements MapState {
         this.controls.target.copy(endTarget);
         this.cameraAnim = null;
       }
-      this.controls.update();
-      this.render();
-      return;
+      currentNeedsRender = true;
     }
-    this.controls.update();
-    this.render();
+
+    if (this.controls.update()) {
+      currentNeedsRender = true;
+    }
+
+    if (currentNeedsRender) {
+      this.needsRender = false;
+      this.render();
+    }
   };
 
   render = () => {
@@ -426,7 +446,7 @@ export class MapStateImpl implements MapState {
     this.controls.target.copy(star.position);
     this.camera.position.copy(star.position).add(new THREE.Vector3(0, 0, 800));
     this.controls.update();
-    this.render();
+    this.requestRender();
     this.onZoom?.(idx);
     this.zoomToStar(idx);
     return true;
