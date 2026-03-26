@@ -670,6 +670,7 @@ function switchPlanet(name: string, updateUrl = true) {
   if (starmapLink && p.sysName) {
     starmapLink.href = `/#focus=${encodeURIComponent(p.sysName)}`;
     starmapLink.title = `Back to ${p.sysName} in Star Map`;
+    starmapLink.setAttribute("aria-label", `Back to ${p.sysName} in Star Map`);
   }
 
   // Update cloud pattern parameters
