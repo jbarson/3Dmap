@@ -74,8 +74,14 @@ vi.mock("three", async () => {
       visible = true;
       material = { dispose: vi.fn() };
     },
-    PointsMaterial: class PointsMaterial {},
-    Points: class Points {},
+    PointsMaterial: class PointsMaterial {
+      dispose = vi.fn();
+      map = { dispose: vi.fn() };
+    },
+    Points: class Points {
+      geometry = { dispose: vi.fn() };
+      material = { dispose: vi.fn(), map: { dispose: vi.fn() } };
+    },
     CanvasTexture: class CanvasTexture {},
     BufferAttribute: class BufferAttribute {},
   };
@@ -106,6 +112,7 @@ vi.mock("three/examples/jsm/controls/OrbitControls.js", () => {
         lerpVectors: vi.fn(),
       };
       update = vi.fn();
+      dispose = vi.fn();
     },
   };
 });
@@ -435,5 +442,48 @@ describe("MapStateImpl focusOnSystem & zoomToStar", () => {
     expect(cameraAnim.duration).toBe(1000);
 
     expect(mapState.onZoom).toHaveBeenCalledWith(0);
+  });
+
+  describe("Glow Management", () => {
+    it("placeGlow caches and reuses material and sprite", () => {
+      // @ts-expect-error accessing private property for test
+      expect(mapState.glowMaterial).toBeNull();
+      // @ts-expect-error accessing private property for test
+      expect(mapState.glowSprite).toBeNull();
+
+      // Trigger glow placement
+      mapState.zoomToStar(0);
+
+      // @ts-expect-error accessing private property for test
+      const firstMaterial = mapState.glowMaterial;
+      // @ts-expect-error accessing private property for test
+      const firstSprite = mapState.glowSprite;
+      expect(firstMaterial).not.toBeNull();
+      expect(firstSprite).not.toBeNull();
+
+      // Trigger glow again on a different star
+      mapState.zoomToStar(1);
+
+      // @ts-expect-error accessing private property for test
+      expect(mapState.glowMaterial).toBe(firstMaterial);
+      // @ts-expect-error accessing private property for test
+      expect(mapState.glowSprite).toBe(firstSprite);
+    });
+
+    it("cleanup() disposes of glow material and clears references", () => {
+      mapState.zoomToStar(0);
+
+      // @ts-expect-error accessing private property for test
+      const material = mapState.glowMaterial;
+      const disposeSpy = vi.spyOn(material, "dispose");
+
+      mapState.cleanup();
+
+      expect(disposeSpy).toHaveBeenCalled();
+      // @ts-expect-error accessing private property for test
+      expect(mapState.glowMaterial).toBeNull();
+      // @ts-expect-error accessing private property for test
+      expect(mapState.glowSprite).toBeNull();
+    });
   });
 });

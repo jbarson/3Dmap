@@ -421,8 +421,11 @@ export class MapStateImpl implements MapState {
         depthWrite: false,
       });
     } else {
+      const prevMap = this.glowMaterial.map;
       this.glowMaterial.map = starMap;
-      this.glowMaterial.needsUpdate = true;
+      if (!!prevMap !== !!starMap) {
+        this.glowMaterial.needsUpdate = true;
+      }
     }
 
     if (!this.glowSprite) {
