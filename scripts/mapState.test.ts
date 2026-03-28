@@ -111,8 +111,10 @@ vi.mock("three/examples/jsm/controls/OrbitControls.js", () => {
         copy: vi.fn().mockReturnThis().mockReturnThis(),
         lerpVectors: vi.fn(),
       };
-      update = vi.fn();
+      update = vi.fn().mockReturnValue(false);
       dispose = vi.fn();
+      addEventListener = vi.fn();
+      removeEventListener = vi.fn();
     },
   };
 });
@@ -484,6 +486,73 @@ describe("MapStateImpl focusOnSystem & zoomToStar", () => {
       expect(mapState.glowMaterial).toBeNull();
       // @ts-expect-error accessing private property for test
       expect(mapState.glowSprite).toBeNull();
+    });
+  });
+
+  describe("Rendering", () => {
+    it("requestRender() sets needsRender to true", () => {
+      // @ts-expect-error accessing private property for test
+      mapState.needsRender = false;
+      mapState.requestRender();
+      // @ts-expect-error accessing private property for test
+      expect(mapState.needsRender).toBe(true);
+    });
+
+    it("animate() calls render() if needsRender is true", () => {
+      const renderSpy = vi.spyOn(mapState, "render");
+      // @ts-expect-error accessing private property for test
+      mapState.needsRender = true;
+
+      mapState.animate();
+
+      expect(renderSpy).toHaveBeenCalled();
+      // @ts-expect-error accessing private property for test
+      expect(mapState.needsRender).toBe(false);
+    });
+
+    it("animate() calls render() if controls.update() returns true", () => {
+      const renderSpy = vi.spyOn(mapState, "render");
+      // @ts-expect-error accessing private property for test
+      mapState.needsRender = false;
+      // @ts-expect-error accessing private property for test
+      mapState.controls.update.mockReturnValue(true);
+
+      mapState.animate();
+
+      expect(renderSpy).toHaveBeenCalled();
+    });
+
+    it("animate() calls render() if cameraAnim is active", () => {
+      const renderSpy = vi.spyOn(mapState, "render");
+      // @ts-expect-error accessing private property for test
+      mapState.needsRender = false;
+      // @ts-expect-error accessing private property for test
+      mapState.cameraAnim = {
+        startPos: { lerpVectors: vi.fn() },
+        endPos: { copy: vi.fn() },
+        startTarget: { lerpVectors: vi.fn() },
+        endTarget: { copy: vi.fn() },
+        startTime: 1000,
+        duration: 1000,
+      };
+
+      mapState.animate();
+
+      expect(renderSpy).toHaveBeenCalled();
+    });
+
+    it("animate() does not call render() if no changes", () => {
+      const renderSpy = vi.spyOn(mapState, "render");
+      // @ts-expect-error accessing private property for test
+      mapState.needsRender = false;
+      // @ts-expect-error accessing private property for test
+      mapState.controls.update.mockReturnValue(false);
+      // @ts-expect-error accessing private property for test
+      mapState.cameraAnim = null;
+
+      mapState.animate();
+
+      expect(renderSpy).not.toHaveBeenCalled();
     });
   });
 });
