@@ -87,6 +87,7 @@ const JUMP_TYPE_LABEL: Record<JumpType, string> = {
 };
 
 let idToNameCache: Map<number, string> | null = null;
+let lastFocusedElement: HTMLElement | null = null;
 
 function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): void {
   const panel = document.getElementById("systemDetail");
@@ -128,7 +129,10 @@ function showSystemDetail(sys: System, jumps: Jump[], allSystems: System[]): voi
     <p>Coordinates: (${sys.x.toFixed(1)}, ${sys.y.toFixed(1)}, ${sys.z.toFixed(1)})</p>
     ${linksSection}
   `;
+  lastFocusedElement = document.activeElement as HTMLElement;
   panel.hidden = false;
+  const closeBtn = document.getElementById("systemDetailClose");
+  if (closeBtn) closeBtn.focus();
 }
 
 function setupMenuToggle(): void {
@@ -271,8 +275,17 @@ function setupSystemDetailPanel(): void {
   const systemDetailClose = document.getElementById("systemDetailClose");
   const systemDetailPanel = document.getElementById("systemDetail");
   if (systemDetailClose && systemDetailPanel) {
-    systemDetailClose.addEventListener("click", () => {
+    const closePanel = () => {
       systemDetailPanel.hidden = true;
+      if (lastFocusedElement && lastFocusedElement.isConnected) {
+        lastFocusedElement.focus();
+      }
+    };
+    systemDetailClose.addEventListener("click", closePanel);
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !systemDetailPanel.hidden) {
+        closePanel();
+      }
     });
   }
 }

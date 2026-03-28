@@ -1,7 +1,77 @@
-import { describe, it, expect } from "vitest";
-import { computeLabelMarginTop } from "./scene";
+/**
+ * @vitest-environment jsdom
+ */
+import { describe, it, expect, vi } from "vitest";
+import { computeLabelMarginTop, buildStarSprite, clearSceneCache } from "./scene";
+import type { System } from "../types";
 
 const tanHalfFov = Math.tan((60 * Math.PI) / 360); // tan(30°) ≈ 0.577
+
+describe("buildStarSprite caching", () => {
+  beforeEach(() => {
+    // Mock canvas context
+    const contextMock = {
+      createRadialGradient: vi.fn().mockReturnValue({
+        addColorStop: vi.fn(),
+      }),
+      fillRect: vi.fn(),
+    };
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(contextMock);
+  });
+
+  const mockSystemG: System = {
+    id: 1,
+    x: 0,
+    y: 0,
+    z: 0,
+    type: ["G V"],
+    sysName: "Sol",
+  };
+  const mockSystemG2: System = {
+    id: 2,
+    x: 10,
+    y: 0,
+    z: 0,
+    type: ["G V"],
+    sysName: "Alpha Centauri",
+  };
+  const mockSystemM: System = {
+    id: 3,
+    x: 0,
+    y: 10,
+    z: 0,
+    type: ["M V"],
+    sysName: "Barnard's Star",
+  };
+
+  const onClick = vi.fn();
+
+  it("reuses the same material for systems with the same spectral type", () => {
+    const res1 = buildStarSprite(mockSystemG, onClick);
+    const res2 = buildStarSprite(mockSystemG2, onClick);
+
+    expect(res1.sprite.material).toBe(res2.sprite.material);
+  });
+
+  it("uses different materials for different spectral types", () => {
+    const resG = buildStarSprite(mockSystemG, onClick);
+    const resM = buildStarSprite(mockSystemM, onClick);
+
+    expect(resG.sprite.material).not.toBe(resM.sprite.material);
+  });
+
+  it("clears cache and creates new materials after clearSceneCache", () => {
+    const res1 = buildStarSprite(mockSystemG, onClick);
+    const material1 = res1.sprite.material;
+
+    clearSceneCache();
+
+    const res2 = buildStarSprite(mockSystemG, onClick);
+    const material2 = res2.sprite.material;
+
+    expect(material1).not.toBe(material2);
+  });
+});
 
 describe("computeLabelMarginTop", () => {
   it("returns a larger margin for a larger sprite", () => {

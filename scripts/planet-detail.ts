@@ -1,0 +1,973 @@
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { escapeHtml } from "./utils/escapeHtml";
+
+// --- Renderer Setup ---
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 3;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// --- Shared State ---
+const sunDirection = new THREE.Vector3(5, 2, 5).normalize();
+const commonUniforms: Record<string, THREE.IUniform> = {
+  uSunDir: { value: sunDirection },
+  uSunDirLocal: { value: new THREE.Vector3() },
+  uTime: { value: 0 },
+  uCloudCoverage: { value: 0.5 },
+  uCloudSeed: { value: new THREE.Vector3(0, 0, 0) },
+  uCloudScale: { value: 2.2 },
+};
+
+// --- Starfield ---
+const starCount = 5000;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++) starPos[i] = (Math.random() - 0.5) * 1000;
+starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5 })));
+
+// --- Noise & FBM Library ---
+const noiseGLSL = `
+    uniform vec3 uCloudSeed;
+    uniform float uCloudScale;
+
+    float hash(vec3 p) { return fract(sin(dot(p + uCloudSeed, vec3(127.1, 311.7, 74.7))) * 43758.5453123); }
+    float noise(vec3 p) {
+        vec3 i = floor(p); vec3 f = fract(p);
+        f = f*f*(3.0-2.0*f);
+        return mix(mix(mix(hash(i), hash(i+vec3(1,0,0)), f.x), mix(hash(i+vec3(0,1,0)), hash(i+vec3(1,1,0)), f.x), f.y),
+                   mix(mix(hash(i+vec3(0,0,1)), hash(i+vec3(1,0,1)), f.x), mix(hash(i+vec3(0,1,1)), hash(i+vec3(1,1,1)), f.x), f.y), f.z);
+    }
+    float fbm(vec3 p) {
+        float v = 0.0, a = 0.5;
+        for (int i=0; i<5; i++) { v += a * noise(p); p *= 2.05; a *= 0.5; }
+        return v;
+    }
+    // Domain warping for "Earth-like" swirly clouds
+    float warpedFbm(vec3 p, float time) {
+        vec3 q = vec3(fbm(p + vec3(0.0, 0.0, 0.0)),
+                      fbm(p + vec3(5.2, 1.3, 0.5)),
+                      fbm(p + vec3(2.4, 4.2, 1.1)));
+        vec3 r = vec3(fbm(p + 4.0 * q + vec3(1.7, 9.2, 2.3) + time * 0.15),
+                      fbm(p + 4.0 * q + vec3(8.3, 2.8, 6.1) - time * 0.1),
+                      fbm(p + 4.0 * q + vec3(3.1, 5.5, 4.4)));
+        return fbm(p + 4.0 * r);
+    }
+`;
+
+// --- Planet Surface ---
+const surfaceMat = new THREE.MeshStandardMaterial({
+  roughness: 0.8,
+  metalness: 0.2,
+});
+
+const surfaceUniforms: Record<string, THREE.IUniform> = {
+  uSunDir: commonUniforms.uSunDir,
+  uSunDirLocal: commonUniforms.uSunDirLocal,
+  uNightMap: { value: null },
+  uSpecularMap: { value: null },
+  uTime: commonUniforms.uTime,
+  uCloudCoverage: commonUniforms.uCloudCoverage,
+  uCloudSeed: commonUniforms.uCloudSeed,
+  uCloudScale: commonUniforms.uCloudScale,
+  uAlbedo: { value: 0.35 },
+  uHasRing: { value: 0 },
+  uSurfTempK: { value: 288.0 },
+  uHydro: { value: 0.7 },
+};
+
+surfaceMat.onBeforeCompile = (shader: THREE.Shader) => {
+  shader.uniforms.uSunDir = surfaceUniforms.uSunDir;
+  shader.uniforms.uSunDirLocal = surfaceUniforms.uSunDirLocal;
+  shader.uniforms.uNightMap = surfaceUniforms.uNightMap;
+  shader.uniforms.uSpecularMap = surfaceUniforms.uSpecularMap;
+  shader.uniforms.uTime = surfaceUniforms.uTime;
+  shader.uniforms.uCloudCoverage = surfaceUniforms.uCloudCoverage;
+  shader.uniforms.uCloudSeed = surfaceUniforms.uCloudSeed;
+  shader.uniforms.uCloudScale = surfaceUniforms.uCloudScale;
+  shader.uniforms.uAlbedo = surfaceUniforms.uAlbedo;
+  shader.uniforms.uHasRing = surfaceUniforms.uHasRing;
+  shader.uniforms.uSurfTempK = surfaceUniforms.uSurfTempK;
+  shader.uniforms.uHydro = surfaceUniforms.uHydro;
+
+  shader.vertexShader = `
+        varying vec3 vLocalNormal;
+        varying vec3 vLocalPosition;
+        ${shader.vertexShader}
+    `.replace(
+    "#include <beginnormal_vertex>",
+    `#include <beginnormal_vertex>
+        vLocalNormal = normal;
+        vLocalPosition = position;`,
+  );
+
+  shader.fragmentShader =
+    `
+        uniform vec3 uSunDir;
+        uniform vec3 uSunDirLocal;
+        uniform sampler2D uNightMap;
+        uniform sampler2D uSpecularMap;
+        uniform float uTime;
+        uniform float uCloudCoverage;
+        uniform float uAlbedo;
+        uniform float uHasRing;
+        uniform float uSurfTempK;
+        uniform float uHydro;
+        varying vec3 vLocalNormal;
+        varying vec3 vLocalPosition;
+        ${noiseGLSL}
+    \n` + shader.fragmentShader;
+
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <map_fragment>",
+    `
+        #include <map_fragment>
+        
+        vec3 sunDir = normalize(uSunDir);
+        float dotNL = dot(vNormal, sunDir);
+        float dayWeight = smoothstep(-0.03, 0.03, dotNL);
+        
+        // 1. Specular from Map
+        float specMask = texture2D(uSpecularMap, vMapUv).r;
+        // Enhance specular on planets with high hydrographics
+        specMask *= (0.8 + uHydro * 1.5);
+        
+        // 2. Night Lights from Map
+        vec3 nightLights = texture2D(uNightMap, vMapUv).rgb * 2.0;
+
+        // 3. Cloud shadows (Warped FBM for swirly patterns)
+        vec3 cloudPos = vLocalNormal * vec3(1.5, 1.0, 1.0) + vec3(uTime * 0.005, 0.0, 0.0);
+        float cloudVal = warpedFbm(cloudPos * uCloudScale, uTime * 0.1);
+        
+        float cloudThreshold = 1.0 - uCloudCoverage;
+        float clouds = smoothstep(cloudThreshold - 0.1, cloudThreshold + 0.3, cloudVal);
+        float cloudShadow = mix(1.0, 0.5, clouds * dayWeight);
+
+        // 4. Ring shadow on planet (sharp, no atmosphere)
+        float ringShadow = 1.0;
+        if (uHasRing > 0.5) {
+            // Calculate shadow from ring using local coordinates
+            vec3 toSun = normalize(uSunDirLocal);
+            // Project point onto ring plane (XZ plane in local space) along sun direction
+            // Ray: P_local + t * toSun. We want Y = 0.
+            // P_local.y + t * toSun.y = 0  => t = -P_local.y / toSun.y
+            if (toSun.y != 0.0) {
+                float t = -vLocalPosition.y / toSun.y;
+                if (t > 0.0) { // Ring is between planet point and sun
+                    vec3 ringIntersect = vLocalPosition + t * toSun;
+                    float dist = length(ringIntersect);
+                    if (dist >= 1.615 && dist <= 1.885) {
+                        ringShadow = 0.3; // Shadow where ring blocks sun
+                    }
+                }
+            }
+        }
+
+        // Apply
+        diffuseColor.rgb *= (dayWeight * cloudShadow * ringShadow * (0.5 + uAlbedo * 1.5));
+        
+        // Temperature Tinting
+        vec3 tempColor = vec3(1.0);
+        if (uSurfTempK < 273.15) { // Below freezing: bluish icy tint
+            tempColor = mix(vec3(0.92, 0.96, 1.05), vec3(1.0), smoothstep(250.0, 273.15, uSurfTempK));
+        } else if (uSurfTempK > 305.0) { // Warm: reddish tint
+            tempColor = mix(vec3(1.0), vec3(1.05, 0.96, 0.92), smoothstep(305.0, 350.0, uSurfTempK));
+        }
+        diffuseColor.rgb *= tempColor;
+
+        diffuseColor.rgb += (nightLights * (1.0 - dayWeight));
+        `,
+  );
+};
+
+const planetMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 128), surfaceMat);
+planetMesh.visible = false;
+scene.add(planetMesh);
+
+// --- Clouds ---
+const cloudMat = new THREE.MeshStandardMaterial({
+  transparent: true,
+  opacity: 1.0,
+  depthWrite: false,
+  color: 0xffffff,
+  map: new THREE.Texture(), // Force UV varyings
+});
+
+cloudMat.onBeforeCompile = (shader: THREE.Shader) => {
+  shader.uniforms.uSunDir = commonUniforms.uSunDir;
+  shader.uniforms.uTime = commonUniforms.uTime;
+  shader.uniforms.uCloudCoverage = commonUniforms.uCloudCoverage;
+  shader.uniforms.uCloudSeed = commonUniforms.uCloudSeed;
+  shader.uniforms.uCloudScale = commonUniforms.uCloudScale;
+
+  shader.vertexShader = `
+        varying vec3 vLocalNormal;
+        ${shader.vertexShader}
+    `.replace(
+    "#include <beginnormal_vertex>",
+    `#include <beginnormal_vertex>
+        vLocalNormal = normal;`,
+  );
+
+  shader.fragmentShader =
+    `
+        uniform vec3 uSunDir;
+        uniform float uTime;
+        uniform float uCloudCoverage;
+        varying vec3 vLocalNormal;
+        ${noiseGLSL}
+    \n` + shader.fragmentShader;
+
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <map_fragment>",
+    `
+        #include <map_fragment>
+        vec3 cloudPos = vLocalNormal * vec3(1.5, 1.0, 1.0) + vec3(uTime * 0.005, 0.0, 0.0);
+        float cloudVal = warpedFbm(cloudPos * uCloudScale, uTime * 0.1);
+        
+        float cloudThreshold = 1.0 - uCloudCoverage;
+        float clouds = smoothstep(cloudThreshold - 0.1, cloudThreshold + 0.3, cloudVal);
+        float lit = smoothstep(-0.02, 0.08, dot(vNormal, normalize(uSunDir)));
+        
+        diffuseColor.rgb = vec3(0.95, 0.95, 1.0);
+        diffuseColor.a = clouds * lit * 0.95;
+        `,
+  );
+};
+
+const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.015, 128, 128), cloudMat);
+cloudMesh.visible = false;
+scene.add(cloudMesh);
+
+// --- Atmosphere ---
+const atmoMat = new THREE.ShaderMaterial({
+  transparent: true,
+  side: THREE.BackSide,
+  depthWrite: false,
+  uniforms: {
+    uSunDir: commonUniforms.uSunDir,
+    uAtmPressure: { value: 1.0 },
+    uAtmoColor: { value: new THREE.Color(0.2, 0.5, 1.0) },
+  },
+  vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vWorldPosition;
+        void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vec4 worldPos = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPos.xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+  fragmentShader: `
+        varying vec3 vNormal;
+        varying vec3 vWorldPosition;
+        uniform vec3 cameraPosition;
+        uniform vec3 uSunDir;
+        uniform float uAtmPressure;
+        uniform vec3 uAtmoColor;
+        void main() {
+            vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+            float fresnel = pow(1.0 - dot(vNormal, viewDir), 4.0);
+            float dotNL = dot(normalize(vWorldPosition), normalize(uSunDir));
+            float lit = smoothstep(-0.3, 0.5, dotNL);
+            
+            // Base color shifts based on pressure
+            vec3 deepColor = mix(vec3(0.02, 0.05, 0.2), uAtmoColor * 0.3, lit);
+            vec3 brightColor = uAtmoColor;
+            
+            vec3 color = mix(deepColor, brightColor, lit);
+            float intensity = (0.4 + uAtmPressure * 0.6);
+            gl_FragColor = vec4(color * fresnel * 2.5 * intensity, fresnel * lit * 0.8 * intensity);
+        }
+    `,
+});
+const atmoMesh = new THREE.Mesh(new THREE.SphereGeometry(1.08, 128, 128), atmoMat);
+atmoMesh.visible = false;
+scene.add(atmoMesh);
+
+// --- Moon ---
+const moonGeo = new THREE.SphereGeometry(1, 32, 32);
+const moonMat = new THREE.MeshStandardMaterial({
+  color: 0x888888,
+  roughness: 0.9,
+  metalness: 0.0,
+});
+const moonMesh = new THREE.Mesh(moonGeo, moonMat);
+moonMesh.visible = false;
+scene.add(moonMesh);
+
+// --- Ring System ---
+const ringMat = new THREE.ShaderMaterial({
+  side: THREE.DoubleSide,
+  transparent: true,
+  depthWrite: false,
+  uniforms: {
+    uTime: commonUniforms.uTime,
+    uSunDir: commonUniforms.uSunDir,
+    uPlanetScale: { value: 1.0 },
+  },
+  vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vWorldPosition;
+        varying vec3 vLocalPosition;
+        void main() {
+            vUv = uv;
+            vLocalPosition = position;
+            vec4 worldPos = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPos.xyz;
+            gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+    `,
+  fragmentShader: `
+        varying vec2 vUv;
+        varying vec3 vWorldPosition;
+        varying vec3 vLocalPosition;
+        uniform float uTime;
+        uniform vec3 uSunDir;
+        uniform float uPlanetScale;
+        
+        void main() {
+            vec3 L = normalize(uSunDir);
+            vec3 P = vWorldPosition; // Planet center is at (0,0,0)
+            
+            float d = dot(P, L);
+            float distToAxis = length(P - d * L);
+            
+            float shadow = 1.0;
+            if (d < 0.0) {
+                // Sphere of radius uPlanetScale at origin
+                shadow = smoothstep(uPlanetScale * 0.98, uPlanetScale * 1.02, distToAxis);
+                shadow = mix(0.05, 1.0, shadow);
+            }
+            
+            float dist = length(vLocalPosition.xy);
+            float innerEdge = smoothstep(1.615, 1.65, dist);
+            float outerEdge = 1.0 - smoothstep(1.85, 1.885, dist);
+            float mask = innerEdge * outerEdge;
+            
+            float band = sin(dist * 60.0) * 0.5 + 0.5;
+            band = mix(0.3, 0.6, band) * mask * shadow;
+            gl_FragColor = vec4(0.75, 0.75, 0.8, band);
+        }
+    `,
+});
+
+const ringGeo = new THREE.RingGeometry(1.615, 1.885, 128);
+const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+ringMesh.rotation.x = Math.PI / 2;
+ringMesh.rotation.y = 0.3;
+ringMesh.visible = false;
+planetMesh.add(ringMesh);
+
+// --- Lighting ---
+const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+sunLight.position.copy(sunDirection).multiplyScalar(10);
+scene.add(sunLight);
+scene.add(new THREE.AmbientLight(0xffffff, 0.1));
+
+// Kelvin to RGB approximation
+function kelvinToRGB(kelvin: number) {
+  const temp = kelvin / 100;
+  let r, g, b;
+
+  if (temp <= 66) {
+    r = 255;
+    g = temp;
+    g = 99.4708025861 * Math.log(g) - 161.1195681661;
+    if (temp <= 19) b = 0;
+    else {
+      b = temp - 10;
+      b = 138.5177312231 * Math.log(b) - 305.0447927307;
+    }
+  } else {
+    r = temp - 60;
+    r = 329.698727446 * Math.pow(r, -0.1332047592);
+    g = temp - 60;
+    g = 288.1221695283 * Math.pow(g, -0.0755148492);
+    b = 255;
+  }
+
+  const clamp = (v: number) => Math.min(255, Math.max(0, v)) / 255;
+  return new THREE.Color(clamp(r), clamp(g), clamp(b));
+}
+
+let rotationSpeed = 1;
+
+interface Planet {
+  name: string;
+  displayName?: string;
+  sysName: string;
+  base: string;
+  seed: number[];
+  scale: number;
+  albedo: number;
+  cloudCover: number;
+  axialTilt: number;
+  diameterKm: number;
+  dayHours: number;
+  stellarLuminosity: number;
+  atmPressure: number;
+  starTemp: number;
+  atmo: { O2: number; N2: number; CO2: number };
+  surfTempK: number;
+  hydro: number;
+  hasRing?: boolean;
+  moon?: { diameterKm: number; distKm: number };
+}
+
+// --- Planet Data & Switching ---
+const planets: Planet[] = [
+  {
+    name: "Altiplano",
+    sysName: "Delta Pavonis",
+    base: "Map_Altiplano",
+    seed: [12.3, 45.6, 78.9],
+    scale: 1.8,
+    albedo: 0.34,
+    cloudCover: 0.55,
+    axialTilt: 29.4,
+    diameterKm: 10883,
+    dayHours: 27,
+    stellarLuminosity: 1.47,
+    atmPressure: 0.64,
+    starTemp: 6000,
+    atmo: { O2: 0.189, N2: 0.781, CO2: 0.001 },
+    surfTempK: 298.6,
+    hydro: 0.53,
+  },
+  {
+    name: "Olympia",
+    sysName: "Alpha Centauri",
+    base: "Map_Olympia",
+    seed: [98.7, 65.4, 32.1],
+    scale: 3.5,
+    albedo: 0.32,
+    cloudCover: 0.5,
+    axialTilt: 23.5,
+    diameterKm: 12288,
+    dayHours: 34,
+    stellarLuminosity: 0.53,
+    atmPressure: 0.89,
+    starTemp: 6000,
+    atmo: { O2: 0.191, N2: 0.801, CO2: 0.001 },
+    surfTempK: 305.0,
+    hydro: 0.69,
+    moon: { diameterKm: 1010, distKm: 512400 },
+  },
+  {
+    name: "Concord",
+    sysName: "Gamma Leporis",
+    base: "Map_Concord",
+    seed: [42.0, 42.0, 42.0],
+    scale: 1.2,
+    albedo: 0.61,
+    cloudCover: 0.57,
+    axialTilt: 25.1,
+    diameterKm: 11326,
+    dayHours: 19,
+    stellarLuminosity: 2.41,
+    atmPressure: 1.49,
+    starTemp: 7000,
+    atmo: { O2: 0.184, N2: 0.43, CO2: 0.0005 },
+    surfTempK: 294.0,
+    hydro: 0.81,
+    moon: { diameterKm: 3640, distKm: 422000 },
+  },
+  {
+    name: "Damso",
+    sysName: "Beta Canum Venaticorum",
+    base: "Map_Damso",
+    seed: [1.1, 2.2, 3.3],
+    scale: 4.0,
+    albedo: 0.9,
+    cloudCover: 0.47,
+    axialTilt: 33.1,
+    diameterKm: 13563,
+    dayHours: 8,
+    stellarLuminosity: 1.21,
+    atmPressure: 5.4,
+    starTemp: 6000,
+    atmo: { O2: 0.061, N2: 0.255, CO2: 0.049 },
+    surfTempK: 290.5,
+    hydro: 0.35,
+    moon: { diameterKm: 4513, distKm: 410638 },
+  },
+  {
+    name: "Medina",
+    sysName: "Sigma Draconis",
+    base: "Map_Medina",
+    seed: [55.5, 66.6, 77.7],
+    scale: 2.5,
+    albedo: 0.29,
+    cloudCover: 0.62,
+    axialTilt: 18.2,
+    diameterKm: 9854,
+    dayHours: 22,
+    stellarLuminosity: 0.46,
+    atmPressure: 1.01,
+    starTemp: 5000,
+    atmo: { O2: 0.239, N2: 0.746, CO2: 0.0003 },
+    surfTempK: 294.7,
+    hydro: 0.71,
+    moon: { diameterKm: 1790, distKm: 58245 },
+  },
+  {
+    name: "Novaya",
+    displayName: "Novoya Rossiya/Nova Brazil",
+    sysName: "Alpha Mensae",
+    base: "Map_Novaya",
+    seed: [8.8, 9.9, 0.0],
+    scale: 1.5,
+    albedo: 0.31,
+    cloudCover: 0.49,
+    axialTilt: 31.6,
+    diameterKm: 10954,
+    dayHours: 17,
+    stellarLuminosity: 0.87,
+    atmPressure: 1.15,
+    starTemp: 6000,
+    atmo: { O2: 0.186, N2: 0.76, CO2: 0.0004 },
+    surfTempK: 304.6,
+    hydro: 0.68,
+    hasRing: true,
+    moon: { diameterKm: 3475, distKm: 384410 },
+  },
+  {
+    name: "Pacifica",
+    sysName: "BD-05°1844",
+    base: "Map_Pacifica",
+    seed: [33.3, 22.2, 11.1],
+    scale: 2.0,
+    albedo: 0.34,
+    cloudCover: 0.81,
+    axialTilt: 2.1,
+    diameterKm: 15584,
+    dayHours: 98,
+    stellarLuminosity: 0.24,
+    atmPressure: 0.68,
+    starTemp: 3500,
+    atmo: { O2: 0.317, N2: 0.647, CO2: 0.0007 },
+    surfTempK: 294.0,
+    hydro: 0.97,
+    moon: { diameterKm: 16484, distKm: 154230 },
+  },
+  {
+    name: "Refuge",
+    sysName: "41 Arae",
+    base: "Map_Refuge",
+    seed: [7.7, 6.6, 5.5],
+    scale: 3.0,
+    albedo: 0.45,
+    cloudCover: 0.55,
+    axialTilt: 16.8,
+    diameterKm: 8972,
+    dayHours: 29,
+    stellarLuminosity: 0.47,
+    atmPressure: 1.09,
+    starTemp: 6000,
+    atmo: { O2: 0.234, N2: 0.744, CO2: 0.0003 },
+    surfTempK: 296.4,
+    hydro: 0.86,
+  },
+  {
+    name: "Schwarzvaal",
+    sysName: "107 Piscium",
+    base: "Map_Schwartzvaal",
+    seed: [100.1, 200.2, 300.3],
+    scale: 0.8,
+    albedo: 0.32,
+    cloudCover: 0.27,
+    axialTilt: 21.4,
+    diameterKm: 10240,
+    dayHours: 31,
+    stellarLuminosity: 0.51,
+    atmPressure: 1.12,
+    starTemp: 5600,
+    atmo: { O2: 0.27, N2: 0.65, CO2: 0.0001 },
+    surfTempK: 272.2,
+    hydro: 0.62,
+  },
+  {
+    name: "Xing Cheng",
+    sysName: "Zeta Tucanae",
+    base: "Map_XingCheng",
+    seed: [0.1, 0.2, 0.3],
+    scale: 5.0,
+    albedo: 0.36,
+    cloudCover: 0.49,
+    axialTilt: 28.3,
+    diameterKm: 12672,
+    dayHours: 29,
+    stellarLuminosity: 1.24,
+    atmPressure: 0.81,
+    starTemp: 5800,
+    atmo: { O2: 0.286, N2: 0.71, CO2: 0.0008 },
+    surfTempK: 301.7,
+    hydro: 0.81,
+    moon: { diameterKm: 590, distKm: 238200 },
+  },
+];
+
+const texLoader = new THREE.TextureLoader();
+const cache: Record<string, THREE.Texture> = {};
+const failedTextureCache: Record<string, THREE.Texture> = {};
+
+// 1x1 black pixel fallback
+const fallbackTexture = (() => {
+  const data = new Uint8Array([0, 0, 0, 255]);
+  const texture = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+})();
+
+let currentPlanetName = "";
+
+function switchPlanet(name: string, updateUrl = true) {
+  const p = planets.find((x) => x.name === name);
+  if (!p) return;
+
+  currentPlanetName = name;
+
+  // Hide planet during switch
+  planetMesh.visible = false;
+  cloudMesh.visible = false;
+  atmoMesh.visible = false;
+  moonMesh.visible = false;
+  ringMesh.visible = false;
+
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("planet", name);
+    window.history.pushState({}, "", url);
+  }
+
+  const planetNameEl = document.getElementById("planet-name");
+  if (planetNameEl) planetNameEl.textContent = p.displayName || name;
+
+  document.querySelectorAll(".planet-link").forEach((l) => {
+    const isActive = (l as HTMLElement).dataset.name === name;
+    l.classList.toggle("active", isActive);
+    if (isActive) {
+      l.setAttribute("aria-current", "page");
+    } else {
+      l.removeAttribute("aria-current");
+    }
+  });
+
+  const starmapLink = document.getElementById("starmap-link") as HTMLAnchorElement;
+  if (starmapLink && p.sysName) {
+    starmapLink.href = `/#focus=${encodeURIComponent(p.sysName)}`;
+    starmapLink.title = `Back to ${p.sysName} in Star Map`;
+    starmapLink.setAttribute("aria-label", `Back to ${p.sysName} in Star Map`);
+  }
+
+  // Update cloud pattern parameters
+  commonUniforms.uCloudSeed.value.set(p.seed[0], p.seed[1], p.seed[2]);
+  commonUniforms.uCloudScale.value = p.scale;
+
+  // Show/hide ring (will be shown after texture load)
+  const hasRing = p.hasRing || false;
+
+  // Set albedo and temperature
+  surfaceUniforms.uAlbedo.value = p.albedo || 0.35;
+  surfaceUniforms.uHasRing.value = hasRing ? 1.0 : 0.0;
+  surfaceUniforms.uSurfTempK.value = p.surfTempK || 288.0;
+  surfaceUniforms.uHydro.value = p.hydro || 0.5;
+
+  // Set axial tilt (convert degrees to radians, tilt around X axis)
+  if (p.axialTilt !== undefined) {
+    planetMesh.rotation.x = (p.axialTilt * Math.PI) / 180;
+    cloudMesh.rotation.x = (p.axialTilt * Math.PI) / 180;
+    atmoMesh.rotation.x = (p.axialTilt * Math.PI) / 180;
+  }
+
+  // Set planet scale based on diameter (relative to Earth ~12742km)
+  const EARTH_DIAMETER = 12742;
+  if (p.diameterKm) {
+    const scale = p.diameterKm / EARTH_DIAMETER;
+    planetMesh.scale.setScalar(scale);
+    cloudMesh.scale.setScalar(scale);
+    atmoMesh.scale.setScalar(scale);
+    ringMat.uniforms.uPlanetScale.value = scale;
+  }
+
+  // Set rotation speed (Earth day = 24 hours, so 24/dayHours = speed multiplier)
+  const EARTH_DAY_HOURS = 24;
+  rotationSpeed = p.dayHours ? EARTH_DAY_HOURS / p.dayHours : 1;
+
+  // Set stellar luminosity (affects sun light intensity)
+  if (p.stellarLuminosity) {
+    sunLight.intensity = 2.5 * Math.sqrt(p.stellarLuminosity);
+  }
+
+  // Set stellar color based on temperature
+  if (p.starTemp) {
+    sunLight.color = kelvinToRGB(p.starTemp);
+  } else {
+    sunLight.color.set(0xffffff);
+  }
+
+  if (p.atmPressure) {
+    atmoMat.uniforms.uAtmPressure.value = p.atmPressure;
+    const atmoScale = 1.0 + 0.08 * (p.atmPressure > 1 ? Math.sqrt(p.atmPressure) : p.atmPressure);
+    atmoMesh.scale.setScalar((p.diameterKm / EARTH_DIAMETER) * atmoScale);
+  }
+
+  // Set atmosphere color based on composition
+  const atmoColor = new THREE.Color(0.2, 0.5, 1.0); // Default Earth blue
+  if (p.atmo) {
+    if (p.atmo.CO2 > 0.01) {
+      atmoColor.lerp(new THREE.Color(0.8, 0.7, 0.4), 0.4);
+    }
+    if (p.atmo.O2 > 0.25) {
+      atmoColor.lerp(new THREE.Color(0.1, 0.3, 0.9), 0.2);
+    }
+  }
+  atmoMat.uniforms.uAtmoColor.value.copy(atmoColor);
+
+  // Set cloud coverage from planet data
+  if (p.cloudCover !== undefined) {
+    commonUniforms.uCloudCoverage.value = p.cloudCover;
+  }
+
+  // Set camera angle for ring visibility
+  if (hasRing) {
+    camera.position.set(1.5, 1.2, 2.5);
+    camera.lookAt(0, 0, 0);
+  } else {
+    camera.position.set(0, 0, 3);
+    camera.lookAt(0, 0, 0);
+  }
+
+  // Show "Loading..." in HUD while textures load
+  const hud = document.getElementById("hud");
+  if (hud) {
+    hud.innerHTML = `<div class="loading-hud">Loading planet data...</div>`;
+  }
+
+  Promise.all([
+    loadTexture(p.base, "_dilated"),
+    loadTexture(p.base, "_specular"),
+    loadTexture(p.base, "_bump"),
+    loadTexture(p.base, "_night"),
+  ]).then(([diffuse, spec, bump, night]) => {
+    // Race condition check: only apply if this is still the current planet
+    if (currentPlanetName !== name) return;
+
+    surfaceMat.map = diffuse;
+    surfaceMat.bumpMap = bump;
+    surfaceMat.bumpScale = 0.005;
+    surfaceUniforms.uSpecularMap.value = spec;
+    surfaceUniforms.uNightMap.value = night;
+    surfaceMat.needsUpdate = true;
+
+    // Now that textures are ready, show the planet and update HUD
+    planetMesh.visible = true;
+    cloudMesh.visible = true;
+    atmoMesh.visible = true;
+    ringMesh.visible = hasRing;
+    if (p.moon) {
+      moonMesh.visible = true;
+      const planetScale = p.diameterKm / EARTH_DIAMETER;
+      const moonRelScale = p.moon.diameterKm / EARTH_DIAMETER;
+      moonMesh.scale.setScalar(moonRelScale);
+
+      const MOON_VISUAL_DISTANCE_SCALE = 0.00004;
+      const moonDist = p.moon.distKm * MOON_VISUAL_DISTANCE_SCALE + planetScale * 1.5;
+      moonMesh.position.set(moonDist, 0, 0);
+      moonMat.color.set(new THREE.Color(0x999999));
+    }
+
+    if (hud) {
+      hud.innerHTML = `
+        <div style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">${escapeHtml(
+          (p.displayName || name).toUpperCase(),
+        )}</div>
+        <div class="hud-item"><span class="hud-label">Diameter:</span><span class="hud-value">${p.diameterKm.toLocaleString()} km</span></div>
+        <div class="hud-item"><span class="hud-label">Day Length:</span><span class="hud-value">${
+          p.dayHours
+        }h</span></div>
+        <div class="hud-item"><span class="hud-label">Surf Temp:</span><span class="hud-value">${
+          p.surfTempK
+        } K</span></div>
+        <div class="hud-item"><span class="hud-label">Hydrographics:</span><span class="hud-value">${(
+          p.hydro * 100
+        ).toFixed(1)}%</span></div>
+        <div class="hud-item"><span class="hud-label">Axial Tilt:</span><span class="hud-value">${
+          p.axialTilt
+        }°</span></div>
+        
+        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">ATMOSPHERE</div>
+        <div class="hud-item"><span class="hud-label">Pressure:</span><span class="hud-value">${
+          p.atmPressure
+        } atm</span></div>
+        <div class="hud-item"><span class="hud-label">N2 / O2 / CO2:</span><span class="hud-value">${
+          p.atmo.N2
+        }/${p.atmo.O2}/${p.atmo.CO2}</span></div>
+
+        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">STELLAR DATA</div>
+        <div class="hud-item"><span class="hud-label">Star Temp:</span><span class="hud-value">${
+          p.starTemp
+        } K</span></div>
+        <div class="hud-item"><span class="hud-label">Luminosity:</span><span class="hud-value">${
+          p.stellarLuminosity
+        } L</span></div>
+        
+        ${
+          p.moon
+            ? `
+        <div class="hud-section" style="color:#00d2ff; font-weight:bold; margin-bottom:5px;">LUNAR DATA</div>
+        <div class="hud-item"><span class="hud-label">Moon Size:</span><span class="hud-value">${p.moon.diameterKm.toLocaleString()} km</span></div>
+        <div class="hud-item"><span class="hud-label">Distance:</span><span class="hud-value">${p.moon.distKm.toLocaleString()} km</span></div>
+        `
+            : ""
+        }
+      `;
+    }
+  });
+}
+
+const loadTexture = (base: string, suffix: string): Promise<THREE.Texture> => {
+  const path = `/pngs/${base}${suffix}.png`;
+  if (cache[path]) return Promise.resolve(cache[path]);
+  if (failedTextureCache[path]) return Promise.resolve(failedTextureCache[path]);
+
+  return new Promise<THREE.Texture>((res) => {
+    texLoader.load(
+      path,
+      (t) => {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        t.wrapS = THREE.RepeatWrapping;
+        cache[path] = t;
+        res(t);
+      },
+      undefined,
+      () => {
+        console.error(`Failed to load texture: ${path}`);
+        failedTextureCache[path] = fallbackTexture;
+        res(fallbackTexture);
+      },
+    );
+  });
+};
+
+/**
+ * Prefetches all planet textures in the background to avoid delay when switching.
+ */
+function prefetchPlanets() {
+  // Use requestIdleCallback if available to avoid contention
+  const startPrefetch = () => {
+    planets.forEach((p) => {
+      ["_dilated", "_specular", "_bump", "_night"].forEach((suffix) => {
+        loadTexture(p.base, suffix);
+      });
+    });
+  };
+
+  if ("requestIdleCallback" in window) {
+    (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(
+      startPrefetch,
+    );
+  } else {
+    setTimeout(startPrefetch, 2000);
+  }
+}
+
+const selector = document.getElementById("planet-selector");
+if (selector) {
+  planets.forEach((p) => {
+    const link = document.createElement("a");
+    link.className = "planet-link" + (p.name === "Altiplano" ? " active" : "");
+    link.dataset.name = p.name;
+    link.href = "?planet=" + encodeURIComponent(p.name);
+    link.textContent = p.displayName || p.name;
+    link.onclick = (e) => {
+      e.preventDefault();
+      switchPlanet(p.name);
+    };
+    selector.appendChild(link);
+  });
+}
+
+// Initial planet from URL
+const urlParams = new URLSearchParams(window.location.search);
+const initialPlanet = urlParams.get("planet") || "Altiplano";
+switchPlanet(initialPlanet, false);
+
+// Wait for initial load before starting background prefetch
+// To be even safer, we could call prefetchPlanets inside switchPlanet's then block
+// but only once.
+let prefetched = false;
+function triggerPrefetchOnce() {
+  if (prefetched) return;
+  prefetched = true;
+  prefetchPlanets();
+}
+
+// Update the switchPlanet call to trigger prefetch
+const originalInitialPlanet = initialPlanet;
+Promise.all([
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_dilated"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_specular"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_bump"),
+  loadTexture(planets.find((p) => p.name === originalInitialPlanet)!.base, "_night"),
+]).then(() => {
+  triggerPrefetchOnce();
+});
+
+window.addEventListener("popstate", () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const p = urlParams.get("planet") || "Altiplano";
+  switchPlanet(p, false);
+});
+
+function animate(time: number) {
+  requestAnimationFrame(animate);
+  commonUniforms.uTime.value = time * 0.001;
+  controls.update();
+  planetMesh.rotation.y += 0.0005 * rotationSpeed;
+  cloudMesh.rotation.y += 0.0005 * rotationSpeed;
+
+  // Update local sun direction for accurate shadows
+  planetMesh.updateMatrixWorld();
+  commonUniforms.uSunDirLocal.value
+    .copy(sunDirection)
+    .applyQuaternion(planetMesh.quaternion.clone().invert());
+
+  if (ringMesh.visible) {
+    ringMesh.rotation.z += 0.0002 * rotationSpeed;
+  }
+
+  if (moonMesh.visible) {
+    const dist = moonMesh.position.length();
+    const angle = time * 0.0002;
+    moonMesh.position.set(
+      Math.cos(angle) * dist,
+      Math.sin(angle * 0.3) * dist * 0.2,
+      Math.sin(angle) * dist,
+    );
+    moonMesh.rotation.y += 0.001;
+  }
+
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});

@@ -27,9 +27,28 @@ const DEFAULT_STAR_COLORS: [string, string] = ["rgba(255,255,255,1)", "rgba(180,
 
 // Cache canvas textures by spectral type key
 const canvasTextureCache = new Map<string, THREE.CanvasTexture>();
+const materialCache = new Map<string, THREE.SpriteMaterial>();
+
+/**
+ * Normalizes spectral types (e.g. "G V" -> "G") into consistent cache keys.
+ */
+function normalizeSpectralKey(starType: string | undefined): string {
+  return (starType ?? "").trim().toUpperCase();
+}
+
+export function clearSceneCache(): void {
+  for (const material of materialCache.values()) {
+    material.dispose();
+  }
+  for (const texture of canvasTextureCache.values()) {
+    texture.dispose();
+  }
+  materialCache.clear();
+  canvasTextureCache.clear();
+}
 
 function makeStarTexture(starType: string | undefined): THREE.CanvasTexture {
-  const key = (starType ?? "").trim().toUpperCase();
+  const key = normalizeSpectralKey(starType);
   let tex = canvasTextureCache.get(key);
   if (tex) return tex;
 
@@ -73,14 +92,21 @@ export function buildStarSprite(
   label: CSS2DObject;
   planetLabel?: CSS2DObject;
 } {
-  const starType = system.type?.[0]?.[0]?.toUpperCase();
-  const texture = makeStarTexture(starType);
-  const material = new THREE.SpriteMaterial({
-    map: texture,
-    sizeAttenuation: true,
-    transparent: true,
-    depthWrite: false,
-  });
+  const key = normalizeSpectralKey(system.type?.[0]);
+  const starType = key[0];
+
+  let material = materialCache.get(key);
+  if (!material) {
+    const texture = makeStarTexture(system.type?.[0]);
+    material = new THREE.SpriteMaterial({
+      map: texture,
+      sizeAttenuation: true,
+      transparent: true,
+      depthWrite: false,
+    });
+    materialCache.set(key, material);
+  }
+
   const sprite = new THREE.Sprite(material);
   const size = STAR_SIZE[starType ?? ""] ?? DEFAULT_STAR_SIZE;
   sprite.scale.setScalar(size);

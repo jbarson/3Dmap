@@ -51,3 +51,4 @@ coverage/
 # Large texture files
 public/pngs/
 test-results/
+*.orig
