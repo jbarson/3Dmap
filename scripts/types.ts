@@ -55,6 +55,7 @@ export type MapState = {
   onWindowResize: () => void;
   animate: () => void;
   render: () => void;
+  requestRender: () => void;
   toggleLinks: (type: JumpType) => void;
   init: () => void;
   cleanup: () => void;
