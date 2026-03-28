@@ -68,6 +68,15 @@ Before completing any task, you MUST run:
 - Provide concise, high-signal JSDoc comments for complex logic.
 - Keep comments up-to-date with code changes.
 
+## 5. PR Review & Iteration
+
+### **5.1 Addressing Feedback**
+
+- **Proactive Monitoring**: Always check for new comments or requested changes on open PRs before proceeding with other tasks.
+- **Surgical Resolution**: Address feedback directly by modifying the existing branch. Do not create new branches for small fixes unless requested.
+- **Verification**: After addressing feedback, re-run the Quality Gate (`npm run format`, `npm run lint:ci`, `npm test`) and push the changes immediately.
+- **Cycle of Finality**: A task is only complete when all reviewer comments are resolved and the PR is approved or ready for final merge.
+
 ---
 
 _This document takes precedence over general workflows. Consistently applying these standards is mandatory for all contributors._
